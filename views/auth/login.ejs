@@ -1,0 +1,111 @@
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card shadow">
+      <div class="card-body p-5">
+        <h2 class="text-center mb-4">Iniciar Sesión</h2>
+        
+        <!-- Mensaje de error general -->
+        <div class="alert alert-danger" role="alert" id="errorGeneral" hidden>
+          <i class="fas fa-exclamation-circle me-2"></i>
+          <span id="errorGeneralText"></span>
+        </div>
+
+        <form id="loginForm" action="/auth/login" method="POST">
+          <div class="mb-3">
+            <label for="correo" class="form-label">Correo Electrónico</label>
+            <input type="email" class="form-control" id="correo" name="correo" required>
+            <!-- Error de correo -->
+            <div class="invalid-feedback" id="correoError" hidden>
+              Por favor, ingresa un correo electrónico válido
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="contraseña" class="form-label">Contraseña</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="contraseña" name="contraseña" required>
+              <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <!-- Error de contraseña -->
+            <div class="invalid-feedback" id="contraseñaError" hidden>
+              La contraseña es requerida
+            </div>
+          </div>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+            <label class="form-check-label" for="remember">Recordarme</label>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+            </button>
+          </div>
+        </form>
+
+        <div class="text-center mt-3">
+          <a href="/auth/recover" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('loginForm');
+  const errorGeneral = document.getElementById('errorGeneral');
+  const errorGeneralText = document.getElementById('errorGeneralText');
+  const togglePassword = document.getElementById('togglePassword');
+  const contraseñaInput = document.getElementById('contraseña');
+
+  // Función para mostrar errores
+  function mostrarError(mensaje) {
+    errorGeneralText.textContent = mensaje;
+    errorGeneral.hidden = false;
+  }
+
+  // Función para ocultar errores
+  function ocultarErrores() {
+    errorGeneral.hidden = true;
+  }
+
+  // Toggle para mostrar/ocultar contraseña
+  togglePassword.addEventListener('click', function() {
+    const tipo = contraseñaInput.type === 'password' ? 'text' : 'password';
+    contraseñaInput.type = tipo;
+    this.querySelector('i').classList.toggle('fa-eye');
+    this.querySelector('i').classList.toggle('fa-eye-slash');
+  });
+
+  // Manejar envío del formulario
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    ocultarErrores();
+
+    try {
+      const formData = new FormData(form);
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(Object.fromEntries(formData))
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        window.location.href = '/dashboard';
+      } else {
+        mostrarError(data.error || 'Error al iniciar sesión');
+      }
+    } catch (error) {
+      mostrarError('Error al procesar la solicitud');
+    }
+  });
+});
+</script> 

@@ -1,0 +1,215 @@
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card shadow">
+      <div class="card-body p-5">
+        <h2 class="text-center mb-4">Registro de Usuario</h2>
+
+        <!-- Mensaje de error general -->
+        <div class="alert alert-danger" role="alert" id="errorGeneral" hidden>
+          <i class="fas fa-exclamation-circle me-2"></i>
+          <span id="errorGeneralText"></span>
+        </div>
+
+        <form id="registerForm" action="/auth/register" method="POST">
+          <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre Completo</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" required>
+            <!-- Error de nombre -->
+            <div class="invalid-feedback" id="nombreError" hidden>
+              Por favor, ingresa tu nombre completo
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="correo" class="form-label">Correo Electrónico</label>
+            <input type="email" class="form-control" id="correo" name="correo" required>
+            <!-- Error de correo -->
+            <div class="invalid-feedback" id="correoError" hidden>
+              Por favor, ingresa un correo electrónico válido
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="contraseña" class="form-label">Contraseña</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="contraseña" name="contraseña" required>
+              <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <!-- Error de contraseña -->
+            <div class="invalid-feedback" id="contraseñaError" hidden>
+              La contraseña debe tener al menos 6 caracteres
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="confirmarContraseña" class="form-label">Confirmar Contraseña</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="confirmarContraseña" name="confirmarContraseña" required>
+              <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <!-- Error de confirmación de contraseña -->
+            <div class="invalid-feedback" id="confirmarContraseñaError" hidden>
+              Las contraseñas no coinciden
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="pregunta_seguridad" class="form-label">Pregunta de Seguridad</label>
+            <select class="form-select" id="pregunta_seguridad" name="pregunta_seguridad" required>
+              <option value="">Selecciona una pregunta</option>
+              <% for (let i = 0; i < preguntas.length; i++) { %>
+                <option value="<%= preguntas[i].id %>"><%= preguntas[i].pregunta %></option>
+              <% } %>
+            </select>
+            <!-- Error de pregunta de seguridad -->
+            <div class="invalid-feedback" id="preguntaError" hidden>
+              Por favor, selecciona una pregunta de seguridad
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="respuesta_seguridad" class="form-label">Respuesta</label>
+            <input type="text" class="form-control" id="respuesta_seguridad" name="respuesta_seguridad" required>
+            <!-- Error de respuesta -->
+            <div class="invalid-feedback" id="respuestaError" hidden>
+              Por favor, ingresa tu respuesta
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="nombre_finca" class="form-label">Nombre de la Finca</label>
+            <input type="text" class="form-control" id="nombre_finca" name="nombre_finca" required>
+            <!-- Error de nombre de finca -->
+            <div class="invalid-feedback" id="fincaError" hidden>
+              Por favor, ingresa el nombre de tu finca
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="ubicacion_finca" class="form-label">Ubicación de la Finca</label>
+            <input type="text" class="form-control" id="ubicacion_finca" name="ubicacion_finca" required>
+            <!-- Error de ubicación -->
+            <div class="invalid-feedback" id="ubicacionError" hidden>
+              Por favor, ingresa la ubicación de tu finca
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-user-plus me-2"></i>Registrarse
+            </button>
+          </div>
+        </form>
+
+        <div class="text-center mt-3">
+          <p>¿Ya tienes una cuenta? <a href="/auth/login" class="text-decoration-none">Inicia sesión aquí</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('registerForm');
+  const errorGeneral = document.getElementById('errorGeneral');
+  const errorGeneralText = document.getElementById('errorGeneralText');
+  const togglePassword = document.getElementById('togglePassword');
+  const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+  const contraseñaInput = document.getElementById('contraseña');
+  const confirmarContraseñaInput = document.getElementById('confirmarContraseña');
+
+  // Función para mostrar errores
+  function mostrarError(mensaje) {
+    errorGeneralText.textContent = mensaje;
+    errorGeneral.hidden = false;
+  }
+
+  // Función para ocultar errores
+  function ocultarErrores() {
+    errorGeneral.hidden = true;
+    document.querySelectorAll('.invalid-feedback').forEach(el => el.hidden = true);
+    document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+  }
+
+  // Toggle para mostrar/ocultar contraseña
+  togglePassword.addEventListener('click', function() {
+    const tipo = contraseñaInput.type === 'password' ? 'text' : 'password';
+    contraseñaInput.type = tipo;
+    this.querySelector('i').classList.toggle('fa-eye');
+    this.querySelector('i').classList.toggle('fa-eye-slash');
+  });
+
+  // Toggle para mostrar/ocultar confirmación de contraseña
+  toggleConfirmPassword.addEventListener('click', function() {
+    const tipo = confirmarContraseñaInput.type === 'password' ? 'text' : 'password';
+    confirmarContraseñaInput.type = tipo;
+    this.querySelector('i').classList.toggle('fa-eye');
+    this.querySelector('i').classList.toggle('fa-eye-slash');
+  });
+
+  // Validar contraseñas coincidentes
+  function validarContraseñas() {
+    const contraseña = contraseñaInput.value;
+    const confirmarContraseña = confirmarContraseñaInput.value;
+
+    if (contraseña !== confirmarContraseña) {
+      confirmarContraseñaInput.classList.add('is-invalid');
+      document.getElementById('confirmarContraseñaError').hidden = false;
+      return false;
+    }
+    return true;
+  }
+
+  // Manejar envío del formulario
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    ocultarErrores();
+
+    // Validar contraseñas
+    if (!validarContraseñas()) {
+      return;
+    }
+
+    try {
+      const formData = new FormData(form);
+      const data = {};
+      
+      // Convertir FormData a objeto
+      for (const [key, value] of formData.entries()) {
+        data[key] = value;
+      }
+      
+      console.log('Enviando datos:', data);
+      
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      const responseData = await response.json();
+      console.log('Respuesta recibida:', responseData);
+
+      if (response.ok) {
+        window.location.href = '/auth/login?success=true';
+      } else {
+        if (responseData.error) {
+          mostrarError(responseData.error);
+        } else {
+          mostrarError('Error al procesar el registro');
+        }
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+      mostrarError('Error al procesar la solicitud: ' + error.message);
+    }
+  });
+});
+</script> 

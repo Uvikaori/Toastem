@@ -1,0 +1,206 @@
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+      <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link active" href="/dashboard">
+              <i class="fas fa-home me-2"></i>
+              Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard/lotes">
+              <i class="fas fa-boxes me-2"></i>
+              Lotes
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard/procesos">
+              <i class="fas fa-cogs me-2"></i>
+              Procesos
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard/reportes">
+              <i class="fas fa-chart-bar me-2"></i>
+              Reportes
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard/configuracion">
+              <i class="fas fa-cog me-2"></i>
+              Configuración
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Dashboard</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">Exportar</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary">Imprimir</button>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
+            <i class="fas fa-calendar me-1"></i>
+            Esta semana
+          </button>
+        </div>
+      </div>
+
+      <!-- Tarjetas de resumen -->
+      <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                    Lotes Activos</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                </div>
+                <div class="col-auto">
+                  <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                    Procesos Completados</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                </div>
+                <div class="col-auto">
+                  <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                    Procesos en Curso</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                </div>
+                <div class="col-auto">
+                  <i class="fas fa-spinner fa-2x text-gray-300"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                    Procesos Pendientes</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                </div>
+                <div class="col-auto">
+                  <i class="fas fa-clock fa-2x text-gray-300"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos -->
+      <div class="row">
+        <div class="col-xl-8 col-lg-7">
+          <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+              <h6 class="m-0 font-weight-bold text-primary">Procesos por Mes</h6>
+            </div>
+            <div class="card-body">
+              <div class="chart-area">
+                <canvas id="procesosChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+          <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+              <h6 class="m-0 font-weight-bold text-primary">Estado de Procesos</h6>
+            </div>
+            <div class="card-body">
+              <div class="chart-pie pt-4 pb-2">
+                <canvas id="estadoProcesosChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Gráfico de procesos por mes
+  const procesosCtx = document.getElementById('procesosChart').getContext('2d');
+  new Chart(procesosCtx, {
+    type: 'line',
+    data: {
+      labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+      datasets: [{
+        label: 'Procesos',
+        data: [0, 0, 0, 0, 0, 0],
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  // Gráfico de estado de procesos
+  const estadoCtx = document.getElementById('estadoProcesosChart').getContext('2d');
+  new Chart(estadoCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Completados', 'En Curso', 'Pendientes'],
+      datasets: [{
+        data: [0, 0, 0],
+        backgroundColor: [
+          'rgb(75, 192, 192)',
+          'rgb(54, 162, 235)',
+          'rgb(255, 205, 86)'
+        ]
+      }]
+    },
+    options: {
+      maintainAspectRatio: false
+    }
+  });
+});
+</script> 

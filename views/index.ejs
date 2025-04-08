@@ -1,0 +1,64 @@
+<div class="row align-items-center my-5">
+  <div class="col-lg-6">
+    <h1 class="display-4">Bienvenido a Toastem</h1>
+    <p class="lead">La plataforma para gestionar todo el proceso post-cosecha de su café.</p>
+    <p>Toastem le permite controlar cada etapa del procesamiento de su café, desde la recolección hasta el empacado, para mantener la calidad y trazabilidad de su producto.</p>
+    <div class="d-grid gap-2 d-md-flex mt-4">
+      <% if (typeof user === 'undefined') { %>
+        <a href="/auth/login" class="btn btn-primary btn-lg px-4 me-md-2">Iniciar sesión</a>
+        <a href="/auth/register" class="btn btn-outline-secondary btn-lg px-4">Registrarse</a>
+      <% } else { %>
+        <a href="/dashboard" class="btn btn-primary btn-lg px-4 me-md-2">Ir al Dashboard</a>
+      <% } %>
+    </div>
+  </div>
+  <div class="col-lg-6 mt-4 mt-lg-0">
+    <div class="card shadow border-0">
+      <div class="card-body">
+        <h5 class="card-title">Funcionalidades principales</h5>
+        <ul class="list-group list-group-flush mt-3">
+          <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Registro de lotes de recolección</li>
+          <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Control del proceso de despulpado</li>
+          <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Seguimiento de fermentación y lavado</li>
+          <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Monitoreo del proceso de secado</li>
+          <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Control de clasificación y trilla</li>
+          <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Registro de tueste y molienda</li>
+          <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Informes detallados de producción</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-5">
+  <div class="col-12">
+    <h2 class="text-center mb-4">¿Cómo funciona?</h2>
+  </div>
+  <div class="col-md-4 mb-4">
+    <div class="card h-100 shadow-sm border-0">
+      <div class="card-body text-center">
+        <i class="fas fa-user-plus text-primary fa-3x mb-3"></i>
+        <h5 class="card-title">1. Regístrese</h5>
+        <p class="card-text">Cree su cuenta con unos pocos datos y comience a gestionar sus lotes de café.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4">
+    <div class="card h-100 shadow-sm border-0">
+      <div class="card-body text-center">
+        <i class="fas fa-coffee text-primary fa-3x mb-3"></i>
+        <h5 class="card-title">2. Registre sus lotes</h5>
+        <p class="card-text">Ingrese los datos de cada lote y siga todo el proceso post-cosecha paso a paso.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4">
+    <div class="card h-100 shadow-sm border-0">
+      <div class="card-body text-center">
+        <i class="fas fa-chart-line text-primary fa-3x mb-3"></i>
+        <h5 class="card-title">3. Analice resultados</h5>
+        <p class="card-text">Visualice informes y estadísticas para mejorar la calidad de su producción.</p>
+      </div>
+    </div>
+  </div>
+</div> 
