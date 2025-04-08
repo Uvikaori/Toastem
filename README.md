@@ -91,7 +91,7 @@ toastem/
 npm install
 ```
 2. Asegurarse de que el puerto 3000 no esté en uso
-3. Verifica que Node.js esté instalado correctamente:
+3. Verificar que Node.js esté instalado correctamente:
 ```bash
 node --version
 ```
