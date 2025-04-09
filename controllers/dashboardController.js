@@ -5,8 +5,8 @@ const mostrarDashboard = async (req, res) => {
   try {
     const usuario = req.session.usuario;
     
-    // Por ahora, solo mostraremos un dashboard básico
-    // En el futuro, aquí cargaríamos datos de lotes activos, etc.
+    // Por ahora, solo s e muestra un dashboard básico
+    // En las siguientes implementaciones, en este controlador se cargarían datos de lotes activos y las demás partes del proceso
     
     res.render('dashboard', {
       titulo: 'Dashboard | Toastem',
