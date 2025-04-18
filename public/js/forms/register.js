@@ -6,18 +6,55 @@ document.addEventListener('DOMContentLoaded', function() {
   const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
   const contraseñaInput = document.getElementById('contraseña');
   const confirmarContraseñaInput = document.getElementById('confirmarContraseña');
+  const successMessage = document.getElementById('successMessage');
+  const successMessageText = document.getElementById('successMessageText');
+  const loginLink = document.getElementById('loginLink');
 
-  // Función para mostrar errores
+  // Función para mostrar errores generales
   function mostrarError(mensaje) {
     errorGeneralText.textContent = mensaje;
     errorGeneral.hidden = false;
+    successMessage.hidden = true;
   }
 
-  // Función para ocultar errores
+  // Función para ocultar errores generales
   function ocultarErrores() {
     errorGeneral.hidden = true;
+    successMessage.hidden = true;
+    // Limpiar todos los errores de campos
     document.querySelectorAll('.invalid-feedback').forEach(el => el.hidden = true);
     document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+  }
+
+  // Función para mostrar mensaje de éxito
+  function mostrarExito(mensaje) {
+    successMessageText.textContent = mensaje;
+    successMessage.hidden = false;
+    errorGeneral.hidden = true;
+  }
+
+  // Función para mostrar errores de campos
+  function mostrarErroresCampos(errores) {
+    console.log('Mostrando errores:', errores);
+    
+    // Limpiar todos los errores primero
+    document.querySelectorAll('.invalid-feedback').forEach(el => el.hidden = true);
+    document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+
+    // Mostrar los nuevos errores
+    for (const campo in errores) {
+      const errorElement = document.getElementById(`${campo}Error`);
+      const inputElement = document.getElementById(campo);
+      
+      if (errorElement && inputElement) {
+        errorElement.textContent = errores[campo];
+        errorElement.hidden = false;
+        inputElement.classList.add('is-invalid');
+      } else {
+        console.log(`No se encontró elemento de error para el campo: ${campo}`);
+        console.log('ID buscado:', `${campo}Error`);
+      }
+    }
   }
 
   // Toggle para mostrar/ocultar contraseña
@@ -41,23 +78,122 @@ document.addEventListener('DOMContentLoaded', function() {
     const contraseña = contraseñaInput.value;
     const confirmarContraseña = confirmarContraseñaInput.value;
 
-    if (contraseña !== confirmarContraseña) {
-      confirmarContraseñaInput.classList.add('is-invalid');
-      document.getElementById('confirmarContraseñaError').hidden = false;
+    // Validar formato de contraseña
+    const validacionContraseña = Validaciones.validarContraseña(contraseña);
+    if (!validacionContraseña.valido) {
+      Validaciones.mostrarErrorCampo('contraseña', validacionContraseña.mensaje);
       return false;
     }
+
+    // Validar campo vacío de confirmación
+    const validacionConfirmacion = Validaciones.validarCampoVacio(confirmarContraseña, 'confirmar contraseña');
+    if (!validacionConfirmacion.valido) {
+      Validaciones.mostrarErrorCampo('confirmarContraseña', validacionConfirmacion.mensaje);
+      return false;
+    }
+
+    // Validar coincidencia de contraseñas
+    if (contraseña !== confirmarContraseña) {
+      Validaciones.mostrarErrorCampo('confirmarContraseña', 'Las contraseñas no coinciden');
+      return false;
+    }
+
     return true;
   }
+
+  // Validar y capitalizar nombre
+  const nombreInput = document.getElementById('nombre');
+  nombreInput.addEventListener('blur', function() {
+    const nombre = this.value.trim();
+    const validacion = Validaciones.validarNombreCompleto(nombre);
+    
+    if (validacion.valido) {
+      this.value = Validaciones.capitalizarPalabras(nombre);
+      Validaciones.limpiarErrorCampo('nombre');
+    } else {
+      Validaciones.mostrarErrorCampo('nombre', validacion.mensaje);
+    }
+  });
+
+  // Validar email
+  const correoInput = document.getElementById('correo');
+  correoInput.addEventListener('blur', function() {
+    const email = this.value.trim();
+    const validacion = Validaciones.validarEmail(email);
+    
+    if (validacion.valido) {
+      Validaciones.limpiarErrorCampo('correo');
+    } else {
+      Validaciones.mostrarErrorCampo('correo', validacion.mensaje);
+    }
+  });
+
+  // Validar contraseña
+  contraseñaInput.addEventListener('blur', function() {
+    const contraseña = this.value;
+    const validacion = Validaciones.validarContraseña(contraseña);
+    
+    if (validacion.valido) {
+      Validaciones.limpiarErrorCampo('contraseña');
+    } else {
+      Validaciones.mostrarErrorCampo('contraseña', validacion.mensaje);
+    }
+  });
+
+  // Capitalizar nombre de finca
+  const nombreFincaInput = document.getElementById('nombre_finca');
+  nombreFincaInput.addEventListener('blur', function() {
+    const nombre = this.value.trim();
+    const validacion = Validaciones.validarNombreFinca(nombre);
+    
+    if (validacion.valido) {
+      this.value = Validaciones.capitalizarPalabras(nombre);
+      Validaciones.limpiarErrorCampo('nombre_finca');
+    } else {
+      Validaciones.mostrarErrorCampo('nombre_finca', validacion.mensaje);
+    }
+  });
+
+  // Validar y capitalizar ubicación
+  const ubicacionFincaInput = document.getElementById('ubicacion_finca');
+  ubicacionFincaInput.addEventListener('blur', function() {
+    const ubicacion = this.value.trim();
+    const validacion = Validaciones.validarUbicacion(ubicacion);
+    
+    if (validacion.valido) {
+      this.value = Validaciones.capitalizarPalabras(ubicacion);
+      Validaciones.limpiarErrorCampo('ubicacion_finca');
+    } else {
+      Validaciones.mostrarErrorCampo('ubicacion_finca', validacion.mensaje);
+    }
+  });
+
+  // Validar pregunta de seguridad
+  const preguntaSeguridadInput = document.getElementById('pregunta_seguridad');
+  preguntaSeguridadInput.addEventListener('change', function() {
+    const validacion = Validaciones.validarPreguntaSeguridad(this.value);
+    if (validacion.valido) {
+      Validaciones.limpiarErrorCampo('pregunta_seguridad');
+    } else {
+      Validaciones.mostrarErrorCampo('pregunta_seguridad', validacion.mensaje);
+    }
+  });
+
+  // Validar respuesta de seguridad
+  const respuestaSeguridadInput = document.getElementById('respuesta_seguridad');
+  respuestaSeguridadInput.addEventListener('blur', function() {
+    const validacion = Validaciones.validarRespuestaSeguridad(this.value);
+    if (validacion.valido) {
+      Validaciones.limpiarErrorCampo('respuesta_seguridad');
+    } else {
+      Validaciones.mostrarErrorCampo('respuesta_seguridad', validacion.mensaje);
+    }
+  });
 
   // Manejar envío del formulario
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
     ocultarErrores();
-
-    // Validar contraseñas
-    if (!validarContraseñas()) {
-      return;
-    }
 
     try {
       const formData = new FormData(form);
@@ -65,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Convertir FormData a objeto
       for (const [key, value] of formData.entries()) {
-        data[key] = value;
+        data[key] = value.trim();
       }
       
       console.log('Enviando datos:', data);
@@ -81,11 +217,25 @@ document.addEventListener('DOMContentLoaded', function() {
       const responseData = await response.json();
       console.log('Respuesta recibida:', responseData);
 
-      if (response.ok) {
-        window.location.href = '/auth/login?success=true';
+      if (response.ok && responseData.exito) {
+        // Mostrar mensaje de éxito
+        mostrarExito(responseData.mensaje);
+        // Limpiar el formulario
+        form.reset();
+        // Ocultar todos los errores
+        ocultarErrores();
+        
+        // Redirigir después de 2 segundos
+        setTimeout(() => {
+          window.location.href = '/auth/login?registro=exitoso';
+        }, 2000);
       } else {
-        if (responseData.error) {
-          mostrarError(responseData.error);
+        if (responseData.errores) {
+          if (responseData.errores.general) {
+            mostrarError(responseData.errores.general);
+          } else {
+            mostrarErroresCampos(responseData.errores);
+          }
         } else {
           mostrarError('Error al procesar el registro');
         }

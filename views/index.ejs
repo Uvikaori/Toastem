@@ -4,8 +4,8 @@
     <p class="lead">La plataforma para gestionar todo el proceso post-cosecha de su café.</p>
     <p>Toastem le permite controlar cada etapa del procesamiento de su café, desde la recolección hasta el empacado, para mantener la calidad y trazabilidad de su producto.</p>
     <div class="d-grid gap-2 d-md-flex mt-4">
-      <% if (typeof user === 'undefined') { %>
-        <a href="/auth/login" class="btn btn-primary btn-lg px-4 me-md-2">Iniciar sesión</a>
+      <% if (!locals.usuario) { %>
+        <a href="/auth/login" class="btn btn-primary btn-lg px-4 me-md-2">Iniciar Sesión</a>
         <a href="/auth/register" class="btn btn-outline-secondary btn-lg px-4">Registrarse</a>
       <% } else { %>
         <a href="/dashboard" class="btn btn-primary btn-lg px-4 me-md-2">Ir al Dashboard</a>

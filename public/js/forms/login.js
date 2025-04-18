@@ -2,18 +2,56 @@ document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('loginForm');
   const errorGeneral = document.getElementById('errorGeneral');
   const errorGeneralText = document.getElementById('errorGeneralText');
+  const registroExitoso = document.getElementById('registroExitoso');
   const togglePassword = document.getElementById('togglePassword');
   const contraseñaInput = document.getElementById('contraseña');
+  const correoInput = document.getElementById('correo');
 
-  // Función para mostrar errores
-  function mostrarError(mensaje) {
-    errorGeneralText.textContent = mensaje;
-    errorGeneral.hidden = false;
+  // Verificar si viene de un registro exitoso
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('registro') === 'exitoso') {
+    registroExitoso.classList.remove('d-none');
+    // Ocultar el mensaje después de 5 segundos
+    setTimeout(() => {
+      registroExitoso.classList.add('d-none');
+    }, 5000);
   }
 
-  // Función para ocultar errores
+  // Función para mostrar errores generales
+  function mostrarError(mensaje) {
+    errorGeneralText.textContent = mensaje;
+    errorGeneral.classList.remove('d-none');
+    registroExitoso.classList.add('d-none');
+  }
+
+  // Función para ocultar errores generales
   function ocultarErrores() {
-    errorGeneral.hidden = true;
+    errorGeneral.classList.add('d-none');
+    document.querySelectorAll('.invalid-feedback').forEach(el => {
+      el.textContent = '';
+      el.style.display = 'none';
+    });
+    document.querySelectorAll('.form-control').forEach(el => {
+      el.classList.remove('is-invalid');
+    });
+  }
+
+  // Función para mostrar errores de campos
+  function mostrarErroresCampos(errores) {
+    // Limpiar todos los errores primero
+    ocultarErrores();
+
+    // Mostrar los nuevos errores
+    for (const campo in errores) {
+      const errorElement = document.getElementById(`${campo}Error`);
+      const inputElement = document.getElementById(campo);
+      
+      if (errorElement && inputElement) {
+        errorElement.textContent = errores[campo];
+        errorElement.style.display = 'block';
+        inputElement.classList.add('is-invalid');
+      }
+    }
   }
 
   // Toggle para mostrar/ocultar contraseña
@@ -24,6 +62,30 @@ document.addEventListener('DOMContentLoaded', function() {
     this.querySelector('i').classList.toggle('fa-eye-slash');
   });
 
+  // Validar email
+  correoInput.addEventListener('blur', function() {
+    const email = this.value.trim();
+    const validacion = Validaciones.validarEmail(email);
+    
+    if (validacion.valido) {
+      Validaciones.limpiarErrorCampo('correo');
+    } else {
+      Validaciones.mostrarErrorCampo('correo', validacion.mensaje);
+    }
+  });
+
+  // Validar contraseña
+  contraseñaInput.addEventListener('blur', function() {
+    const contraseña = this.value;
+    const validacion = Validaciones.validarContraseña(contraseña);
+    
+    if (validacion.valido) {
+      Validaciones.limpiarErrorCampo('contraseña');
+    } else {
+      Validaciones.mostrarErrorCampo('contraseña', validacion.mensaje);
+    }
+  });
+
   // Manejar envío del formulario
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -31,22 +93,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     try {
       const formData = new FormData(form);
+      const data = {};
+      
+      // Convertir FormData a objeto
+      for (const [key, value] of formData.entries()) {
+        data[key] = value;
+      }
+      
       const response = await fetch(form.action, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(Object.fromEntries(formData))
+        body: JSON.stringify(data)
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (response.ok) {
         window.location.href = '/dashboard';
       } else {
-        mostrarError(data.error || 'Error al iniciar sesión');
+        if (responseData.errores) {
+          if (responseData.errores.general) {
+            mostrarError(responseData.errores.general);
+          } else {
+            mostrarErroresCampos(responseData.errores);
+          }
+        } else {
+          mostrarError('Error al procesar el inicio de sesión');
+        }
       }
     } catch (error) {
+      console.error('Error en la solicitud:', error);
       mostrarError('Error al procesar la solicitud');
     }
   });

@@ -10,6 +10,11 @@
           <span id="errorGeneralText"></span>
         </div>
 
+        <div class="alert alert-success" id="successMessage" hidden>
+          <p id="successMessageText"></p>
+          <p>Puede <a href="/auth/login" id="loginLink">iniciar sesión aquí</a>.</p>
+        </div>
+
         <form id="registerForm" action="/auth/register" method="POST">
           <div class="mb-3">
             <label for="nombre" class="form-label">Nombre Completo</label>
@@ -39,7 +44,7 @@
             </div>
             <!-- Error de contraseña -->
             <div class="invalid-feedback" id="contraseñaError" hidden>
-              La contraseña debe tener al menos 6 caracteres
+              La contraseña debe tener al menos 6 caracteres, una letra y un número
             </div>
           </div>
 
@@ -66,7 +71,7 @@
               <% } %>
             </select>
             <!-- Error de pregunta de seguridad -->
-            <div class="invalid-feedback" id="preguntaError" hidden>
+            <div class="invalid-feedback" id="pregunta_seguridadError" hidden>
               Por favor, selecciona una pregunta de seguridad
             </div>
           </div>
@@ -75,7 +80,7 @@
             <label for="respuesta_seguridad" class="form-label">Respuesta</label>
             <input type="text" class="form-control" id="respuesta_seguridad" name="respuesta_seguridad" required>
             <!-- Error de respuesta -->
-            <div class="invalid-feedback" id="respuestaError" hidden>
+            <div class="invalid-feedback" id="respuesta_seguridadError" hidden>
               Por favor, ingresa tu respuesta
             </div>
           </div>
@@ -84,7 +89,7 @@
             <label for="nombre_finca" class="form-label">Nombre de la Finca</label>
             <input type="text" class="form-control" id="nombre_finca" name="nombre_finca" required>
             <!-- Error de nombre de finca -->
-            <div class="invalid-feedback" id="fincaError" hidden>
+            <div class="invalid-feedback" id="nombre_fincaError" hidden>
               Por favor, ingresa el nombre de tu finca
             </div>
           </div>
@@ -93,7 +98,7 @@
             <label for="ubicacion_finca" class="form-label">Ubicación de la Finca</label>
             <input type="text" class="form-control" id="ubicacion_finca" name="ubicacion_finca" required>
             <!-- Error de ubicación -->
-            <div class="invalid-feedback" id="ubicacionError" hidden>
+            <div class="invalid-feedback" id="ubicacion_fincaError" hidden>
               Por favor, ingresa la ubicación de tu finca
             </div>
           </div>
