@@ -11,7 +11,7 @@
   <!-- Custom CSS -->
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="bg-light">
+<body class="bg-light d-flex flex-column min-vh-100">
   <% if (typeof hideNavbar === 'undefined' || !hideNavbar) { %>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -60,7 +60,7 @@
   <% } %>
 
   <!-- Contenido principal -->
-  <main class="container my-4">
+  <main class="container my-4 flex-grow-1">
     <% if (typeof exito !== 'undefined' && exito) { %>
       <div class="alert alert-success alert-dismissible fade show" role="alert">
         <%= exito %>
