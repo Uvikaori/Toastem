@@ -89,43 +89,66 @@ document.addEventListener('DOMContentLoaded', function() {
   // Manejar envío del formulario
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
-    ocultarErrores();
+    
+    // Limpiar errores previos
+    clearErrors();
+    
+    const formData = {
+        correo: document.getElementById('correo').value,
+        contraseña: document.getElementById('contraseña').value
+    };
 
     try {
-      const formData = new FormData(form);
-      const data = {};
-      
-      // Convertir FormData a objeto
-      for (const [key, value] of formData.entries()) {
-        data[key] = value;
-      }
-      
-      const response = await fetch(form.action, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
+        const response = await fetch('/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
 
-      const responseData = await response.json();
-
-      if (response.ok) {
-        window.location.href = '/dashboard';
-      } else {
-        if (responseData.errores) {
-          if (responseData.errores.general) {
-            mostrarError(responseData.errores.general);
-          } else {
-            mostrarErroresCampos(responseData.errores);
-          }
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            // Redirigir al usuario
+            window.location.href = data.redirect || '/fincas';
         } else {
-          mostrarError('Error al procesar el inicio de sesión');
+            // Mostrar errores
+            if (data.errores) {
+                Object.keys(data.errores).forEach(key => {
+                    showError(key, data.errores[key]);
+                });
+            } else {
+                showGeneralError('Error al procesar la solicitud');
+            }
         }
-      }
     } catch (error) {
-      console.error('Error en la solicitud:', error);
-      mostrarError('Error al procesar la solicitud');
+        console.error('Error:', error);
+        showGeneralError('Error al procesar la solicitud');
     }
   });
+
+  function clearErrors() {
+    document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    document.getElementById('errorGeneral').classList.add('d-none');
+  }
+
+  function showError(field, message) {
+    const element = document.getElementById(field);
+    const feedback = document.getElementById(`${field}Error`);
+    if (element && feedback) {
+        element.classList.add('is-invalid');
+        feedback.textContent = message;
+    }
+  }
+
+  function showGeneralError(message) {
+    const errorDiv = document.getElementById('errorGeneral');
+    const errorText = document.getElementById('errorGeneralText');
+    if (errorDiv && errorText) {
+        errorText.textContent = message;
+        errorDiv.classList.remove('d-none');
+    }
+  }
 }); 

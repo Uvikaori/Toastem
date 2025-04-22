@@ -14,43 +14,67 @@
 <body class="bg-light d-flex flex-column min-vh-100">
   <% if (typeof hideNavbar === 'undefined' || !hideNavbar) { %>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
       <div class="container">
         <a class="navbar-brand" href="/">
           <i class="fas fa-coffee me-2"></i>Toastem
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
+
+        <div class="collapse navbar-collapse" id="navbarMain">
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
-              <a class="nav-link" href="/"><i class="fas fa-home me-1"></i>Inicio</a>
+              <a class="nav-link" href="/">
+                <i class="fas fa-home me-1"></i>Inicio
+              </a>
             </li>
-            <% if (typeof usuario !== 'undefined' && usuario) { %>
+            <% if (locals.usuario) { %>
               <li class="nav-item">
-                <a class="nav-link" href="/dashboard"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a>
+                <a class="nav-link" href="/dashboard">
+                  <i class="fas fa-chart-line me-1"></i>Dashboard
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/fincas">
+                  <i class="fas fa-leaf me-1"></i>Gestionar Fincas
+                </a>
               </li>
             <% } %>
           </ul>
+
           <ul class="navbar-nav">
-            <% if (typeof usuario !== 'undefined' && usuario) { %>
+            <% if (locals.usuario) { %>
               <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="fas fa-user-circle me-1"></i> <%= usuario.nombre %>
+                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-user me-1"></i>
+                  <%= locals.usuario.nombre %>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                  <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item" href="/perfil">
+                      <i class="fas fa-user-cog me-1"></i>Mi Perfil
+                    </a>
+                  </li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/auth/logout"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
+                  <li>
+                    <a class="dropdown-item" href="/auth/logout">
+                      <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
+                    </a>
+                  </li>
                 </ul>
               </li>
             <% } else { %>
               <li class="nav-item">
-                <a class="nav-link" href="/auth/login"><i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión</a>
+                <a class="nav-link" href="/auth/login">
+                  <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+                </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/auth/register"><i class="fas fa-user-plus me-1"></i>Registrarse</a>
+                <a class="nav-link" href="/auth/register">
+                  <i class="fas fa-user-plus me-1"></i>Registrarse
+                </a>
               </li>
             <% } %>
           </ul>
@@ -79,11 +103,11 @@
   </main>
 
   <!-- Footer -->
-  <footer class="bg-dark text-light py-4 mt-5">
+  <footer class="bg-primary text-light py-4">
     <div class="container">
       <div class="row">
         <div class="col-md-6">
-          <h5>Toastem</h5>
+          <h5><i class="fas fa-coffee me-2"></i>Toastem</h5>
           <p>Sistema de gestión para productores de café</p>
         </div>
         <div class="col-md-6 text-md-end">
@@ -95,8 +119,6 @@
 
   <!-- Bootstrap Bundle with Popper -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Validaciones -->
-  <script src="/js/utils/validations.js"></script>
   <!-- Custom JS -->
   <script src="/js/main.js"></script>
 </body>

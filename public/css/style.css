@@ -1,7 +1,7 @@
 /* Estilos personalizados para Toastem */
 
 :root {
-  --primary-color: #5d4037;
+  --primary-color: #1D0101;  /* Color café muy oscuro para header/footer */
   --secondary-color: #8d6e63;
   --accent-color: #ff6f00;
   --light-accent: #ffecb3;
@@ -40,8 +40,8 @@
 }
 
 .navbar-brand {
-  font-weight: bold;
-  font-size: 1.5rem;
+  font-size: 1.75rem;  /* Hacemos el logo un poco más grande */
+  padding: 0.5rem 0;   /* Añadimos espacio alrededor del logo */
 }
 
 footer {
@@ -49,12 +49,44 @@ footer {
 }
 
 /* Navbar adjustments */
+.navbar {
+  padding: 1.0rem 0;  /* Aumentamos el padding vertical */
+  background-color: var(--primary-color) !important;
+}
+
 .navbar-dark .navbar-nav .nav-link {
   color: rgba(255, 255, 255, 0.8);
 }
 
 .navbar-dark .navbar-nav .nav-link:hover {
   color: white;
+}
+
+/* Ajustes del Navbar */
+.navbar .nav-link {
+  padding: 0.75rem 1rem !important;  /* Más espacio en los enlaces */
+  font-size: 1.1rem;   /* Texto un poco más grande */
+}
+
+/* Ajuste del contenedor dentro del navbar */
+.navbar > .container {
+  padding: 0.5rem 1rem;  /* Más espacio en los laterales */
+}
+
+/* Ajuste del espaciado entre elementos del navbar */
+.navbar-nav .nav-item {
+  margin: 0 0.25rem;  /* Espacio entre elementos del menú */
+}
+
+/* Ajuste del dropdown */
+.dropdown-menu {
+  margin-top: 0.5rem;  /* Espacio entre el botón y el menú desplegable */
+  border: none;
+  background-color: var(--primary-color);
+}
+
+.dropdown-item {
+  padding: 0.75rem 1.5rem;  /* Más espacio en los elementos del dropdown */
 }
 
 /* Form elements */

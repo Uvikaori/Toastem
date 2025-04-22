@@ -19,6 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "connect-flash": "^0.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
@@ -26,6 +27,7 @@
     "express-ejs-layouts": "^2.5.1",
     "express-session": "^1.18.1",
     "express-validator": "^7.2.1",
+    "method-override": "^3.0.0",
     "mysql2": "^3.14.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
@@ -34,6 +36,7 @@
   "devDependencies": {
     "jest": "^29.7.0",
     "nodemon": "^3.1.9",
-    "supertest": "^6.3.4"
+    "supertest": "^6.3.4",
+    "supertest-session": "^5.0.1"
   }
 }

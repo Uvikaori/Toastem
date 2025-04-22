@@ -1,0 +1,44 @@
+<div class="container mt-5">
+    <h1 class="text-center">Gestión de Fincas</h1>
+    
+    <% if (error) { %>
+        <div class="alert alert-danger">
+            <%= error %>
+        </div>
+    <% } %>
+
+    <% if (mensaje) { %>
+        <div class="alert alert-success">
+            <%= mensaje %>
+        </div>
+    <% } %>
+
+    <!-- Listado de fincas -->
+    <div class="row mt-4">
+        <% if (Array.isArray(fincas) && fincas.length > 0) { %>
+            <% fincas.filter(finca => finca !== null).forEach(finca => { %>
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title"><%= finca?.nombre || 'Sin nombre' %></h5>
+                            <p class="card-text">
+                                <i class="fas fa-map-marker-alt"></i> 
+                                <%= finca?.ubicacion || 'Sin ubicación' %>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="alert alert-info">
+                No tienes fincas registradas.
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Modal para agregar/editar finca -->
+<%- include('partials/finca-modal') %>
+
+<!-- Scripts para la validación en tiempo real y gestión de fincas -->
+<script src="/js/fincas.js"></script>

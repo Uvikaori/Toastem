@@ -1,5 +1,8 @@
 const authController = require('../../controllers/authController');
 const bcrypt = require('bcrypt');
+const request = require('supertest');
+const app = require('../../app');
+const session = require('supertest-session');
 
 // Mock de la clase Usuario
 jest.mock('../../models/Usuario', () => {
@@ -11,6 +14,12 @@ jest.mock('../../models/Usuario', () => {
 });
 
 const Usuario = require('../../models/Usuario');
+
+let testSession;
+
+beforeEach(() => {
+    testSession = session(app);
+});
 
 describe('AuthController', () => {
     let mockReq;
@@ -159,4 +168,27 @@ describe('AuthController', () => {
             expect(mockRes.redirect).toHaveBeenCalledWith('/auth/login');
         });
     });
-}); 
+});
+
+describe('Auth Controller - Login Flow', () => {
+    it('should set req.session.usuario after successful login', async () => {
+        // Mock user data
+        const mockUser = {
+            correo: 'testuser@example.com',
+            contraseña: 'password123'
+        };
+
+        // Simulate login request
+        const response = await testSession
+            .post('/auth/login')
+            .send(mockUser);
+
+        // Check if login was successful
+        expect(response.status).toBe(200);
+        expect(response.body.exito).toBe(true);
+
+        // Check if session contains usuario
+        const sessionResponse = await testSession.get('/dashboard');
+        expect(sessionResponse.text).toContain('Bienvenido');
+    });
+});

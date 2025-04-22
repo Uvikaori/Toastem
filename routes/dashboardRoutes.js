@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const controladorDashboard = require('../controllers/dashboardController');
-const { autenticado } = require('../middlewares/auth');
+const { isAuthenticated } = require('../middlewares/auth');
+const dashboardController = require('../controllers/dashboardController');
 
 /**
  * @swagger
@@ -50,6 +50,14 @@ const { autenticado } = require('../middlewares/auth');
  *       401:
  *         description: Usuario no autenticado
  */
-router.get('/', autenticado, controladorDashboard.mostrarDashboard);
+
+// Middleware de autenticación
+router.use(isAuthenticated);
+
+// Ruta principal del dashboard
+router.get('/', dashboardController.index.bind(dashboardController));
+
+// Ruta para redirigir a gestión de fincas
+router.get('/fincas', dashboardController.redirigirAFincas.bind(dashboardController));
 
 module.exports = router; 

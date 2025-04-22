@@ -7,7 +7,10 @@ const cors = require('cors');
 const db = require('./config/database');
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUI = require('swagger-ui-express');
+const flash = require('connect-flash');
+const methodOverride = require('method-override');
 require('dotenv').config();
+const fincaRoutes = require('./routes/fincaRoutes');
 
 // Configuración de Swagger
 const swaggerOptions = {
@@ -52,6 +55,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 app.use(expressLayouts);
+app.use(methodOverride('_method'));
 
 // Configuración de Swagger UI
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
@@ -69,10 +73,14 @@ app.use(session({
 
 // Middleware para pasar usuario a todas las vistas
 app.use((req, res, next) => {
-  res.locals.usuario = req.session.usuario || null;
+  res.locals.usuario = req.session.usuario;
+  res.locals.currentPath = req.path;
   res.locals.titulo = 'Toastem - Gestión de Café';
   next();
 });
+
+// Después de la configuración de session
+app.use(flash());
 
 // Routes
 app.get('/', (req, res) => {
@@ -81,12 +89,14 @@ app.get('/', (req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/dashboard', dashboardRoutes);
+app.use('/fincas', fincaRoutes);
 
 // 404
 app.use((req, res) => {
   res.status(404).render('error', { 
-    message: 'Página no encontrada',
-    title: '404 - No encontrado | Toastem'
+    titulo: 'Página no encontrada | Toastem',
+    mensaje: 'La página que buscas no existe.',
+    hideNavbar: true
   });
 });
 
@@ -94,9 +104,9 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).render('error', { 
-    message: 'Error del servidor',
-    error: process.env.NODE_ENV === 'development' ? err : {},
-    title: 'Error | Toastem'
+    titulo: 'Error interno del servidor | Toastem',
+    mensaje: 'Ocurrió un error inesperado.',
+    hideNavbar: true
   });
 });
 

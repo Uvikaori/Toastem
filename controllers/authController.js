@@ -19,22 +19,19 @@ const mostrarPaginaInicioSesion = (req, res) => {
 const iniciarSesion = async (req, res) => {
   try {
     const { correo, contraseña } = req.body;
-    const errores = {};
+    console.log('Datos recibidos:', { correo }); // Log para debug
 
     // Validar campos vacíos
     if (!correo || correo.trim() === '') {
-      errores.correo = 'El correo electrónico no puede estar vacío';
-    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(correo)) {
-      errores.correo = 'Ingrese un correo electrónico válido';
+      return res.status(400).json({ 
+        errores: { correo: 'El correo electrónico no puede estar vacío' }
+      });
     }
 
     if (!contraseña) {
-      errores.contraseña = 'La contraseña no puede estar vacía';
-    }
-
-    // Si hay errores de validación, devolverlos
-    if (Object.keys(errores).length > 0) {
-      return res.status(400).json({ errores });
+      return res.status(400).json({ 
+        errores: { contraseña: 'La contraseña no puede estar vacía' }
+      });
     }
 
     // Buscar usuario
@@ -42,12 +39,11 @@ const iniciarSesion = async (req, res) => {
       'SELECT * FROM usuarios WHERE email = ?',
       [correo]
     );
+    console.log('Usuario encontrado:', usuarios[0]?.id); // Log para debug
 
     if (usuarios.length === 0) {
       return res.status(400).json({ 
-        errores: { 
-          correo: 'El correo electrónico no está registrado' 
-        } 
+        errores: { correo: 'El correo electrónico no está registrado' }
       });
     }
 
@@ -57,9 +53,7 @@ const iniciarSesion = async (req, res) => {
     const contraseñaValida = await bcrypt.compare(contraseña, usuario.password);
     if (!contraseñaValida) {
       return res.status(400).json({ 
-        errores: { 
-          contraseña: 'La contraseña es incorrecta' 
-        } 
+        errores: { contraseña: 'La contraseña es incorrecta' }
       });
     }
 
@@ -68,16 +62,21 @@ const iniciarSesion = async (req, res) => {
     delete usuario.respuesta_seguridad;
     
     // Guardar usuario en sesión
-    req.session.idUsuario = usuario.id;
     req.session.usuario = usuario;
+    req.session.idUsuario = usuario.id;
     
-    res.json({ exito: true });
+    console.log('Sesión establecida:', req.session); // Log para debug
+
+    // Responder con éxito
+    res.json({
+      success: true,
+      redirect: '/fincas'
+    });
+
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
     res.status(500).json({ 
-      errores: { 
-        general: 'Error al procesar el inicio de sesión' 
-      } 
+      errores: { general: 'Error al procesar el inicio de sesión' }
     });
   }
 };
@@ -106,7 +105,9 @@ const mostrarPaginaRegistro = async (req, res) => {
     res.status(500).render('error', { 
       titulo: 'Error | Toastem',
       mensaje: 'Error al cargar la página de registro',
-      preguntas: [] // Proporcionar un array vacío en caso de error
+      preguntas: [], // Proporcionar un array vacío en caso de error
+      hideNavbar: true,
+      error: process.env.NODE_ENV === 'development' ? error : {}
     });
   }
 };
@@ -273,7 +274,8 @@ const mostrarPaginaRecuperacion = (req, res) => {
     res.status(500).render('error', {
       titulo: 'Error | Toastem',
       mensaje: 'Error al cargar la página de recuperación de contraseña',
-      hideNavbar: false,
+      hideNavbar: true,
+      error: process.env.NODE_ENV === 'development' ? error : {},
       usuario: req.session.usuario || null
     });
   }
@@ -426,4 +428,4 @@ module.exports = {
   mostrarPaginaRecuperacion,
   verificarCorreo,
   resetearContraseña
-}; 
+};
