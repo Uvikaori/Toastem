@@ -40,7 +40,7 @@
 }
 
 .navbar-brand {
-  font-size: 1.75rem;  /* Hacemos el logo un poco más grande */
+  font-size: 2.5rem;  /* Hacemos el logo un poco más grande */
   padding: 0.5rem 0;   /* Añadimos espacio alrededor del logo */
 }
 
@@ -87,6 +87,7 @@ footer {
 
 .dropdown-item {
   padding: 0.75rem 1.5rem;  /* Más espacio en los elementos del dropdown */
+  color: white;
 }
 
 /* Form elements */

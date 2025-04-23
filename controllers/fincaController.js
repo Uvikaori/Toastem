@@ -3,16 +3,16 @@ const fincaDAO = require('../models/dao/fincaDAO');
 class FincaController {
     async listarFincas(req, res) {
         try {
-            console.log('Sesión actual:', req.session); // Log para debug
+            console.log('Sesión actual:', req.session); 
             
             // Verificar si el usuario está autenticado
             if (!req.session.usuario || !req.session.usuario.id) {
-                console.log('Usuario no autenticado, redirigiendo...'); // Log para debug
+                console.log('Usuario no autenticado, redirigiendo...'); 
                 return res.redirect('/auth/login');
             }
 
             const fincas = await fincaDAO.getFincasByUserId(req.session.usuario.id);
-            console.log('Fincas encontradas:', fincas); // Log para debug
+            console.log('Fincas encontradas:', fincas); 
             
             res.render('gestionar-fincas', { 
                 titulo: 'Gestionar Fincas | Toastem',
