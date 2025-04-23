@@ -44,9 +44,10 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 // App
 const app = express();
 
-// View engine
+// Configurar EJS como motor de vistas
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+
+// Configurar la ruta del layout principal
 app.set('layout', 'layouts/main');
 
 // Middlewares
