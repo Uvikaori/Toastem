@@ -1,3 +1,5 @@
+const { validarNombre, validarUbicacion } = require('../../utils/fincaValidations');
+
 class Finca {
     constructor(id = null, idUsuario, nombre, ubicacion) {
         this.id = id;
@@ -8,16 +10,9 @@ class Finca {
 
     // Métodos de validación
     validar() {
-        if (!this.nombre || this.nombre.trim() === '') {
-            throw new Error('El nombre de la finca es obligatorio');
-        }
-        if (this.nombre.length > 100) {
-            throw new Error('El nombre de la finca no puede exceder los 100 caracteres');
-        }
-        if (this.ubicacion && this.ubicacion.length > 255) {
-            throw new Error('La ubicación no puede exceder los 255 caracteres');
-        }
+        validarNombre(this.nombre);
+        validarUbicacion(this.ubicacion);
     }
 }
 
-module.exports = Finca; 
+module.exports = Finca;

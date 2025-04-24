@@ -1,13 +1,17 @@
 document.addEventListener('DOMContentLoaded', function() {
+  // Datos dinámicos para los gráficos
+  const procesosData = JSON.parse(document.getElementById('procesosChart').dataset.procesos || '[]');
+  const estadoData = JSON.parse(document.getElementById('estadoProcesosChart').dataset.estado || '[]');
+
   // Gráfico de procesos por mes
   const procesosCtx = document.getElementById('procesosChart').getContext('2d');
   new Chart(procesosCtx, {
     type: 'line',
     data: {
-      labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+      labels: procesosData.map(d => d.mes),
       datasets: [{
         label: 'Procesos',
-        data: [0, 0, 0, 0, 0, 0],
+        data: procesosData.map(d => d.cantidad),
         borderColor: 'rgb(75, 192, 192)',
         tension: 0.1
       }]
@@ -27,9 +31,9 @@ document.addEventListener('DOMContentLoaded', function() {
   new Chart(estadoCtx, {
     type: 'doughnut',
     data: {
-      labels: ['Completados', 'En Curso', 'Pendientes'],
+      labels: estadoData.map(d => d.estado),
       datasets: [{
-        data: [0, 0, 0],
+        data: estadoData.map(d => d.cantidad),
         backgroundColor: [
           'rgb(75, 192, 192)',
           'rgb(54, 162, 235)',
@@ -41,4 +45,4 @@ document.addEventListener('DOMContentLoaded', function() {
       maintainAspectRatio: false
     }
   });
-}); 
+});

@@ -71,7 +71,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (data.success) {
                 modal.hide();
-                window.location.reload();
+                // Redirigir a la página de gestión de fincas después de crear/editar
+                window.location.href = '/fincas';
             } else {
                 showError(data.message);
             }
@@ -133,4 +134,4 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         document.querySelector('.container').insertAdjacentElement('afterbegin', errorDiv);
     }
-}); 
+});

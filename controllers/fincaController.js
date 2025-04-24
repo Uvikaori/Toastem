@@ -1,4 +1,6 @@
 const fincaDAO = require('../models/dao/fincaDAO');
+const { validarNombre, validarUbicacion } = require('../utils/fincaValidations');
+const Finca = require('../models/entities/Finca');
 
 class FincaController {
     async listarFincas(req, res) {
@@ -38,21 +40,14 @@ class FincaController {
             }
 
             const { nombre, ubicacion } = req.body;
-            
-            // Validaciones
-            if (!nombre || nombre.trim() === '') {
-                return res.status(400).json({ success: false, message: 'El nombre de la finca es obligatorio' });
-            }
-            if (nombre.length > 100) {
-                return res.status(400).json({ success: false, message: 'El nombre no puede exceder los 100 caracteres' });
-            }
-            if (ubicacion && ubicacion.length > 255) {
-                return res.status(400).json({ success: false, message: 'La ubicación no puede exceder los 255 caracteres' });
-            }
+
+            // Validaciones reutilizables
+            validarNombre(nombre);
+            validarUbicacion(ubicacion);
 
             const finca = new Finca(null, req.session.usuario.id, nombre, ubicacion);
             const id = await fincaDAO.createFinca(finca);
-            
+
             res.status(201).json({ 
                 success: true, 
                 message: 'Finca creada exitosamente',
@@ -70,7 +65,7 @@ class FincaController {
     async actualizarFinca(req, res) {
         try {
             const { id } = req.params;
-            
+
             // Validar que id sea un número
             if (!id || isNaN(id)) {
                 return res.status(400).json({ 
@@ -81,25 +76,9 @@ class FincaController {
 
             const { nombre, ubicacion } = req.body;
 
-            // Validaciones
-            if (!nombre || nombre.trim() === '') {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'El nombre de la finca es obligatorio' 
-                });
-            }
-            if (nombre.length > 100) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'El nombre no puede exceder los 100 caracteres' 
-                });
-            }
-            if (ubicacion && ubicacion.length > 255) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'La ubicación no puede exceder los 255 caracteres' 
-                });
-            }
+            // Validaciones reutilizables
+            validarNombre(nombre);
+            validarUbicacion(ubicacion);
 
             const finca = new Finca(
                 parseInt(id),

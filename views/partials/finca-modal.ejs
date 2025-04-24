@@ -6,7 +6,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="fincaForm">
+                <form id="fincaForm" data-action="crear">
+                    <input type="hidden" id="fincaId" name="id">
                     <div class="mb-3">
                         <label for="nombre" class="form-label">Nombre de la Finca</label>
                         <input type="text" class="form-control" id="nombre" name="nombre" required>
@@ -22,4 +23,36 @@
             </div>
         </div>
     </div>
-</div> 
+</div>
+
+<script>
+    document.getElementById('fincaForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const action = form.dataset.action;
+        const id = document.getElementById('fincaId').value;
+        const nombre = document.getElementById('nombre').value;
+        const ubicacion = document.getElementById('ubicacion').value;
+
+        try {
+            const response = await fetch(`/fincas/${action === 'editar' ? id : 'crear'}`, {
+                method: action === 'editar' ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, ubicacion })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(result.message);
+                location.reload();
+            } else {
+                alert(result.message || 'Error al guardar la finca');
+            }
+        } catch (error) {
+            console.error('Error al enviar el formulario:', error);
+            alert('Error al enviar el formulario');
+        }
+    });
+</script>

@@ -12,4 +12,13 @@ router.post('/crear', fincaController.crearFinca);
 router.put('/:id', fincaController.actualizarFinca);
 router.delete('/:id', fincaController.eliminarFinca);
 
+// Ruta para mostrar el formulario de creación de fincas
+router.get('/crear', (req, res) => {
+    res.render('fincas/crear', {
+        titulo: 'Crear Nueva Finca | Toastem',
+        mensaje: null,
+        error: null
+    });
+});
+
 module.exports = router;

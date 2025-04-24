@@ -1,40 +1,30 @@
-const db = require('../../config/database');
-const Finca = require('../entities/Finca');
+const db = require('../../config/database'); 
 
 class FincaDAO {
-  constructor(database) {
-    this.db = database;
-  }
-
   /**
-   * Obtiene la finca seleccionada por el usuario
+   * Obtiene todas las fincas asociadas a un usuario por su ID
    * @param {number} userId - ID del usuario
-   * @returns {Promise<Object|null>} - Finca seleccionada o null
+   * @returns {Promise<Array>} - Lista de fincas
    */
-  async getFincaByUserId(userId) {
+  async getFincasByUserId(userId) {
     try {
-      const result = await this.db.query(
-        'SELECT * FROM fincas WHERE id_usuario = ? LIMIT 1',
-        [userId]
-      );
-      return result.length > 0 ? result[0] : null;
+      const [rows] = await db.query('SELECT * FROM fincas WHERE id_usuario = ?', [userId]);
+      return rows;
     } catch (error) {
-      console.error('Error al obtener la finca del usuario:', error);
+      console.error('Error al obtener las fincas del usuario:', error);
       throw error;
     }
   }
 
   /**
-   * Obtiene los lotes de una finca
+   * Obtiene los lotes asociados a una finca por su ID
    * @param {number} fincaId - ID de la finca
    * @returns {Promise<Array>} - Lista de lotes
    */
   async getLotesByFincaId(fincaId) {
     try {
-      return await this.db.query(
-        'SELECT * FROM lotes WHERE id_finca = ?',
-        [fincaId]
-      );
+      const [rows] = await db.query('SELECT * FROM lotes WHERE finca_id = ?', [fincaId]);
+      return rows;
     } catch (error) {
       console.error('Error al obtener los lotes de la finca:', error);
       throw error;
@@ -47,40 +37,22 @@ class FincaDAO {
    */
   async getCoffeePrice() {
     try {
-      // Por ahora, devolver valores predeterminados
-      return { precio: null, fechaActualizacion: null };
+      const [rows] = await db.query('SELECT precio, fecha_actualizacion FROM precios_cafe ORDER BY fecha_actualizacion DESC LIMIT 1');
+      return rows.length > 0 ? rows[0] : { precio: 0, fecha_actualizacion: null };
     } catch (error) {
       console.error('Error al obtener el precio del café:', error);
       throw error;
     }
   }
 
-  async getFincasByUserId(userId) {
-    try {
-      if (!userId) {
-        console.error('ID de usuario no proporcionado');
-        return [];
-      }
-
-      const result = await this.db.query(
-        `SELECT f.*, COUNT(l.id) as total_lotes 
-         FROM fincas f 
-         LEFT JOIN lotes l ON f.id = l.id_finca 
-         WHERE f.id_usuario = ? 
-         GROUP BY f.id`,
-        [userId]
-      );
-      return Array.isArray(result) ? result : [];
-    } catch (error) {
-      console.error('Error al obtener las fincas del usuario:', error);
-      return [];
-    }
-  }
-
+  /**
+   * Crea una nueva finca en la base de datos
+   * @param {Finca} finca - Objeto de la finca a crear
+   * @returns {Promise<number>} - ID de la finca creada
+   */
   async createFinca(finca) {
     try {
-      finca.validar();
-      const result = await this.db.query(
+      const [result] = await db.query(
         'INSERT INTO fincas (id_usuario, nombre, ubicacion) VALUES (?, ?, ?)',
         [finca.idUsuario, finca.nombre, finca.ubicacion]
       );
@@ -90,41 +62,6 @@ class FincaDAO {
       throw error;
     }
   }
-
-  async updateFinca(finca) {
-    try {
-      finca.validar();
-      await this.db.query(
-        'UPDATE fincas SET nombre = ?, ubicacion = ? WHERE id = ? AND id_usuario = ?',
-        [finca.nombre, finca.ubicacion, finca.id, finca.idUsuario]
-      );
-    } catch (error) {
-      console.error('Error al actualizar la finca:', error);
-      throw error;
-    }
-  }
-
-  async deleteFinca(id, userId) {
-    try {
-      // Verificar si tiene lotes
-      const lotes = await this.db.query(
-        'SELECT COUNT(*) as count FROM lotes WHERE id_finca = ?',
-        [id]
-      );
-      
-      if (lotes[0].count > 0) {
-        throw new Error('No se puede eliminar una finca con lotes registrados');
-      }
-
-      await this.db.query(
-        'DELETE FROM fincas WHERE id = ? AND id_usuario = ?',
-        [id, userId]
-      );
-    } catch (error) {
-      console.error('Error al eliminar la finca:', error);
-      throw error;
-    }
-  }
 }
 
-module.exports = new FincaDAO(db);
+module.exports = new FincaDAO();

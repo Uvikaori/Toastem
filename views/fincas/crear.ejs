@@ -1,0 +1,27 @@
+<div class="container mt-5">
+    <h1 class="text-center">Crear Nueva Finca</h1>
+
+    <% if (error) { %>
+        <div class="alert alert-danger">
+            <%= error %>
+        </div>
+    <% } %>
+
+    <% if (mensaje) { %>
+        <div class="alert alert-success">
+            <%= mensaje %>
+        </div>
+    <% } %>
+
+    <form action="/fincas/crear" method="POST">
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre de la Finca</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" required maxlength="100">
+        </div>
+        <div class="mb-3">
+            <label for="ubicacion" class="form-label">Ubicación</label>
+            <input type="text" class="form-control" id="ubicacion" name="ubicacion" maxlength="255">
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+    </form>
+</div>

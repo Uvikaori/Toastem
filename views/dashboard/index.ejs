@@ -63,7 +63,7 @@
                 <div class="col mr-2">
                   <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                     Lotes Activos</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800"><%= lotesActivos || 0 %></div>
                 </div>
                 <div class="col-auto">
                   <i class="fas fa-boxes fa-2x text-gray-300"></i>
@@ -79,11 +79,11 @@
               <div class="row no-gutters align-items-center">
                 <div class="col mr-2">
                   <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                    Procesos Completados</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                    Lotes en Secado</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800"><%= lotesEnSecado || 0 %></div>
                 </div>
                 <div class="col-auto">
-                  <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                  <i class="fas fa-spinner fa-2x text-gray-300"></i>
                 </div>
               </div>
             </div>
@@ -96,28 +96,11 @@
               <div class="row no-gutters align-items-center">
                 <div class="col mr-2">
                   <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                    Procesos en Curso</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                    Precio del Café</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">$<%= precioCafe || '0.00' %></div>
                 </div>
                 <div class="col-auto">
-                  <i class="fas fa-spinner fa-2x text-gray-300"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                    Procesos Pendientes</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-clock fa-2x text-gray-300"></i>
+                  <i class="fas fa-coffee fa-2x text-gray-300"></i>
                 </div>
               </div>
             </div>
@@ -159,5 +142,4 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Script para el dashboard -->
-<script src="/js/forms/dashboard.js"></script> 
+<script src="/js/forms/dashboard.js"></script>
