@@ -16,11 +16,16 @@ CREATE TABLE usuarios (
     password VARCHAR(255) NOT NULL,
     id_pregunta_seguridad INT,
     respuesta_seguridad VARCHAR(255) NOT NULL,
-    nombre_finca VARCHAR(100) NOT NULL,
-    ubicacion_finca VARCHAR(255),
+    -- nombre_finca VARCHAR(100) NOT NULL,
+    -- ubicacion_finca VARCHAR(255),
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_pregunta_seguridad) REFERENCES preguntas_seguridad(id)
 );
+
+-- Eliminar datos de finca de tabla usuarios, si existiese
+ALTER TABLE usuarios
+DROP COLUMN nombre_finca,
+DROP COLUMN ubicacion_finca;
 
 -- Tabla de fincas (para posible expansión futura)
 CREATE TABLE fincas (

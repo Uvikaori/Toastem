@@ -66,9 +66,11 @@
             <label for="pregunta_seguridad" class="form-label">Pregunta de Seguridad</label>
             <select class="form-select" id="pregunta_seguridad" name="pregunta_seguridad" required>
               <option value="">Selecciona una pregunta</option>
-              <% for (let i = 0; i < preguntas.length; i++) { %>
-                <option value="<%= preguntas[i].id %>"><%= preguntas[i].pregunta %></option>
-              <% } %>
+              <% for (let i=0; i < preguntas.length; i++) { %>
+                <option value="<%= preguntas[i].id %>">
+                  <%= preguntas[i].pregunta %>
+                </option>
+                <% } %>
             </select>
             <!-- Error de pregunta de seguridad -->
             <div class="invalid-feedback" id="pregunta_seguridadError" hidden>
@@ -82,24 +84,6 @@
             <!-- Error de respuesta -->
             <div class="invalid-feedback" id="respuesta_seguridadError" hidden>
               Por favor, ingresa tu respuesta
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label for="nombre_finca" class="form-label">Nombre de la Finca</label>
-            <input type="text" class="form-control" id="nombre_finca" name="nombre_finca" required>
-            <!-- Error de nombre de finca -->
-            <div class="invalid-feedback" id="nombre_fincaError" hidden>
-              Por favor, ingresa el nombre de tu finca
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label for="ubicacion_finca" class="form-label">Ubicación de la Finca</label>
-            <input type="text" class="form-control" id="ubicacion_finca" name="ubicacion_finca" required>
-            <!-- Error de ubicación -->
-            <div class="invalid-feedback" id="ubicacion_fincaError" hidden>
-              Por favor, ingresa la ubicación de tu finca
             </div>
           </div>
 
@@ -119,4 +103,4 @@
 </div>
 
 <!-- Script para el formulario de registro -->
-<script src="/js/forms/register.js"></script> 
+<script src="/js/forms/register.js"></script>

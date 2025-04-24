@@ -140,34 +140,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Capitalizar nombre de finca
-  const nombreFincaInput = document.getElementById('nombre_finca');
-  nombreFincaInput.addEventListener('blur', function() {
-    const nombre = this.value.trim();
-    const validacion = Validaciones.validarNombreFinca(nombre);
-    
-    if (validacion.valido) {
-      this.value = Validaciones.capitalizarPalabras(nombre);
-      Validaciones.limpiarErrorCampo('nombre_finca');
-    } else {
-      Validaciones.mostrarErrorCampo('nombre_finca', validacion.mensaje);
-    }
-  });
-
-  // Validar y capitalizar ubicación
-  const ubicacionFincaInput = document.getElementById('ubicacion_finca');
-  ubicacionFincaInput.addEventListener('blur', function() {
-    const ubicacion = this.value.trim();
-    const validacion = Validaciones.validarUbicacion(ubicacion);
-    
-    if (validacion.valido) {
-      this.value = Validaciones.capitalizarPalabras(ubicacion);
-      Validaciones.limpiarErrorCampo('ubicacion_finca');
-    } else {
-      Validaciones.mostrarErrorCampo('ubicacion_finca', validacion.mensaje);
-    }
-  });
-
   // Validar pregunta de seguridad
   const preguntaSeguridadInput = document.getElementById('pregunta_seguridad');
   preguntaSeguridadInput.addEventListener('change', function() {
@@ -245,4 +217,4 @@ document.addEventListener('DOMContentLoaded', function() {
       mostrarError('Error al procesar la solicitud: ' + error.message);
     }
   });
-}); 
+});

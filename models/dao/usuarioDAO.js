@@ -35,16 +35,14 @@ class UsuarioDAO {
       
       const result = await db.query(
         `INSERT INTO usuarios (nombre, email, password, id_pregunta_seguridad, 
-          respuesta_seguridad, nombre_finca, ubicacion_finca) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          respuesta_seguridad) 
+         VALUES (?, ?, ?, ?, ?)`,
         [
           usuario.nombre,
           usuario.email,
           hashedPassword,
           usuario.id_pregunta_seguridad,
-          usuario.respuesta_seguridad,
-          usuario.nombre_finca,
-          usuario.ubicacion_finca || null
+          usuario.respuesta_seguridad
         ]
       );
       

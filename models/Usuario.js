@@ -1,14 +1,12 @@
 const usuarioDAO = require('./dao/usuarioDAO');
 
 class Usuario {
-  constructor(id, nombre, email, id_pregunta_seguridad, respuesta_seguridad, nombre_finca, ubicacion_finca) {
+  constructor(id, nombre, email, id_pregunta_seguridad, respuesta_seguridad) {
     this.id = id;
     this.nombre = nombre;
     this.email = email;
     this.id_pregunta_seguridad = id_pregunta_seguridad;
     this.respuesta_seguridad = respuesta_seguridad;
-    this.nombre_finca = nombre_finca;
-    this.ubicacion_finca = ubicacion_finca;
   }
 
   /**
@@ -23,8 +21,6 @@ class Usuario {
       data.email,
       data.id_pregunta_seguridad,
       data.respuesta_seguridad,
-      data.nombre_finca,
-      data.ubicacion_finca
     );
   }
 
