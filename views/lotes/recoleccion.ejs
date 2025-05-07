@@ -1,0 +1,124 @@
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/fincas/gestionar">Mis Fincas</a></li>
+            <li class="breadcrumb-item"><a href="/fincas/<%= finca.id %>/lotes">Lotes de: <%= finca.nombre %></a></li>
+            <li class="breadcrumb-item active" aria-current="page">Registrar Recolección</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-toastem-primary text-white">
+                    <h4 class="mb-0">Registrar Recolección - <%= finca.nombre %></h4>
+                </div>
+                <div class="card-body">
+                    <% if (error && error.length > 0) { %>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Error:</strong>
+                            <ul>
+                                <% error.forEach(function(err) { %>
+                                    <li><%= Array.isArray(err) ? err.join(", ") : err %></li>
+                                <% }) %>
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <% } %>
+
+                    <form action="/lotes/recoleccion" method="POST" class="needs-validation" novalidate>
+                        <input type="hidden" name="id_finca" value="<%= finca.id %>">
+                        <input type="hidden" name="id_usuario" value="<%= usuario.id %>">
+
+                        <div class="mb-3">
+                            <label for="fecha_recoleccion" class="form-label">Fecha de Recolección</label>
+                            <input type="date" class="form-control" id="fecha_recoleccion" name="fecha_recoleccion" required>
+                            <div class="invalid-feedback">
+                                Por favor seleccione la fecha de recolección.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="peso_inicial" class="form-label">Peso Inicial (kg)</label>
+                            <input type="number" class="form-control" id="peso_inicial" name="peso_inicial" step="0.01" min="0" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese el peso inicial.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tipo_recoleccion" class="form-label">Tipo de Recolección</label>
+                            <select class="form-select" id="tipo_recoleccion" name="tipo_recoleccion" required>
+                                <option value="">Seleccione un tipo</option>
+                                <option value="Selectiva">Selectiva</option>
+                                <option value="General">General</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Por favor seleccione el tipo de recolección.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tipo_cafe" class="form-label">Tipo de Café</label>
+                            <select class="form-select" id="tipo_cafe" name="tipo_cafe" required>
+                                <option value="">Seleccione un tipo</option>
+                                <option value="Rojo">Rojo</option>
+                                <option value="Amarillo">Amarillo</option>
+                                <option value="Mezcla">Mezcla</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Por favor seleccione el tipo de café.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-toastem-primary">
+                                <i class="fas fa-save me-2"></i>Registrar Recolección
+                            </button>
+                            <a href="/fincas/<%= finca.id %>/lotes" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-toastem-primary {
+        background-color: #5D4037;
+    }
+    .btn-toastem-primary {
+        background-color: #5D4037;
+        color: white;
+    }
+    .btn-toastem-primary:hover {
+        background-color: #4E342E;
+        color: white;
+    }
+</style>
+
+<script>
+    // Validación del formulario
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+</script> 

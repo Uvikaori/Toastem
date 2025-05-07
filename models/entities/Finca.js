@@ -1,17 +1,17 @@
-const { validarNombre, validarUbicacion } = require('../../utils/fincaValidations');
+const { validateFinca } = require('../../validators/fincaValidator');
 
 class Finca {
-    constructor(id = null, idUsuario, nombre, ubicacion) {
+    constructor(id = null, idUsuario, nombre, ubicacion, id_municipio_vereda) {
         this.id = id;
         this.idUsuario = idUsuario;
         this.nombre = nombre;
         this.ubicacion = ubicacion;
+        this.id_municipio_vereda = id_municipio_vereda;
     }
 
     // Métodos de validación
     validar() {
-        validarNombre(this.nombre);
-        validarUbicacion(this.ubicacion);
+        validateFinca(this.nombre, this.ubicacion);
     }
 }
 

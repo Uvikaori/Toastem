@@ -195,4 +195,220 @@ INSERT INTO preguntas_seguridad (pregunta) VALUES
 ('¿Cuál fue tu primer colegio?'),
 ('¿Cuál es tu color favorito?');
 
+-- Crear la base de datos (Si no existe)
+CREATE DATABASE IF NOT EXISTS toastem_db;
+USE toastem_db;
+
+-- Crear tabla de procesos
+CREATE TABLE procesos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    descripcion VARCHAR(255),
+    orden INT NOT NULL UNIQUE COMMENT 'Orden en el flujo del proceso'
+);
+
+INSERT INTO procesos (nombre, descripcion, orden) VALUES 
+('Recolección', 'Proceso de recolección del café', 1),
+('Despulpado', 'Proceso de despulpado del café', 2),
+('Fermentación y Lavado', 'Proceso de fermentación y lavado del café', 3),
+('Zarandeo', 'Proceso de zarandeo del café', 4),
+('Secado', 'Proceso de secado del café', 5),
+('Clasificación', 'Proceso de clasificación del café', 6),
+('Trilla', 'Proceso de trilla del café', 7),
+('Tueste', 'Proceso de tueste del café', 8),
+('Molienda', 'Proceso de molienda del café (opcional)', 9),
+('Empacado', 'Proceso de empacado del café', 10),
+('Control de Calidad', 'Proceso de control de calidad del café', 11);
+
+-- Crear tabla de estados de proceso
+CREATE TABLE estados_proceso (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(20) NOT NULL,
+    descripcion VARCHAR(100)
+);
+
+INSERT INTO estados_proceso (nombre, descripcion) VALUES 
+('Por hacer', 'Proceso aún no iniciado'),
+('En progreso', 'Proceso en ejecución'),
+('Terminado', 'Proceso completado'),
+('Cancelado', 'Proceso cancelado'),
+('Finalizado', 'Proceso finalizado y producto vendido');
+
+-- Crear tabla municipio_vereda
+CREATE TABLE municipio_vereda (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    dptompio INT(5) NOT NULL COMMENT 'Número de 5 dígitos (código departamento + municipio)',
+    codigo_ver INT(8) NOT NULL COMMENT 'Número de 8 dígitos',
+    nom_dep VARCHAR(100) NOT NULL,
+    nomb_mpio VARCHAR(100) NOT NULL,
+    nombre_ver VARCHAR(100) NOT NULL,
+    cod_dpto INT(2) NOT NULL COMMENT 'Número de 2 dígitos',
+    UNIQUE KEY (dptompio, codigo_ver)
+);
+
+-- Modificar tabla fincas para relacionar con municipio_vereda
+ALTER TABLE fincas
+ADD COLUMN id_municipio_vereda INT,
+ADD FOREIGN KEY (id_municipio_vereda) REFERENCES municipio_vereda(id);
+
+-- Modificar tabla molienda para relacionar con tueste
+ALTER TABLE molienda
+CHANGE COLUMN id_tueste id_tueste INT NOT NULL,
+ADD COLUMN es_grano BOOLEAN NOT NULL DEFAULT FALSE AFTER fecha_molienda;
+
+-- Modificar tabla empacado para relacionar con tueste y molienda
+ALTER TABLE empacado
+DROP FOREIGN KEY empacado_ibfk_1;
+
+ALTER TABLE empacado
+ADD COLUMN id_tueste INT,
+ADD COLUMN id_molienda INT,
+ADD FOREIGN KEY (id_tueste) REFERENCES tueste(id),
+ADD FOREIGN KEY (id_molienda) REFERENCES molienda(id),
+ADD CONSTRAINT chk_empacado_origen CHECK (
+    (id_tueste IS NOT NULL AND id_molienda IS NULL) OR
+    (id_tueste IS NULL AND id_molienda IS NOT NULL)
+);
+
+-- Modificar tabla clasificacion (desde db_setup.sql)
+ALTER TABLE clasificacion
+DROP COLUMN peso_cafe_negro,
+DROP COLUMN peso_cafe_partido,
+DROP COLUMN peso_cafe_amarillo,
+DROP COLUMN peso_cafe_brocado;
+
+-- Modificar tabla clasificacion (adiciones)
+ALTER TABLE clasificacion
+ADD COLUMN id_estado_proceso INT DEFAULT 1,
+ADD FOREIGN KEY (id_estado_proceso) REFERENCES estados_proceso(id),
+ADD COLUMN peso_inicial DECIMAL(10,2) AFTER id_lote,
+ADD COLUMN peso_total DECIMAL(10,2) AFTER fecha_clasificacion,
+ADD COLUMN peso_pergamino DECIMAL(10,2) AFTER peso_total,
+ADD COLUMN peso_pasilla DECIMAL(10,2) AFTER peso_pergamino,
+ADD COLUMN peso_otro VARCHAR(255) AFTER peso_pasilla;
+
+-- Añadir estado_proceso y pesos inicial/final a las tablas de procesos individuales
+ALTER TABLE despulpado
+ADD COLUMN id_estado_proceso INT DEFAULT 1,
+ADD FOREIGN KEY (id_estado_proceso) REFERENCES estados_proceso(id),
+ADD COLUMN peso_inicial DECIMAL(10,2) AFTER id_lote,
+ADD COLUMN peso_final DECIMAL(10,2) AFTER fecha_despulpado;
+
+ALTER TABLE fermentacion_lavado
+ADD COLUMN id_estado_proceso INT DEFAULT 1,
+ADD FOREIGN KEY (id_estado_proceso) REFERENCES estados_proceso(id),
+ADD COLUMN peso_inicial DECIMAL(10,2) AFTER id_lote,
+ADD COLUMN peso_final DECIMAL(10,2) AFTER fecha_lavado;
+
+ALTER TABLE zarandeo
+ADD COLUMN id_estado_proceso INT DEFAULT 1,
+ADD FOREIGN KEY (id_estado_proceso) REFERENCES estados_proceso(id),
+ADD COLUMN peso_inicial DECIMAL(10,2) AFTER id_lote,
+ADD COLUMN peso_final DECIMAL(10,2) AFTER fecha_zarandeo;
+
+ALTER TABLE secado
+ADD COLUMN id_estado_proceso INT DEFAULT 1,
+ADD FOREIGN KEY (id_estado_proceso) REFERENCES estados_proceso(id),
+ADD COLUMN peso_inicial DECIMAL(10,2) AFTER id_lote,
+ADD COLUMN peso_final DECIMAL(10,2) AFTER fecha_fin;
+
+ALTER TABLE trilla
+ADD COLUMN id_estado_proceso INT DEFAULT 1,
+ADD FOREIGN KEY (id_estado_proceso) REFERENCES estados_proceso(id),
+ADD COLUMN peso_inicial DECIMAL(10,2) AFTER id_lote,
+ADD COLUMN peso_final DECIMAL(10,2) AFTER fecha_trilla;
+
+ALTER TABLE tueste
+ADD COLUMN id_estado_proceso INT DEFAULT 1,
+ADD FOREIGN KEY (id_estado_proceso) REFERENCES estados_proceso(id),
+ADD COLUMN peso_inicial DECIMAL(10,2) AFTER id_lote,
+ADD COLUMN peso_final DECIMAL(10,2) AFTER fecha_tueste;
+
+ALTER TABLE molienda
+ADD COLUMN id_estado_proceso INT DEFAULT 1,
+ADD FOREIGN KEY (id_estado_proceso) REFERENCES estados_proceso(id),
+ADD COLUMN peso_inicial DECIMAL(10,2) AFTER id_tueste,
+ADD COLUMN peso_final DECIMAL(10,2) AFTER fecha_molienda;
+
+ALTER TABLE empacado
+ADD COLUMN id_estado_proceso INT DEFAULT 1,
+ADD FOREIGN KEY (id_estado_proceso) REFERENCES estados_proceso(id),
+ADD COLUMN peso_inicial DECIMAL(10,2) AFTER id_lote,
+ADD COLUMN peso_final DECIMAL(10,2) AFTER fecha_empacado;
+
+ALTER TABLE control_calidad
+ADD COLUMN id_estado_proceso INT DEFAULT 1,
+ADD FOREIGN KEY (id_estado_proceso) REFERENCES estados_proceso(id),
+ADD COLUMN peso_inicial DECIMAL(10,2) AFTER id_lote,
+ADD COLUMN peso_final DECIMAL(10,2) AFTER fecha_evaluacion;
+
+-- Crear tablas de referencia
+CREATE TABLE tipos_venta (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE,
+    descripcion VARCHAR(255)
+);
+
+INSERT INTO tipos_venta (nombre, descripcion) VALUES
+('Pergamino', 'Venta de café en pergamino'),
+('Trillado', 'Venta de café trillado (verde)'),
+('Tostado', 'Venta de café tostado'),
+('Molido', 'Venta de café molido');
+
+CREATE TABLE destinos_finales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE,
+    descripcion VARCHAR(255)
+);
+
+INSERT INTO destinos_finales (nombre, descripcion) VALUES
+('Proceso completo', 'El lote sigue todo el proceso hasta el empacado'),
+('Venta como pergamino', 'El lote se vende después del secado'),
+('Venta como tostado (grano)', 'El lote se vende tostado en grano'), 
+('Venta como molido', 'El lote se vende molido');
+
+CREATE TABLE tipos_producto (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE,
+    descripcion VARCHAR(255)
+);
+
+INSERT INTO tipos_producto (nombre, descripcion) VALUES
+('Pergamino', 'Café en pergamino'),
+('Grano', 'Café empacado en grano'),
+('Molido', 'Café empacado molido');
+
+-- Modificar tabla ventas
+CREATE TABLE ventas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_lote INT NOT NULL,
+    fecha_venta DATE NOT NULL,
+    id_tipo_venta INT NOT NULL,
+    cantidad DECIMAL(10,2) NOT NULL,
+    precio_kg DECIMAL(10,2) NOT NULL,
+    comprador VARCHAR(100),
+    observaciones TEXT,
+    FOREIGN KEY (id_lote) REFERENCES lotes(id),
+    FOREIGN KEY (id_tipo_venta) REFERENCES tipos_venta(id)
+);
+
+-- Modificar tabla lotes
+ALTER TABLE lotes
+ADD COLUMN id_destino_final INT DEFAULT 1,
+ADD COLUMN fecha_finalizacion DATE,
+FOREIGN KEY (id_destino_final) REFERENCES destinos_finales(id),
+DROP COLUMN estado,
+DROP COLUMN tipo_cafe; -- Eliminar la columna ENUM anterior
+
+-- Modificar tabla secado
+ALTER TABLE secado
+ADD COLUMN decision_venta BOOLEAN DEFAULT FALSE,
+ADD COLUMN fecha_decision DATETIME;
+-- No necesitamos una tabla tipos_decision, ya que es un simple booleano
+
+-- Modificar tabla empacado
+ALTER TABLE empacado
+ADD COLUMN id_tipo_producto INT NOT NULL DEFAULT 1,
+ADD FOREIGN KEY (id_tipo_producto) REFERENCES tipos_producto(id),
+DROP COLUMN tipo_empaque; -- Eliminar la columna VARCHAR anterior
 

@@ -1,0 +1,64 @@
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/fincas/gestionar">Mis Fincas</a></li>
+            <li class="breadcrumb-item"><a href="/fincas/<%= finca.id %>/lotes">Lotes de: <%= finca.nombre %></a></li>
+            <li class="breadcrumb-item"><a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos">Procesos Lote: <%= lote.codigo %></a></li>
+            <li class="breadcrumb-item active" aria-current="page"><%= titulo %></li>
+        </ol>
+    </nav>
+
+    <h1 class="text-toastem-primary mb-4"><%= titulo %></h1>
+
+    <%# Mostrar mensajes flash %>
+    <% if (mensaje && mensaje.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert"><%= mensaje %><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+    <% } %>
+    <% if (error && error.length > 0) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong>
+            <ul><% error.forEach(function(err){ %><li><%= Array.isArray(err) ? err.join(', ') : err %></li><% }) %></ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/despulpado" method="POST">
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="fecha_remojo" class="form-label">Fecha y Hora de Remojo:</label>
+                        <input type="datetime-local" class="form-control" id="fecha_remojo" name="fecha_remojo" value="<%= fecha_remojo %>" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="fecha_despulpado" class="form-label">Fecha y Hora de Despulpado:</label>
+                        <input type="datetime-local" class="form-control" id="fecha_despulpado" name="fecha_despulpado" value="<%= fecha_despulpado %>" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="peso_final_despulpado" class="form-label">Peso Final Despulpado (kg):</label>
+                    <input type="number" step="0.01" class="form-control" id="peso_final_despulpado" name="peso_final_despulpado" value="<%= peso_final_despulpado %>" placeholder="Ej: 45.50" required>
+                    <small class="form-text text-muted">Peso del café después del proceso de despulpado.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="observaciones_despulpado" class="form-label">Observaciones:</label>
+                    <textarea class="form-control" id="observaciones_despulpado" name="observaciones_despulpado" rows="3" placeholder="Anotaciones adicionales sobre el proceso de despulpado"><%= observaciones_despulpado %></textarea>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Registrar Despulpado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-toastem-primary {
+        color: #5D4037; /* Color principal de Toastem */
+    }
+</style> 

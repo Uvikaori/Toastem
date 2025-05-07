@@ -6,8 +6,9 @@ const REGEX = {
   UBICACION: /^[A-Za-zÑñÁáÉéÍíÓóÚúÜü0-9\s.,#-]+$/
 };
 
-// Función para capitalizar palabras
+// Función para capitalizar palabras (para uso en frontend si es necesario)
 function capitalizarPalabras(texto) {
+  if (!texto) return ''; // Añadir chequeo por si acaso
   return texto.toLowerCase()
     .split(' ')
     .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1))

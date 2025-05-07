@@ -1,27 +1,178 @@
 <div class="container mt-5">
-    <h1 class="text-center">Crear Nueva Finca</h1>
+    <h1 class="text-center mb-4">Crear Nueva Finca</h1>
 
-    <% if (error) { %>
-        <div class="alert alert-danger">
-            <%= error %>
+    <%# Mostrar mensajes flash %>
+    <% if (mensaje && mensaje.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= mensaje %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <% } %>
-
-    <% if (mensaje) { %>
-        <div class="alert alert-success">
-            <%= mensaje %>
+    <% if (error && error.length > 0) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong>
+            <ul>
+                <% error.forEach(function(err){ %>
+                    <li><%= Array.isArray(err) ? err.join(', ') : err %></li>
+                <% }) %>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <% } %>
 
     <form action="/fincas/crear" method="POST">
         <div class="mb-3">
             <label for="nombre" class="form-label">Nombre de la Finca</label>
-            <input type="text" class="form-control" id="nombre" name="nombre" required maxlength="100">
+            <input type="text" class="form-control" id="nombre" name="nombre" required maxlength="100" value="<%= nombre %>">
         </div>
+
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="departamento" class="form-label">Departamento</label>
+                <select class="form-select" id="departamento" name="departamento" required>
+                    <option value="" disabled <%= !selectedDepartamento ? 'selected' : '' %>>Seleccione departamento...</option>
+                    <% departamentos.forEach(dep => { %>
+                        <option value="<%= dep.nom_dep %>" <%= selectedDepartamento === dep.nom_dep ? 'selected' : '' %>><%= dep.nom_dep %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="municipio" class="form-label">Municipio</label>
+                <select class="form-select" id="municipio" name="municipio" required disabled>
+                    <option value="" disabled <%= !selectedMunicipio ? 'selected' : '' %>>Seleccione municipio...</option>
+                    <%# Opciones se cargarán dinámicamente %>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="id_municipio_vereda" class="form-label">Vereda</label>
+                <select class="form-select" id="id_municipio_vereda" name="id_municipio_vereda" required disabled>
+                    <option value="" disabled <%= !selectedMunicipioVereda ? 'selected' : '' %>>Seleccione vereda...</option>
+                    <%# Opciones se cargarán dinámicamente. El valor de este select es el que se guarda %>
+                </select>
+            </div>
+        </div>
+
         <div class="mb-3">
-            <label for="ubicacion" class="form-label">Ubicación</label>
-            <input type="text" class="form-control" id="ubicacion" name="ubicacion" maxlength="255">
+            <label for="ubicacion" class="form-label">Ubicación (Detalles adicionales)</label>
+            <input type="text" class="form-control" id="ubicacion" name="ubicacion" maxlength="255" value="<%= ubicacion %>">
+            <div id="ubicacionHelp" class="form-text">Puede agregar indicaciones adicionales aquí (ej: nombre de la entrada, punto de referencia).</div>
         </div>
-        <button type="submit" class="btn btn-primary">Guardar</button>
+
+        <div class="d-flex justify-content-end">
+            <a href="/fincas/gestionar" class="btn btn-secondary me-2">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar Finca</button>
+        </div>
     </form>
 </div>
+
+<%# Scripts de utilidades y eventos de campos %>
+<script src="/js/utils/validations.js"></script>
+<script src="/js/events/formFieldEvents.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const departamentoSelect = document.getElementById('departamento');
+        const municipioSelect = document.getElementById('municipio');
+        const veredaSelect = document.getElementById('id_municipio_vereda'); // Este es el que envía el ID
+
+        // Valores iniciales (para repoblar en caso de error de validación)
+        const initialDepartamento = "<%= selectedDepartamento %>";
+        const initialMunicipio = "<%= selectedMunicipio %>";
+        const initialVeredaId = "<%= selectedMunicipioVereda %>";
+
+        function populateSelect(selectElement, options, placeholder, selectedValue = null) {
+            selectElement.innerHTML = `<option value="" disabled ${!selectedValue ? 'selected' : ''}>${placeholder}</option>`;
+            options.forEach(option => {
+                // option puede ser {nomb_mpio: '... '} o {id: 1, nombre_ver: '... '}
+                const value = option.id || option.nomb_mpio; // Para vereda es option.id, para municipio es option.nomb_mpio
+                const text = option.nombre_ver || option.nomb_mpio;
+                const optionElement = document.createElement('option');
+                optionElement.value = value;
+                optionElement.textContent = text;
+                if (selectedValue && value == selectedValue) { // Usar '==' por si selectedValue es string y value es number
+                    optionElement.selected = true;
+                }
+                selectElement.appendChild(optionElement);
+            });
+            selectElement.disabled = options.length === 0;
+        }
+
+        async function cargarMunicipios(departamentoNombre, municipioSeleccionado = null) {
+            if (!departamentoNombre) {
+                populateSelect(municipioSelect, [], 'Seleccione municipio...');
+                municipioSelect.disabled = true;
+                cargarVeredas(null, null); // Limpiar y deshabilitar veredas
+                return;
+            }
+            try {
+                const response = await fetch(`/fincas/api/municipios/${encodeURIComponent(departamentoNombre)}`);
+                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                const municipios = await response.json(); // Espera [{nomb_mpio: '...'}, ...]
+                populateSelect(municipioSelect, municipios, 'Seleccione municipio...', municipioSeleccionado);
+                // Si hay un municipio preseleccionado (por error de validación), cargar sus veredas
+                if (municipioSeleccionado) {
+                     cargarVeredas(departamentoNombre, municipioSeleccionado, initialVeredaId);
+                } else {
+                    cargarVeredas(null, null); // Limpiar y deshabilitar veredas si no hay municipio seleccionado
+                }
+            } catch (error) {
+                console.error('Error al cargar municipios:', error);
+                populateSelect(municipioSelect, [], 'Error al cargar municipios');
+                municipioSelect.disabled = true;
+                cargarVeredas(null, null);
+            }
+        }
+
+        async function cargarVeredas(departamentoNombre, municipioNombre, veredaIdSeleccionada = null) {
+            if (!departamentoNombre || !municipioNombre) {
+                populateSelect(veredaSelect, [], 'Seleccione vereda...');
+                veredaSelect.disabled = true;
+                return;
+            }
+            try {
+                const response = await fetch(`/fincas/api/veredas/${encodeURIComponent(departamentoNombre)}/${encodeURIComponent(municipioNombre)}`);
+                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                const veredas = await response.json(); // Espera [{id: 1, nombre_ver: '...'}, ...]
+                populateSelect(veredaSelect, veredas, 'Seleccione vereda...', veredaIdSeleccionada);
+            } catch (error) {
+                console.error('Error al cargar veredas:', error);
+                populateSelect(veredaSelect, [], 'Error al cargar veredas');
+                veredaSelect.disabled = true;
+            }
+        }
+
+        departamentoSelect.addEventListener('change', (event) => {
+            const depNombre = event.target.value;
+            cargarMunicipios(depNombre);
+            // Al cambiar departamento, se limpian y deshabilitan veredas directamente por cargarMunicipios->cargarVeredas(null,null)
+        });
+
+        municipioSelect.addEventListener('change', (event) => {
+            const depNombre = departamentoSelect.value;
+            const munNombre = event.target.value;
+            cargarVeredas(depNombre, munNombre);
+        });
+
+        // Carga inicial si hay valores preseleccionados (por error de validación)
+        if (initialDepartamento) {
+            cargarMunicipios(initialDepartamento, initialMunicipio).then(() => {
+                // Asegurar que el municipio correcto esté seleccionado si initialMunicipio existe
+                if(initialMunicipio && municipioSelect.querySelector(`option[value="${initialMunicipio}"]`)){
+                    municipioSelect.value = initialMunicipio;
+                    // Y luego, si hay una vereda inicial, seleccionarla
+                    // La carga de veredas ya se habrá disparado desde cargarMunicipios si initialMunicipio fue pasado
+                    if (initialVeredaId && veredaSelect.querySelector(`option[value="${initialVeredaId}"]`)){
+                        veredaSelect.value = initialVeredaId;
+                    }
+                } else if (initialMunicipio) {
+                    // Si initialMunicipio existía pero no se encontró la opción (ej. depa cambiado)
+                    // se limpian las veredas
+                    cargarVeredas(null,null);
+                }
+            });
+        } else {
+            municipioSelect.disabled = true;
+            veredaSelect.disabled = true;
+        }
+    });
+</script>

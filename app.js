@@ -11,6 +11,8 @@ const flash = require('connect-flash');
 const methodOverride = require('method-override');
 require('dotenv').config();
 const fincaRoutes = require('./routes/fincaRoutes');
+const helpers = require('./utils/helpers');
+const loteRoutes = require('./routes/loteRoutes');
 
 // Configuración de Swagger
 const swaggerOptions = {
@@ -49,6 +51,9 @@ app.set('view engine', 'ejs');
 
 // Configurar la ruta del layout principal
 app.set('layout', 'layouts/main');
+
+// Hacer helpers disponibles globalmente en las vistas
+app.locals.capitalizarPalabras = helpers.capitalizarPalabras;
 
 // Middlewares
 app.use(express.json());
@@ -91,6 +96,7 @@ app.get('/', (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/fincas', fincaRoutes);
+app.use('/fincas/:id_finca/lotes', loteRoutes);
 
 // 404
 app.use((req, res) => {

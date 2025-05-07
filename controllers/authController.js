@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const db = require('../config/database');
 const Usuario = require('../models/Usuario');
 const { validationResult } = require('express-validator');
+const { capitalizarPalabras } = require('../utils/helpers');
 
 /**
  * Muestra la página de inicio de sesión
@@ -70,7 +71,7 @@ const iniciarSesion = async (req, res) => {
     // Responder con éxito
     res.json({
       success: true,
-      redirect: '/fincas'
+      redirect: '/fincas/gestionar'
     });
 
   } catch (error) {
@@ -156,14 +157,6 @@ function validarDatosRegistro(datos) {
     errores.respuesta_seguridad = 'La respuesta de seguridad no puede estar vacía';
   }
   return errores;
-}
-
-// Función para capitalizar palabras
-function capitalizarPalabras(texto) {
-  return texto.toLowerCase()
-    .split(' ')
-    .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1))
-    .join(' ');
 }
 
 /**

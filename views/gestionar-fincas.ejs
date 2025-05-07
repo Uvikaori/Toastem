@@ -5,15 +5,28 @@
     </a>
     <h1 class="text-center">Gestión de Fincas</h1>
     
-    <% if (error) { %>
-        <div class="alert alert-danger">
-            <%= error %>
+    <% if (mensaje && ( (Array.isArray(mensaje) && mensaje.length > 0) || (typeof mensaje === 'string' && mensaje.trim() !== '') ) ) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <% if (Array.isArray(mensaje)) { %>
+                <% mensaje.forEach(function(msg){ %><li><%= msg %></li><% }) %>
+            <% } else { %>
+                <%= mensaje %>
+            <% } %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <% } %>
 
-    <% if (mensaje) { %>
-        <div class="alert alert-success">
-            <%= mensaje %>
+    <% if (error && ( (Array.isArray(error) && error.length > 0) || (typeof error === 'string' && error.trim() !== '') ) ) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong>
+            <% if (Array.isArray(error)) { %>
+                <ul>
+                    <% error.forEach(function(err){ %><li><%= err %></li><% }) %>
+                </ul>
+            <% } else { %>
+                <%= error %>
+            <% } %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <% } %>
 
@@ -22,13 +35,24 @@
         <% if (Array.isArray(fincas) && fincas.length > 0) { %>
             <% fincas.filter(finca => finca !== null).forEach(finca => { %>
                 <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-body">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
                             <h5 class="card-title"><%= finca?.nombre || 'Sin nombre' %></h5>
                             <p class="card-text">
-                                <i class="fas fa-map-marker-alt"></i> 
+                                <i class="fas fa-map-marker-alt text-secondary"></i> 
                                 <%= finca?.ubicacion || 'Sin ubicación' %>
+                                <% 
+                                const mv = municipiosVeredasAll.find(m => m.id === finca.id_municipio_vereda); 
+                                if (mv) { 
+                                %>
+                                    <br><small class="text-muted"><%= mv.nombre_ver %>, <%= mv.nomb_mpio %>, <%= mv.nom_dep %></small>
+                                <% } %>
                             </p>
+                            <div class="mt-auto">
+                                <a href="/fincas/<%= finca.id %>/lotes" class="btn btn-outline-primary btn-sm me-2">Ver Lotes</a>
+                                <a href="#" class="btn btn-outline-secondary btn-sm edit-finca-btn" data-bs-toggle="modal" data-bs-target="#fincaModal" data-id="<%= finca.id %>" data-nombre="<%= finca.nombre %>" data-ubicacion="<%= finca.ubicacion %>" data-idmv="<%= finca.id_municipio_vereda %>">Editar Finca</a>
+                                <%# Añadir botón eliminar si es necesario %>
+                            </div>
                         </div>
                     </div>
                 </div>
