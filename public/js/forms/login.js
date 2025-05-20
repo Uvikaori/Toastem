@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.querySelectorAll('.form-control').forEach(el => {
       el.classList.remove('is-invalid');
+      el.classList.remove('is-valid');
     });
   }
 
@@ -62,27 +63,33 @@ document.addEventListener('DOMContentLoaded', function() {
     this.querySelector('i').classList.toggle('fa-eye-slash');
   });
 
-  // Validar email
+  // Validar email cuando el campo pierde el foco
   correoInput.addEventListener('blur', function() {
     const email = this.value.trim();
     const validacion = Validaciones.validarEmail(email);
     
     if (validacion.valido) {
       Validaciones.limpiarErrorCampo('correo');
+      this.classList.add('is-valid');
+      this.classList.remove('is-invalid');
     } else {
       Validaciones.mostrarErrorCampo('correo', validacion.mensaje);
+      this.classList.remove('is-valid');
     }
   });
 
-  // Validar contraseña
-  contraseñaInput.addEventListener('blur', function() {
+  // Validar contraseña en tiempo real
+  contraseñaInput.addEventListener('input', function() {
     const contraseña = this.value;
     const validacion = Validaciones.validarContraseña(contraseña);
     
     if (validacion.valido) {
       Validaciones.limpiarErrorCampo('contraseña');
+      this.classList.add('is-valid');
+      this.classList.remove('is-invalid');
     } else {
       Validaciones.mostrarErrorCampo('contraseña', validacion.mensaje);
+      this.classList.remove('is-valid');
     }
   });
 
@@ -91,64 +98,38 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
     
     // Limpiar errores previos
-    clearErrors();
+    ocultarErrores();
     
     const formData = {
-        correo: document.getElementById('correo').value,
-        contraseña: document.getElementById('contraseña').value
+      correo: correoInput.value.trim(),
+      contraseña: contraseñaInput.value
     };
 
     try {
-        const response = await fetch('/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
 
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            // Redirigir al usuario
-            window.location.href = data.redirect || '/fincas';
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Redirigir al usuario
+        window.location.href = data.redirect || '/fincas';
+      } else {
+        // Mostrar errores
+        if (data.errores) {
+          mostrarErroresCampos(data.errores);
         } else {
-            // Mostrar errores
-            if (data.errores) {
-                Object.keys(data.errores).forEach(key => {
-                    showError(key, data.errores[key]);
-                });
-            } else {
-                showGeneralError('Error al procesar la solicitud');
-            }
+          mostrarError('Error al procesar la solicitud');
         }
+      }
     } catch (error) {
-        console.error('Error:', error);
-        showGeneralError('Error al procesar la solicitud');
+      console.error('Error:', error);
+      mostrarError('Error al procesar la solicitud');
     }
   });
-
-  function clearErrors() {
-    document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
-    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-    document.getElementById('errorGeneral').classList.add('d-none');
-  }
-
-  function showError(field, message) {
-    const element = document.getElementById(field);
-    const feedback = document.getElementById(`${field}Error`);
-    if (element && feedback) {
-        element.classList.add('is-invalid');
-        feedback.textContent = message;
-    }
-  }
-
-  function showGeneralError(message) {
-    const errorDiv = document.getElementById('errorGeneral');
-    const errorText = document.getElementById('errorGeneralText');
-    if (errorDiv && errorText) {
-        errorText.textContent = message;
-        errorDiv.classList.remove('d-none');
-    }
-  }
 }); 

@@ -5,7 +5,21 @@ const validateZarandeo = [
     body('fecha_zarandeo')
         .notEmpty().withMessage('La fecha de zarandeo es obligatoria.')
         .isISO8601().withMessage('Formato de fecha de zarandeo inválido.')
-        .toDate(),
+        .toDate()
+        .custom(async (value, { req }) => {
+            // Validar que la fecha de zarandeo sea posterior a la fecha de lavado
+            const id_lote = parseInt(req.params.id_lote);
+            if (id_lote && !isNaN(id_lote)) {
+                const fermentacionInfo = await fermentacionLavadoDAO.getFermentacionLavadoByLoteId(id_lote);
+                if (fermentacionInfo && fermentacionInfo.fecha_lavado) {
+                    const fechaLavado = new Date(fermentacionInfo.fecha_lavado);
+                    if (new Date(value) < fechaLavado) {
+                        throw new Error(`La fecha de zarandeo debe ser posterior a la fecha de lavado (${fechaLavado.toLocaleString()}).`);
+                    }
+                }
+            }
+            return true;
+        }),
 
     body('peso_final_zarandeo')
         .notEmpty().withMessage('El peso después del zarandeo es obligatorio.')

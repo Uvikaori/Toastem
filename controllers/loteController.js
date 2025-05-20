@@ -7,6 +7,7 @@ const zarandeoDAO = require('../models/dao/zarandeoDAO'); // Nuevo DAO
 const secadoDAO = require('../models/dao/secadoDAO'); // Nuevo DAO
 const clasificacionDAO = require('../models/dao/clasificacionDAO'); // Renombrado y actualizado
 const trillaDAO = require('../models/dao/trillaDAO'); // Nuevo DAO
+const db = require('../config/database'); // Importar la conexión a la base de datos
 const Lote = require('../models/entities/Lote');
 const Despulpado = require('../models/entities/Despulpado'); // Entidad Despulpado
 const FermentacionLavado = require('../models/entities/FermentacionLavado'); // Nueva entidad
@@ -73,31 +74,42 @@ class LoteController {
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
-            req.flash('error', errors.array().map(e => e.msg));
-            req.flash('fecha_recoleccion', req.body.fecha_recoleccion);
-            req.flash('peso_inicial', req.body.peso_inicial);
-            req.flash('tipo_cafe', req.body.tipo_cafe);
-            req.flash('tipo_recoleccion', req.body.tipo_recoleccion);
-            req.flash('observaciones', req.body.observaciones);
-            return res.redirect(`/fincas/${id_finca}/lotes/crear`);
+            // En lugar de usar flash, pasamos los errores directamente a la vista
+            return res.render('lotes/crear', {
+                titulo: 'Crear Nuevo Lote',
+                id_finca: id_finca,
+                nombre_finca: req.body.nombre_finca,
+                fecha_recoleccion: req.body.fecha_recoleccion,
+                peso_inicial: req.body.peso_inicial,
+                tipo_cafe: req.body.tipo_cafe,
+                tipo_recoleccion: req.body.tipo_recoleccion,
+                observaciones: req.body.observaciones,
+                error: errors.array().map(e => e.msg)
+            });
         }
 
         try {
             if (isNaN(id_finca)) {
-                req.flash('error', 'ID de finca inválido.');
-                return res.redirect('/fincas/gestionar');
+                return res.render('lotes/crear', {
+                    titulo: 'Crear Nuevo Lote',
+                    id_finca: id_finca,
+                    nombre_finca: req.body.nombre_finca,
+                    fecha_recoleccion: req.body.fecha_recoleccion,
+                    peso_inicial: req.body.peso_inicial,
+                    tipo_cafe: req.body.tipo_cafe,
+                    tipo_recoleccion: req.body.tipo_recoleccion,
+                    observaciones: req.body.observaciones,
+                    error: ['ID de finca inválido.']
+                });
             }
-            // Sería bueno verificar de nuevo que la finca pertenece al usuario.
 
             const { fecha_recoleccion, peso_inicial, tipo_cafe, tipo_recoleccion, observaciones } = req.body;
             const id_usuario = req.session.usuario.id;
 
             const codigoLote = await loteDAO.generarCodigoLoteUnico(id_finca);
 
-            // Los valores por defecto para id_estado_proceso, id_proceso_actual, 
-            // fecha_registro y id_destino_final se tomarán de la entidad Lote.
             const nuevoLote = new Lote(
-                null, // id
+                null,
                 codigoLote,
                 id_usuario,
                 id_finca,
@@ -110,17 +122,21 @@ class LoteController {
 
             await loteDAO.createLote(nuevoLote);
             req.flash('mensaje', `Lote ${codigoLote} creado exitosamente.`);
-            res.redirect(`/fincas/${id_finca}/lotes`); // Redirigir a la lista de lotes de la finca
+            res.redirect(`/fincas/${id_finca}/lotes`);
 
         } catch (error) {
             console.error('Error al crear lote:', error);
-            req.flash('error', 'Error interno al crear el lote.');
-            req.flash('fecha_recoleccion', req.body.fecha_recoleccion);
-            req.flash('peso_inicial', req.body.peso_inicial);
-            req.flash('tipo_cafe', req.body.tipo_cafe);
-            req.flash('tipo_recoleccion', req.body.tipo_recoleccion);
-            req.flash('observaciones', req.body.observaciones);
-            res.redirect(`/fincas/${id_finca}/lotes/crear`);
+            return res.render('lotes/crear', {
+                titulo: 'Crear Nuevo Lote',
+                id_finca: id_finca,
+                nombre_finca: req.body.nombre_finca,
+                fecha_recoleccion: req.body.fecha_recoleccion,
+                peso_inicial: req.body.peso_inicial,
+                tipo_cafe: req.body.tipo_cafe,
+                tipo_recoleccion: req.body.tipo_recoleccion,
+                observaciones: req.body.observaciones,
+                error: ['Error interno al crear el lote.']
+            });
         }
     }
 
@@ -171,16 +187,10 @@ class LoteController {
             const id_finca = parseInt(req.params.id_finca);
             const id_lote = parseInt(req.params.id_lote);
 
-            const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
-            if (!finca) {
-                req.flash('error', 'Finca no encontrada o no tiene permiso.');
-                return res.redirect('/fincas/gestionar');
-            }
-            const lote = await loteDAO.getLoteById(id_lote);
-            if (!lote || lote.id_finca !== id_finca) {
-                req.flash('error', 'Lote no encontrado o no pertenece a esta finca.');
-                return res.redirect(`/fincas/${id_finca}/lotes`);
-            }
+            // Ya no necesitamos verificar el acceso, el middleware lo hace por nosotros
+            // Y además tenemos el lote y la finca ya disponibles en req.lote y req.finca
+            const finca = req.finca;
+            const lote = req.lote;
 
             const todosLosProcesosDefinidos = await procesosDAO.getAllProcesosOrdenados();
             
@@ -194,41 +204,30 @@ class LoteController {
 
             const procesosConEstado = todosLosProcesosDefinidos.map(procesoDef => {
                 let etapaInfo = null;
-                let urlFormulario = '#';
-                let urlVer = '#';
-                let urlAccionAdicional = null;
-                let textoAccionAdicional = null;
-
+                
+                // Solo obtenemos la información de la etapa según el proceso
                 switch (procesoDef.nombre.toLowerCase()) {
+                    case 'recolección':
+                        // La recolección ya está registrada como parte del lote
+                        etapaInfo = { id_estado_proceso: 3 }; // 3 = Terminado
+                        break;
                     case 'despulpado':
                         etapaInfo = despulpadoInfo;
-                        urlFormulario = `/fincas/${id_finca}/lotes/${id_lote}/despulpado/registrar`;
                         break;
                     case 'fermentación y lavado':
                         etapaInfo = fermentacionInfo;
-                        urlFormulario = `/fincas/${id_finca}/lotes/${id_lote}/fermentacion-lavado/registrar`;
                         break;
                     case 'zarandeo':
                         etapaInfo = zarandeoInfo;
-                        urlFormulario = `/fincas/${id_finca}/lotes/${id_lote}/zarandeo/registrar`;
                         break;
                     case 'secado': 
                         etapaInfo = secadoInfo;
-                        if (!etapaInfo) {
-                            urlFormulario = `/fincas/${id_finca}/lotes/${id_lote}/secado/iniciar`;
-                        } else if (etapaInfo.id_estado_proceso === 2) {
-                            urlAccionAdicional = `/fincas/${id_finca}/lotes/${id_lote}/secado/finalizar`;
-                            textoAccionAdicional = 'Finalizar Secado';
-                            urlFormulario = '#';
-                        }
                         break;
                     case 'clasificación':  
                         etapaInfo = clasificacionInfo;
-                        urlFormulario = `/fincas/${id_finca}/lotes/${id_lote}/clasificacion/registrar`;
                         break;
                     case 'trilla':
                         etapaInfo = trillaInfo;
-                        urlFormulario = `/fincas/${id_finca}/lotes/${id_lote}/trilla/registrar`;
                         break;
                     // TODO: Añadir caso para Tueste
                 }
@@ -236,30 +235,36 @@ class LoteController {
                 return {
                     ...procesoDef,
                     datosEtapa: etapaInfo,
-                    urlFormulario: urlFormulario,
-                    urlVerDetalles: urlVer,
-                    urlAccionAdicional: urlAccionAdicional,
-                    textoAccionAdicional: textoAccionAdicional
                 };
             });
+
+            // Recupera los mensajes flash pero asegúrate de que no son vacíos
+            const mensajeFlash = req.flash('mensaje');
+            const mensaje = mensajeFlash && mensajeFlash.length > 0 ? mensajeFlash : null;
+            
+            // No usamos req.flash para errores, esto evita mensajes flash de error sin sentido
+            const error = null;
 
             res.render('lotes/procesos', {
                 titulo: `Procesos del Lote ${lote.codigo}`,
                 finca: finca,
                 lote: lote,
                 procesosConEstado: procesosConEstado,
-                mensaje: req.flash('mensaje'),
-                error: req.flash('error')
+                mensaje: mensaje,
+                error: error
             });
 
         } catch (error) {
             console.error('Error al mostrar vista de procesos del lote:', error);
-            req.flash('error', 'Error al cargar la vista de procesos del lote.');
+            
+            // Manejo de error específico sin usar flash
+            const errorMessage = 'Error al cargar la vista de procesos del lote.';
             const id_finca_param = req.params.id_finca ? parseInt(req.params.id_finca) : null;
-            if (id_finca_param && !isNaN(id_finca_param)){
-                 res.redirect(`/fincas/${id_finca_param}/lotes`);
+            
+            if (id_finca_param && !isNaN(id_finca_param)) {
+                return res.redirect(`/fincas/${id_finca_param}/lotes`);
             } else {
-                 res.redirect('/fincas/gestionar');
+                return res.redirect('/fincas/gestionar');
             }
         }
     }
@@ -585,14 +590,19 @@ class LoteController {
             const id_lote = parseInt(req.params.id_lote);
 
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
-            if (!finca) { /* ... manejo error ... */ return res.redirect('/fincas/gestionar'); }
+            if (!finca) { 
+                req.flash('error', 'Finca no encontrada o no tiene permiso.');
+                return res.redirect('/fincas/gestionar'); 
+            }
             const lote = await loteDAO.getLoteById(id_lote);
-            if (!lote || lote.id_finca !== id_finca) { /* ... manejo error ... */ return res.redirect(`/fincas/${id_finca}/lotes`); }
+            if (!lote || lote.id_finca !== id_finca) { 
+                req.flash('error', 'Lote no encontrado o no pertenece a la finca.');
+                return res.redirect(`/fincas/${id_finca}/lotes`);
+            }
 
             const secadoExistente = await secadoDAO.getSecadoByLoteId(id_lote);
             if (secadoExistente) {
                 req.flash('error', 'El proceso de Secado ya ha sido iniciado o registrado para este lote.');
-                // Podríamos redirigir a una vista para ACTUALIZAR/FINALIZAR secado si ya existe
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`); 
             }
 
@@ -602,15 +612,20 @@ class LoteController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
+            // Obtener la fecha actual en formato datetime-local
+            const now = new Date();
+            const fechaActual = now.toISOString().slice(0, 16); // Formato: YYYY-MM-DDTHH:mm
+
             res.render('lotes/procesos/secado-inicio-form', {
                 titulo: `Iniciar Proceso de Secado - Lote ${lote.codigo}`,
                 finca: finca,
                 lote: lote,
-                peso_zarandeo_final: zarandeoInfo.peso_final,
-                fecha_inicio_secado: req.flash('fecha_inicio_secado')[0] || '',
+                peso_zarandeo_final: zarandeoInfo.peso_final || 0,
+                fecha_inicio_secado: req.flash('fecha_inicio_secado')[0] || fechaActual,
                 metodo_secado: req.flash('metodo_secado')[0] || '',
                 humedad_inicial_secado: req.flash('humedad_inicial_secado')[0] || '',
                 observaciones_secado: req.flash('observaciones_secado')[0] || '',
+                decision_venta: false, // Valor por defecto
                 mensaje: req.flash('mensaje'),
                 error: req.flash('error')
             });
@@ -642,10 +657,17 @@ class LoteController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/secado/iniciar`);
             }
 
+            // Extraer el peso inicial del formulario (campo hidden)
+            const peso_inicial = req.body.peso_inicial_secado || zarandeoInfo.peso_final;
+            
+            // Determinar si hay decisión de venta (checkbox)
+            const decision_venta = req.body.decision_venta ? 1 : 0;
+            const fecha_decision = decision_venta ? new Date() : null;
+
             const secadoData = new Secado(
                 null, // id
                 id_lote,
-                zarandeoInfo.peso_final, // Peso inicial para secado
+                peso_inicial, // Ahora obtenemos del formulario o fallback al zarandeo
                 req.body.fecha_inicio_secado,
                 req.body.metodo_secado,
                 req.body.humedad_inicial_secado || null,
@@ -655,7 +677,13 @@ class LoteController {
                 // id_estado_proceso es 2 ('En progreso') por defecto desde la entidad Secado
             );
             
-            await secadoDAO.createSecado(secadoData);
+            // Realizar la inserción básica
+            const id_secado = await secadoDAO.createSecado(secadoData);
+            
+            // Actualizar campos adicionales (decision_venta y fecha_decision)
+            if (id_secado) {
+                await secadoDAO.updateSecado(id_secado, { decision_venta, fecha_decision });
+            }
 
             // Actualizar estado general y proceso actual del LOTE al proceso de Secado
             const todosLosProcesos = await procesosDAO.getAllProcesosOrdenados();
@@ -745,10 +773,16 @@ class LoteController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
+            // Determinar si hay decisión de venta (checkbox)
+            const decision_venta = req.body.decision_venta ? 1 : 0;
+            const fecha_decision = decision_venta ? new Date() : null;
+
             const datosActualizacion = {
                 fecha_fin: req.body.fecha_fin_secado,
                 peso_final: req.body.peso_final_secado,
-                observaciones: req.body.observaciones_fin_secado, 
+                observaciones: req.body.observaciones_fin_secado,
+                decision_venta: decision_venta,
+                fecha_decision: fecha_decision,
                 id_estado_proceso: 3 // 3 = Terminado
             };
 
@@ -763,8 +797,20 @@ class LoteController {
             }
 
             const siguienteProcesoDef = todosLosProcesos.find(p => p.orden === (procesoSecadoDef.orden + 1));
-            const idNuevoProcesoActualParaLote = siguienteProcesoDef ? siguienteProcesoDef.id : procesoSecadoDef.id; 
-            const nuevoEstadoGeneralLote = siguienteProcesoDef ? 2 : 3; // 2 En progreso, 3 Finalizado Lote
+            
+            // Si hay decisión de venta, no continuamos con el siguiente proceso
+            let idNuevoProcesoActualParaLote; 
+            let nuevoEstadoGeneralLote;
+            
+            if (decision_venta) {
+                // Si hay decisión de venta, marcamos como proceso terminado
+                idNuevoProcesoActualParaLote = procesoSecadoDef.id;
+                nuevoEstadoGeneralLote = 3; // 3 = Terminado
+            } else {
+                // De lo contrario, avanzamos al siguiente proceso
+                idNuevoProcesoActualParaLote = siguienteProcesoDef ? siguienteProcesoDef.id : procesoSecadoDef.id;
+                nuevoEstadoGeneralLote = siguienteProcesoDef ? 2 : 3; // 2 En progreso, 3 Finalizado Lote
+            }
 
             await loteDAO.updateLoteProcesoYEstado(id_lote, idNuevoProcesoActualParaLote, nuevoEstadoGeneralLote);
 
@@ -789,14 +835,14 @@ class LoteController {
             const id_lote = parseInt(req.params.id_lote);
 
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
-            if (!finca) { /* ... */ return res.redirect('/fincas/gestionar'); }
+            if (!finca) { 
+                req.flash('error', 'Finca no encontrada o no tiene permiso.');
+                return res.redirect('/fincas/gestionar'); 
+            }
             const lote = await loteDAO.getLoteById(id_lote);
-            if (!lote || lote.id_finca !== id_finca) { /* ... */ return res.redirect(`/fincas/${id_finca}/lotes`); }
-
-            const clasificacionExistente = await clasificacionDAO.getClasificacionByLoteId(id_lote);
-            if (clasificacionExistente) {
-                req.flash('info', 'La Clasificación ya ha sido registrada para este lote.');
-                return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
+            if (!lote || lote.id_finca !== id_finca) { 
+                req.flash('error', 'Lote no encontrado o no pertenece a la finca.');
+                return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
             const secadoInfo = await secadoDAO.getSecadoByLoteId(id_lote);
@@ -804,19 +850,24 @@ class LoteController {
                 req.flash('error', 'El proceso de Secado debe estar completado (Terminado) antes de registrar la Clasificación.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
+
+            // Obtener la fecha actual en formato date
+            const now = new Date();
+            const fechaActual = now.toISOString().split('T')[0]; // Formato: YYYY-MM-DD
             
             res.render('lotes/procesos/clasificacion-form', {
                 titulo: `Registrar Clasificación - Lote ${lote.codigo}`,
                 finca: finca,
                 lote: lote,
-                peso_secado_final: secadoInfo.peso_final,
-                // Para repoblar
-                fecha_clasificacion: req.flash('fecha_clasificacion')[0] || '',
-                proveedor_externo: req.flash('proveedor_externo')[0] === 'true', // Convertir a booleano
-                nombre_proveedor: req.flash('nombre_proveedor')[0] || '',
-                costo_servicio: req.flash('costo_servicio')[0] || '',
-                peso_final_clasificado: req.flash('peso_final_clasificado')[0] || '',
-                observaciones_clasificacion: req.flash('observaciones_clasificacion')[0] || '',
+                peso_secado_final: secadoInfo.peso_final || 0,
+                // Valores para repoblar el formulario
+                fecha_clasificacion: req.flash('fecha_clasificacion')[0] || fechaActual,
+                peso_total: req.flash('peso_total')[0] || '',
+                peso_pergamino: req.flash('peso_pergamino')[0] || '',
+                peso_pasilla: req.flash('peso_pasilla')[0] || '',
+                peso_otro: req.flash('peso_otro')[0] || '',
+                peso_cafe_bueno: req.flash('peso_cafe_bueno')[0] || '',
+                observaciones: req.flash('observaciones')[0] || '',
                 mensaje: req.flash('mensaje'),
                 error: req.flash('error')
             });
@@ -835,57 +886,70 @@ class LoteController {
         if (!errors.isEmpty()) {
             req.flash('error', errors.array().map(e => e.msg));
             req.flash('fecha_clasificacion', req.body.fecha_clasificacion);
-            req.flash('proveedor_externo', req.body.proveedor_externo); // string 'true' or 'false'
-            req.flash('nombre_proveedor', req.body.nombre_proveedor);
-            req.flash('costo_servicio', req.body.costo_servicio);
-            req.flash('peso_final_clasificado', req.body.peso_final_clasificado);
-            req.flash('observaciones_clasificacion', req.body.observaciones_clasificacion);
+            req.flash('peso_total', req.body.peso_total);
+            req.flash('peso_pergamino', req.body.peso_pergamino);
+            req.flash('peso_pasilla', req.body.peso_pasilla);
+            req.flash('peso_otro', req.body.peso_otro);
+            req.flash('peso_cafe_bueno', req.body.peso_cafe_bueno);
+            req.flash('observaciones', req.body.observaciones);
             return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/clasificacion/registrar`);
         }
 
         try {
-            const secadoInfo = await secadoDAO.getSecadoByLoteId(id_lote);
-            if (!secadoInfo || !secadoInfo.peso_final) {
-                req.flash('error', 'No se encontró el peso final del secado.');
-                return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/clasificacion/registrar`);
+            const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
+            if (!finca) { 
+                req.flash('error', 'Finca no encontrada o no tiene permiso.');
+                return res.redirect('/fincas/gestionar'); 
+            }
+            const lote = await loteDAO.getLoteById(id_lote);
+            if (!lote || lote.id_finca !== id_finca) { 
+                req.flash('error', 'Lote no encontrado o no pertenece a la finca.');
+                return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
-            const esProveedorExterno = req.body.proveedor_externo === 'true';
+            const secadoInfo = await secadoDAO.getSecadoByLoteId(id_lote);
+            if (!secadoInfo || secadoInfo.id_estado_proceso !== 3) { // 3 = Terminado
+                req.flash('error', 'El proceso de Secado debe estar completado (Terminado) antes de registrar la Clasificación.');
+                return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
+            }
+
+            const clasificacionExistente = await clasificacionDAO.getClasificacionByLoteId(id_lote);
+            if (clasificacionExistente) {
+                req.flash('error', 'La Clasificación ya ha sido registrada para este lote.');
+                return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
+            }
 
             const clasificacionData = new Clasificacion(
                 null, // id
                 id_lote,
-                secadoInfo.peso_final, // peso_inicial para clasificación
+                secadoInfo.peso_final, // peso_inicial
                 req.body.fecha_clasificacion,
-                esProveedorExterno,
-                esProveedorExterno ? req.body.nombre_proveedor : null,
-                esProveedorExterno ? (req.body.costo_servicio || null) : null,
-                req.body.peso_final_clasificado,
-                req.body.observaciones_clasificacion
+                req.body.peso_cafe_bueno, // peso_cafe_bueno
+                req.body.peso_total || null, // peso_total
+                req.body.peso_pergamino || null, // peso_pergamino
+                req.body.peso_pasilla || null, // peso_pasilla
+                req.body.peso_otro || null, // peso_otro
+                req.body.observaciones || null, // observaciones
+                3 // id_estado_proceso = 3 (Terminado)
             );
-            
+
             await clasificacionDAO.createClasificacion(clasificacionData);
-
-            const todosLosProcesos = await procesosDAO.getAllProcesosOrdenados();
-            const procesoClasificacionDef = todosLosProcesos.find(p => p.nombre.toLowerCase() === 'clasificación');
-
-            if (!procesoClasificacionDef) {
-                req.flash('error', "Error de configuración: Proceso 'Clasificación' no encontrado.");
-                return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
-            }
+            await loteDAO.updateProcesoActual(id_lote, 7); // 7 = Trilla (siguiente proceso)
             
-            const siguienteProcesoDef = todosLosProcesos.find(p => p.orden === (procesoClasificacionDef.orden + 1));
-            const idNuevoProcesoActualParaLote = siguienteProcesoDef ? siguienteProcesoDef.id : procesoClasificacionDef.id;
-            const nuevoEstadoGeneralLote = siguienteProcesoDef ? 2 : 3; // 2 En progreso, 3 Finalizado Lote
-
-            await loteDAO.updateLoteProcesoYEstado(id_lote, idNuevoProcesoActualParaLote, nuevoEstadoGeneralLote);
-
             req.flash('mensaje', 'Clasificación registrada exitosamente.');
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
-
         } catch (error) {
             console.error('Error al registrar clasificación:', error);
-            req.flash('error', 'Error interno al registrar la clasificación.');
+            // Mantener los datos del formulario y mostrar el error
+            req.flash('error', error.message || 'Error al registrar la clasificación. Por favor, verifica los datos e intenta nuevamente.');
+            // Guardar los datos para repopular el formulario
+            req.flash('fecha_clasificacion', req.body.fecha_clasificacion);
+            req.flash('peso_total', req.body.peso_total);
+            req.flash('peso_pergamino', req.body.peso_pergamino);
+            req.flash('peso_pasilla', req.body.peso_pasilla); 
+            req.flash('peso_otro', req.body.peso_otro);
+            req.flash('peso_cafe_bueno', req.body.peso_cafe_bueno);
+            req.flash('observaciones', req.body.observaciones);
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/clasificacion/registrar`);
         }
     }
@@ -917,14 +981,11 @@ class LoteController {
                 titulo: `Registrar Trilla - Lote ${lote.codigo}`,
                 finca: finca,
                 lote: lote,
-                peso_clasificado_final: clasificacionInfo.peso_final_clasificado,
+                peso_clasificado_final: clasificacionInfo.peso_cafe_bueno,
                 // Para repoblar
                 fecha_trilla: req.flash('fecha_trilla')[0] || '',
-                proveedor_externo: req.flash('proveedor_externo')[0] === 'true',
-                nombre_proveedor: req.flash('nombre_proveedor')[0] || '',
-                costo_servicio: req.flash('costo_servicio')[0] || '',
-                peso_final_trillado: req.flash('peso_final_trillado')[0] || '',
-                observaciones_trilla: req.flash('observaciones_trilla')[0] || '',
+                peso_final: req.flash('peso_final')[0] || '',
+                observaciones: req.flash('observaciones')[0] || '',
                 mensaje: req.flash('mensaje'),
                 error: req.flash('error')
             });
@@ -943,33 +1004,26 @@ class LoteController {
         if (!errors.isEmpty()) {
             req.flash('error', errors.array().map(e => e.msg));
             req.flash('fecha_trilla', req.body.fecha_trilla);
-            req.flash('proveedor_externo', req.body.proveedor_externo);
-            req.flash('nombre_proveedor', req.body.nombre_proveedor);
-            req.flash('costo_servicio', req.body.costo_servicio);
-            req.flash('peso_final_trillado', req.body.peso_final_trillado);
-            req.flash('observaciones_trilla', req.body.observaciones_trilla);
+            req.flash('peso_final', req.body.peso_final);
+            req.flash('observaciones', req.body.observaciones);
             return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/trilla/registrar`);
         }
 
         try {
             const clasificacionInfo = await clasificacionDAO.getClasificacionByLoteId(id_lote);
-            if (!clasificacionInfo || !clasificacionInfo.peso_final_clasificado) {
+            if (!clasificacionInfo || !clasificacionInfo.peso_cafe_bueno) {
                 req.flash('error', 'No se encontró el peso final de la clasificación.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/trilla/registrar`);
             }
 
-            const esProveedorExterno = req.body.proveedor_externo === 'true';
-
             const trillaData = new Trilla(
                 null, // id
                 id_lote,
-                clasificacionInfo.peso_final_clasificado, // peso_inicial para trilla
+                clasificacionInfo.peso_cafe_bueno, // peso_inicial para trilla
                 req.body.fecha_trilla,
-                esProveedorExterno,
-                esProveedorExterno ? req.body.nombre_proveedor : null,
-                esProveedorExterno ? (req.body.costo_servicio || null) : null,
-                req.body.peso_final_trillado,
-                req.body.observaciones_trilla
+                req.body.peso_final,
+                req.body.observaciones,
+                3 // id_estado_proceso = 3 (Terminado)
             );
             
             await trillaDAO.createTrilla(trillaData);
@@ -986,7 +1040,7 @@ class LoteController {
             }
             
             // Como Trilla es el último proceso en la lista de la BD que me diste, el lote se considera finalizado.
-            await loteDAO.updateLoteProcesoYEstado(id_lote, procesoTrillaDef.id, 3); // 3 = 'Finalizado' (estado general del lote)
+            await loteDAO.updateLoteProcesoYEstado(id_lote, procesoTrillaDef.id, 3);
 
             req.flash('mensaje', 'Trilla registrada exitosamente. El lote ha completado su ciclo de procesos.');
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);

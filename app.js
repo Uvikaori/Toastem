@@ -73,9 +73,38 @@ app.use(session({
   saveUninitialized: false,
   cookie: { 
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 24 horas
+    maxAge: 24 * 60 * 60 * 1000, // 24 horas
+    httpOnly: true, // Previene acceso JS al lado del cliente
+    sameSite: 'lax' // Restringe cookies a mismo sitio
   }
 }));
+
+// Protecciones de seguridad
+/*
+app.use(require('helmet')({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:", "http:"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:", "http:"],
+      fontSrc: ["'self'", "https:", "http:", "data:"],
+      imgSrc: ["'self'", "data:", "https:", "http:"],
+      connectSrc: ["'self'", "https:", "http:"]
+    }
+  }
+}));
+*/
+
+// Comentado temporalmente para diagnosticar problemas con los íconos
+// Recuerda volver a habilitar estas protecciones después
+
+// Limitar tasa de peticiones para prevenir ataques de fuerza bruta
+const limiter = require('express-rate-limit')({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // límite de 100 peticiones por ventana
+  message: 'Demasiadas peticiones desde esta IP, por favor intente de nuevo más tarde.'
+});
+app.use('/auth', limiter); // Aplicar solo a rutas de autenticación
 
 // Middleware para pasar usuario a todas las vistas
 app.use((req, res, next) => {

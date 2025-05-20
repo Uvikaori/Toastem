@@ -6,11 +6,37 @@ const validateInicioSecado = [
     body('fecha_inicio_secado')
         .notEmpty().withMessage('La fecha de inicio de secado es obligatoria.')
         .isISO8601().withMessage('Formato de fecha de inicio inválido.')
-        .toDate(),
+        .toDate()
+        .custom(async (value, { req }) => {
+            // Validar que la fecha de inicio de secado sea posterior a la fecha de zarandeo
+            const id_lote = parseInt(req.params.id_lote);
+            if (id_lote && !isNaN(id_lote)) {
+                const zarandeoInfo = await zarandeoDAO.getZarandeoByLoteId(id_lote);
+                if (zarandeoInfo && zarandeoInfo.fecha_zarandeo) {
+                    const fechaZarandeo = new Date(zarandeoInfo.fecha_zarandeo);
+                    if (new Date(value) < fechaZarandeo) {
+                        throw new Error(`La fecha de inicio de secado debe ser posterior a la fecha de zarandeo (${fechaZarandeo.toLocaleString()}).`);
+                    }
+                }
+            }
+            return true;
+        }),
 
     body('metodo_secado')
         .notEmpty().withMessage('El método de secado es obligatorio.')
-        .isIn(['Sol', 'Malla']).withMessage('Método de secado inválido. Valores permitidos: Sol, Malla.'),
+        .isIn(['Secado al sol', 'Secado mecánico', 'Secado por vía húmeda (con cereza)'])
+        .withMessage('Método de secado inválido. Valores permitidos: Secado al sol, Secado mecánico, Secado por vía húmeda (con cereza).'),
+
+    body('peso_inicial_secado')
+        .notEmpty().withMessage('El peso inicial del secado es obligatorio.')
+        .isDecimal({ decimal_digits: '1,2' }).withMessage('El peso inicial debe ser un número decimal.')
+        .toFloat()
+        .custom(value => {
+            if (value <= 0) {
+                throw new Error('El peso inicial debe ser positivo.');
+            }
+            return true;
+        }),
 
     body('humedad_inicial_secado')
         .optional({ checkFalsy: true })
@@ -23,8 +49,10 @@ const validateInicioSecado = [
             return true;
         }),
     
-    // No validamos peso_final ni fecha_fin aquí, ya que este es el form de INICIO.
-    // Esos campos se validarían en un formulario de FINALIZACIÓN de secado.
+    body('decision_venta')
+        .optional()
+        .isBoolean().withMessage('La decisión de venta debe ser un valor booleano.')
+        .toBoolean(),
 
     body('observaciones_secado')
         .optional({ checkFalsy: true })
@@ -33,7 +61,7 @@ const validateInicioSecado = [
         .escape(),
 ];
 
-// Podríamos tener otro validador para cuando se actualiza/finaliza el secado
+// Validador para cuando se finaliza el secado
 const validateFinSecado = [
     body('fecha_fin_secado')
         .notEmpty().withMessage('La fecha de fin de secado es obligatoria.')
@@ -74,6 +102,11 @@ const validateFinSecado = [
             }
             return true;
         }),
+    body('decision_venta')
+        .optional()
+        .isBoolean().withMessage('La decisión de venta debe ser un valor booleano.')
+        .toBoolean(),
+    
     body('observaciones_fin_secado')
         .optional({ checkFalsy: true })
         .trim()
@@ -82,4 +115,4 @@ const validateFinSecado = [
 ];
 
 
-module.exports = { validateInicioSecado, validateFinSecado }; // Exportamos ambos por si se usan 
+module.exports = { validateInicioSecado, validateFinSecado }; 

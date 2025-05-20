@@ -4,7 +4,7 @@ class Secado {
         id_lote,
         peso_inicial, // Peso ANTES del secado (viene de zarandeo.peso_final)
         fecha_inicio,
-        metodo_secado, // 'Sol', 'Malla'
+        metodo_secado, // 'Secado al sol', 'Secado mecánico', 'Secado por vía húmeda (con cereza)'
         humedad_inicial = null,
         fecha_fin = null,
         peso_final = null,

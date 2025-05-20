@@ -24,35 +24,49 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <p class="mb-3"><strong>Peso del lote después del Zarandeo (Peso inicial para secado):</strong> <%= peso_zarandeo_final %> kg</p>
+            <p class="mb-3"><strong>Peso del lote después del Zarandeo (Peso inicial para secado):</strong> <%= peso_zarandeo_final || 0 %> kg</p>
             <hr/>
             <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/secado/iniciar" method="POST">
+                <!-- Campo oculto para enviar el peso inicial -->
+                <input type="hidden" name="peso_inicial_secado" value="<%= peso_zarandeo_final || 0 %>">
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="fecha_inicio_secado" class="form-label">Fecha y Hora Inicio Secado:</label>
-                        <input type="datetime-local" class="form-control" id="fecha_inicio_secado" name="fecha_inicio_secado" value="<%= fecha_inicio_secado %>" required>
+                        <label for="fecha_inicio_secado" class="form-label">Fecha y Hora Inicio Secado: <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="fecha_inicio_secado" name="fecha_inicio_secado" value="<%= fecha_inicio_secado || '' %>" required>
+                        <small class="form-text text-muted">Campo obligatorio. Fecha y hora en que inicia el proceso de secado.</small>
                     </div>
                     <div class="col-md-6">
-                        <label for="metodo_secado" class="form-label">Método de Secado:</label>
+                        <label for="metodo_secado" class="form-label">Método de Secado: <span class="text-danger">*</span></label>
                         <select class="form-select" id="metodo_secado" name="metodo_secado" required>
                             <option value="" disabled <%= !metodo_secado ? 'selected' : '' %>>Seleccione un método...</option>
-                            <option value="Sol" <%= metodo_secado === 'Sol' ? 'selected' : '' %>>Sol</option>
-                            <option value="Malla" <%= metodo_secado === 'Malla' ? 'selected' : '' %>>Malla</option>
-                            <% // Podrías añadir más opciones si las tienes en tu ENUM de la BD %>
+                            <option value="Secado al sol" <%= metodo_secado === 'Secado al sol' ? 'selected' : '' %>>Secado al sol</option>
+                            <option value="Secado mecánico" <%= metodo_secado === 'Secado mecánico' ? 'selected' : '' %>>Secado mecánico</option>
+                            <option value="Secado por vía húmeda (con cereza)" <%= metodo_secado === 'Secado por vía húmeda (con cereza)' ? 'selected' : '' %>>Secado por vía húmeda (con cereza)</option>
                         </select>
+                        <small class="form-text text-muted">Campo obligatorio. Seleccione el método de secado utilizado.</small>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label for="humedad_inicial_secado" class="form-label">Humedad Inicial (%):</label>
-                    <input type="number" step="0.1" class="form-control" id="humedad_inicial_secado" name="humedad_inicial_secado" value="<%= humedad_inicial_secado %>" placeholder="Ej: 75.5">
+                    <input type="number" step="0.1" class="form-control" id="humedad_inicial_secado" name="humedad_inicial_secado" value="<%= humedad_inicial_secado || '' %>" placeholder="Ej: 75.5">
                     <small class="form-text text-muted">Opcional. Humedad del grano al iniciar el secado.</small>
                 </div>
 
                 <div class="mb-3">
                     <label for="observaciones_secado" class="form-label">Observaciones Iniciales:</label>
-                    <textarea class="form-control" id="observaciones_secado" name="observaciones_secado" rows="3" placeholder="Anotaciones sobre el inicio del secado"><%= observaciones_secado %></textarea>
+                    <textarea class="form-control" id="observaciones_secado" name="observaciones_secado" rows="3" placeholder="Anotaciones sobre el inicio del secado"><%= observaciones_secado || '' %></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="decision_venta" name="decision_venta" value="1" <%= decision_venta ? 'checked' : '' %>>
+                        <label class="form-check-label" for="decision_venta">
+                            ¿Considerar venta después del secado?
+                        </label>
+                        <small class="form-text text-muted d-block">Marque esta opción si planea vender el café después del secado.</small>
+                    </div>
                 </div>
                 
                 <div class="d-flex justify-content-end gap-2 mt-4">

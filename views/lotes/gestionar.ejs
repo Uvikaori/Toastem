@@ -13,14 +13,30 @@
         </a>
     </div>
 
-    <%# Mostrar mensajes flash %>
-    <% if (mensaje && mensaje.length > 0) { %>
-        <div class="alert alert-success alert-dismissible fade show" role="alert"><%= mensaje %><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+    <%# Mostrar mensajes de éxito (flash) %>
+    <% if (typeof mensaje !== 'undefined' && mensaje && mensaje.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= mensaje %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     <% } %>
-    <% if (error && error.length > 0) { %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    
+    <%# Mostrar errores (no flash) %>
+    <% if (typeof error !== 'undefined' && error && Array.isArray(error) && error.length > 0) { %>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
             <strong>Error:</strong>
-            <ul><% error.forEach(function(err){ %><li><%= Array.isArray(err) ? err.join(', ') : err %></li><% }) %></ul>
+            <ul>
+            <% error.forEach(function(err) { %>
+                <% if (err && err.toString().trim() !== '') { %>
+                    <li><%= Array.isArray(err) ? err.join(', ') : err %></li>
+                <% } %>
+            <% }) %>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } else if (typeof error === 'string' && error.trim() !== '') { %>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
+            <strong>Error:</strong> <%= error %>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <% } %>

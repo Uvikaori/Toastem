@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const fincaController = require('../controllers/fincaController');
-const { isAuthenticated } = require('../middlewares/auth');
+const { isAuthenticated, isFincaOwner } = require('../middlewares/auth');
 const { validateFinca } = require('../validators/fincaValidator');
+const loteRoutes = require('./loteRoutes');
 
 // Aplicar middleware de autenticación
 router.use(isAuthenticated);
@@ -21,7 +22,10 @@ router.get('/api/veredas/:departamento/:municipio', fincaController.getVeredasAP
 router.get('/gestionar', fincaController.listarFincas);
 
 // Rutas para actualizar y eliminar (requieren ID)
-router.put('/:id', validateFinca, fincaController.actualizarFinca);
-router.delete('/:id', fincaController.eliminarFinca);
+router.put('/:id', isFincaOwner, validateFinca, fincaController.actualizarFinca);
+router.delete('/:id', isFincaOwner, fincaController.eliminarFinca);
+
+// Anidamos las rutas de lotes
+router.use('/:id_finca/lotes', isFincaOwner, loteRoutes);
 
 module.exports = router;

@@ -73,6 +73,79 @@ document.addEventListener('DOMContentLoaded', function() {
     this.querySelector('i').classList.toggle('fa-eye-slash');
   });
 
+  // Validar nombre y apellido en tiempo real
+  nombreCompletoInput.addEventListener('input', function() {
+    const nombre = this.value;
+    const validacion = Validaciones.validarNombreCompleto(nombre);
+    if (validacion.valido) {
+      Validaciones.limpiarErrorCampo('nombre_completo');
+      this.classList.add('is-valid');
+      this.classList.remove('is-invalid');
+    } else {
+      Validaciones.mostrarErrorCampo('nombre_completo', validacion.mensaje);
+      this.classList.remove('is-valid');
+    }
+  });
+
+  // Validar email cuando el campo pierde el foco
+  correoInput.addEventListener('blur', function() {
+    const email = this.value.trim();
+    const validacion = Validaciones.validarEmail(email);
+    if (validacion.valido) {
+      Validaciones.limpiarErrorCampo('correo');
+      this.classList.add('is-valid');
+      this.classList.remove('is-invalid');
+    } else {
+      Validaciones.mostrarErrorCampo('correo', validacion.mensaje);
+      this.classList.remove('is-valid');
+    }
+  });
+
+  // Validar contraseña en tiempo real
+  contraseñaInput.addEventListener('input', function() {
+    const contraseña = this.value;
+    const validacion = Validaciones.validarContraseña(contraseña);
+    
+    if (validacion.valido) {
+      Validaciones.limpiarErrorCampo('contraseña');
+      this.classList.add('is-valid');
+    } else {
+      Validaciones.mostrarErrorCampo('contraseña', validacion.mensaje);
+      this.classList.remove('is-valid');
+    }
+
+    // Validar coincidencia de contraseñas si hay confirmación
+    if (confirmarContraseñaInput.value) {
+      validarContraseñas();
+    }
+  });
+
+  // Validar confirmación de contraseña en tiempo real
+  confirmarContraseñaInput.addEventListener('input', function() {
+    validarContraseñas();
+  });
+
+  // Validar pregunta de seguridad en tiempo real
+  preguntaSeguridadInput.addEventListener('change', function() {
+    const validacion = Validaciones.validarPreguntaSeguridad(this.value);
+    if (validacion.valido) {
+      Validaciones.limpiarErrorCampo('pregunta_seguridad');
+    } else {
+      Validaciones.mostrarErrorCampo('pregunta_seguridad', validacion.mensaje);
+    }
+  });
+
+  // Validar respuesta de seguridad
+  const respuestaSeguridadInput = document.getElementById('respuesta_seguridad');
+  respuestaSeguridadInput.addEventListener('blur', function() {
+    const validacion = Validaciones.validarRespuestaSeguridad(this.value);
+    if (validacion.valido) {
+      Validaciones.limpiarErrorCampo('respuesta_seguridad');
+    } else {
+      Validaciones.mostrarErrorCampo('respuesta_seguridad', validacion.mensaje);
+    }
+  });
+
   // Validar contraseñas coincidentes
   function validarContraseñas() {
     const contraseña = contraseñaInput.value;
@@ -82,20 +155,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const validacionContraseña = Validaciones.validarContraseña(contraseña);
     if (!validacionContraseña.valido) {
       Validaciones.mostrarErrorCampo('contraseña', validacionContraseña.mensaje);
+      contraseñaInput.classList.remove('is-valid');
       return false;
+    } else {
+      Validaciones.limpiarErrorCampo('contraseña');
+      contraseñaInput.classList.add('is-valid');
     }
 
     // Validar campo vacío de confirmación
-    const validacionConfirmacion = Validaciones.validarCampoVacio(confirmarContraseña, 'confirmar contraseña');
-    if (!validacionConfirmacion.valido) {
-      Validaciones.mostrarErrorCampo('confirmarContraseña', validacionConfirmacion.mensaje);
+    if (!confirmarContraseña) {
+      Validaciones.mostrarErrorCampo('confirmarContraseña', 'Debe confirmar la contraseña');
+      confirmarContraseñaInput.classList.remove('is-valid');
       return false;
     }
 
     // Validar coincidencia de contraseñas
     if (contraseña !== confirmarContraseña) {
       Validaciones.mostrarErrorCampo('confirmarContraseña', 'Las contraseñas no coinciden');
+      confirmarContraseñaInput.classList.remove('is-valid');
       return false;
+    } else {
+      Validaciones.limpiarErrorCampo('confirmarContraseña');
+      confirmarContraseñaInput.classList.add('is-valid');
     }
 
     return true;
@@ -115,31 +196,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Validar email
-  const correoInput = document.getElementById('correo');
-  correoInput.addEventListener('blur', function() {
-    const email = this.value.trim();
-    const validacion = Validaciones.validarEmail(email);
-    
-    if (validacion.valido) {
-      Validaciones.limpiarErrorCampo('correo');
-    } else {
-      Validaciones.mostrarErrorCampo('correo', validacion.mensaje);
-    }
-  });
-
-  // Validar contraseña
-  contraseñaInput.addEventListener('blur', function() {
-    const contraseña = this.value;
-    const validacion = Validaciones.validarContraseña(contraseña);
-    
-    if (validacion.valido) {
-      Validaciones.limpiarErrorCampo('contraseña');
-    } else {
-      Validaciones.mostrarErrorCampo('contraseña', validacion.mensaje);
-    }
-  });
-
   // Validar pregunta de seguridad
   const preguntaSeguridadInput = document.getElementById('pregunta_seguridad');
   preguntaSeguridadInput.addEventListener('change', function() {
@@ -148,17 +204,6 @@ document.addEventListener('DOMContentLoaded', function() {
       Validaciones.limpiarErrorCampo('pregunta_seguridad');
     } else {
       Validaciones.mostrarErrorCampo('pregunta_seguridad', validacion.mensaje);
-    }
-  });
-
-  // Validar respuesta de seguridad
-  const respuestaSeguridadInput = document.getElementById('respuesta_seguridad');
-  respuestaSeguridadInput.addEventListener('blur', function() {
-    const validacion = Validaciones.validarRespuestaSeguridad(this.value);
-    if (validacion.valido) {
-      Validaciones.limpiarErrorCampo('respuesta_seguridad');
-    } else {
-      Validaciones.mostrarErrorCampo('respuesta_seguridad', validacion.mensaje);
     }
   });
 

@@ -5,29 +5,34 @@
     </a>
     <h1 class="text-center">Gestión de Fincas</h1>
     
-    <% if (mensaje && ( (Array.isArray(mensaje) && mensaje.length > 0) || (typeof mensaje === 'string' && mensaje.trim() !== '') ) ) { %>
+    <%# Mostrar mensajes de éxito (flash) %>
+    <% if (typeof mensaje !== 'undefined' && mensaje && mensaje.length > 0) { %>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <% if (Array.isArray(mensaje)) { %>
-                <% mensaje.forEach(function(msg){ %><li><%= msg %></li><% }) %>
-            <% } else { %>
-                <%= mensaje %>
-            <% } %>
+            <%= mensaje %>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <% } %>
 
-    <% if (error && ( (Array.isArray(error) && error.length > 0) || (typeof error === 'string' && error.trim() !== '') ) ) { %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Error:</strong>
-            <% if (Array.isArray(error)) { %>
+    <%# Mostrar errores (no flash) %>
+    <% if (typeof error !== 'undefined' && error) { %>
+        <% if (Array.isArray(error) && error.length > 0) { %>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
+                <strong>Error:</strong>
                 <ul>
-                    <% error.forEach(function(err){ %><li><%= err %></li><% }) %>
+                <% error.forEach(function(err) { %>
+                    <% if (err && err.toString().trim() !== '') { %>
+                        <li><%= Array.isArray(err) ? err.join(', ') : err %></li>
+                    <% } %>
+                <% }) %>
                 </ul>
-            <% } else { %>
-                <%= error %>
-            <% } %>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } else if (typeof error === 'string' && error.trim() !== '') { %>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
+                <strong>Error:</strong> <%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
     <% } %>
 
     <!-- Listado de fincas -->

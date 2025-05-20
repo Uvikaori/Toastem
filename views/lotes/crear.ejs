@@ -9,14 +9,25 @@
 
     <h1 class="text-center mb-4">Crear Nuevo Lote para: <span class="text-toastem-primary"><%= nombre_finca %></span></h1>
 
-    <%# Mostrar mensajes flash %>
-    <% if (mensaje && mensaje.length > 0) { %>
-        <div class="alert alert-success alert-dismissible fade show" role="alert"><%= mensaje %><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+    <%# Mostrar mensajes de éxito (flash) %>
+    <% if (typeof mensaje !== 'undefined' && mensaje && mensaje.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= mensaje %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     <% } %>
-    <% if (error && error.length > 0) { %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    
+    <%# Mostrar errores (no flash) %>
+    <% if (typeof error !== 'undefined' && error && Array.isArray(error) && error.length > 0) { %>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
             <strong>Error:</strong>
-            <ul><% error.forEach(function(err){ %><li><%= Array.isArray(err) ? err.join(', ') : err %></li><% }) %></ul>
+            <ul>
+            <% error.forEach(function(err) { %>
+                <% if (err && err.toString().trim() !== '') { %>
+                    <li><%= Array.isArray(err) ? err.join(', ') : err %></li>
+                <% } %>
+            <% }) %>
+            </ul>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <% } %>
@@ -25,23 +36,23 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <label for="fecha_recoleccion" class="form-label fs-5">Fecha de Recolección <span class="text-danger">*</span></label>
-                <input type="date" class="form-control form-control-lg" id="fecha_recoleccion" name="fecha_recoleccion" value="<%= fecha_recoleccion %>" required>
+                <input type="date" class="form-control form-control-lg" id="fecha_recoleccion" name="fecha_recoleccion" value="<%= typeof fecha_recoleccion !== 'undefined' ? fecha_recoleccion : '' %>" required>
                 <div class="invalid-feedback">Por favor, ingrese la fecha de recolección.</div>
             </div>
 
             <div class="col-md-6">
                 <label for="peso_inicial" class="form-label fs-5">Peso Inicial (kg) <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" class="form-control form-control-lg" id="peso_inicial" name="peso_inicial" placeholder="Ej: 150.75" value="<%= peso_inicial %>" required>
+                <input type="number" step="0.01" class="form-control form-control-lg" id="peso_inicial" name="peso_inicial" placeholder="Ej: 150.75" value="<%= typeof peso_inicial !== 'undefined' ? peso_inicial : '' %>" required>
                 <div class="invalid-feedback">Ingrese un peso válido (ej: 150 o 150.75).</div>
             </div>
 
             <div class="col-md-6">
                 <label for="tipo_cafe" class="form-label fs-5">Tipo de Café <span class="text-danger">*</span></label>
                 <select class="form-select form-select-lg" id="tipo_cafe" name="tipo_cafe" required>
-                    <option value="" disabled <%= !tipo_cafe ? 'selected' : '' %>>Seleccione tipo...</option>
-                    <option value="Rojo" <%= tipo_cafe === 'Rojo' ? 'selected' : '' %>>Rojo</option>
-                    <option value="Amarillo" <%= tipo_cafe === 'Amarillo' ? 'selected' : '' %>>Amarillo</option>
-                    <option value="Mezcla" <%= tipo_cafe === 'Mezcla' ? 'selected' : '' %>>Mezcla</option>
+                    <option value="" disabled <%= typeof tipo_cafe === 'undefined' || !tipo_cafe ? 'selected' : '' %>>Seleccione tipo...</option>
+                    <option value="Rojo" <%= typeof tipo_cafe !== 'undefined' && tipo_cafe === 'Rojo' ? 'selected' : '' %>>Rojo</option>
+                    <option value="Amarillo" <%= typeof tipo_cafe !== 'undefined' && tipo_cafe === 'Amarillo' ? 'selected' : '' %>>Amarillo</option>
+                    <option value="Mezcla" <%= typeof tipo_cafe !== 'undefined' && tipo_cafe === 'Mezcla' ? 'selected' : '' %>>Mezcla</option>
                 </select>
                 <div class="invalid-feedback">Seleccione el tipo de café.</div>
             </div>
@@ -49,9 +60,9 @@
             <div class="col-md-6">
                 <label for="tipo_recoleccion" class="form-label fs-5">Tipo de Recolección <span class="text-danger">*</span></label>
                 <select class="form-select form-select-lg" id="tipo_recoleccion" name="tipo_recoleccion" required>
-                    <option value="" disabled <%= !tipo_recoleccion ? 'selected' : '' %>>Seleccione tipo...</option>
-                    <option value="Selectiva" <%= tipo_recoleccion === 'Selectiva' ? 'selected' : '' %>>Selectiva</option>
-                    <option value="General" <%= tipo_recoleccion === 'General' ? 'selected' : '' %>>General</option>
+                    <option value="" disabled <%= typeof tipo_recoleccion === 'undefined' || !tipo_recoleccion ? 'selected' : '' %>>Seleccione tipo...</option>
+                    <option value="Selectiva" <%= typeof tipo_recoleccion !== 'undefined' && tipo_recoleccion === 'Selectiva' ? 'selected' : '' %>>Selectiva</option>
+                    <option value="General" <%= typeof tipo_recoleccion !== 'undefined' && tipo_recoleccion === 'General' ? 'selected' : '' %>>General</option>
                 </select>
                 <div class="invalid-feedback">Seleccione el tipo de recolección.</div>
             </div>
@@ -60,7 +71,7 @@
                 <label for="observaciones" class="form-label fs-5">Observaciones 
                     <i class="fas fa-info-circle text-muted" title="Puede agregar más información sobre el lote recolectado, como el estado de las plantas, condiciones climáticas, etc."></i>
                 </label>
-                <textarea class="form-control form-control-lg" id="observaciones" name="observaciones" rows="3" placeholder="Detalles adicionales sobre el lote..."><%= observaciones %></textarea>
+                <textarea class="form-control form-control-lg" id="observaciones" name="observaciones" rows="3" placeholder="Detalles adicionales sobre el lote..."><%= typeof observaciones !== 'undefined' ? observaciones : '' %></textarea>
             </div>
         </div>
 

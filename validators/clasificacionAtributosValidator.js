@@ -5,29 +5,73 @@ const validateClasificacion = [
     body('fecha_clasificacion')
         .notEmpty().withMessage('La fecha de clasificación es obligatoria.')
         .isISO8601().withMessage('Formato de fecha inválido.')
-        .toDate(),
+        .toDate()
+        .custom(async (value, { req }) => {
+            // Validar que la fecha de clasificación sea posterior a la fecha de fin de secado
+            const id_lote = parseInt(req.params.id_lote);
+            if (id_lote && !isNaN(id_lote)) {
+                const secadoInfo = await secadoDAO.getSecadoByLoteId(id_lote);
+                if (secadoInfo && secadoInfo.fecha_fin) {
+                    const fechaFinSecado = new Date(secadoInfo.fecha_fin);
+                    if (new Date(value) < fechaFinSecado) {
+                        throw new Error(`La fecha de clasificación debe ser posterior a la fecha de finalización del secado (${fechaFinSecado.toLocaleString()}).`);
+                    }
+                }
+            }
+            return true;
+        }),
 
-    body('proveedor_externo')
-        .isBoolean().withMessage('Valor inválido para proveedor externo.'),
-
-    body('nombre_proveedor')
-        .if(body('proveedor_externo').equals('true'))
-        .notEmpty().withMessage('El nombre del proveedor es obligatorio si es externo.')
-        .trim().escape(),
-
-    body('costo_servicio')
-        .if(body('proveedor_externo').equals('true'))
+    body('peso_total')
         .optional({ checkFalsy: true })
-        .isDecimal().withMessage('El costo del servicio debe ser un número.')
-        .toFloat(),
+        .isNumeric().withMessage('El peso total debe ser un número.')
+        .toFloat()
+        .custom((value) => {
+            if (value < 0) {
+                throw new Error('El peso total no puede ser negativo.');
+            }
+            return true;
+        }),
 
-    body('peso_final_clasificado')
-        .notEmpty().withMessage('El peso final clasificado es obligatorio.')
-        .isDecimal({ decimal_digits: '1,2' }).withMessage('El peso debe ser un número decimal.')
+    body('peso_pergamino')
+        .optional({ checkFalsy: true })
+        .isNumeric().withMessage('El peso del pergamino debe ser un número.')
+        .toFloat()
+        .custom((value) => {
+            if (value < 0) {
+                throw new Error('El peso del pergamino no puede ser negativo.');
+            }
+            return true;
+        }),
+
+    body('peso_pasilla')
+        .optional({ checkFalsy: true })
+        .isNumeric().withMessage('El peso de la pasilla debe ser un número.')
+        .toFloat()
+        .custom((value) => {
+            if (value < 0) {
+                throw new Error('El peso de la pasilla no puede ser negativo.');
+            }
+            return true;
+        }),
+
+    body('peso_otro')
+        .optional({ checkFalsy: true })
+        .isNumeric().withMessage('El peso de otros debe ser un número.')
+        .toFloat()
+        .custom((value) => {
+            if (value < 0) {
+                throw new Error('El peso de otros no puede ser negativo.');
+            }
+            return true;
+        }),
+
+    body('peso_cafe_bueno')
+        .notEmpty().withMessage('El peso del café bueno es obligatorio.')
+        .isNumeric().withMessage('El peso del café bueno debe ser un número.')
         .toFloat()
         .custom(async (value, { req }) => {
             if (value <= 0) {
-                throw new Error('El peso final clasificado debe ser positivo.');
+                throw new Error('El peso del café bueno debe ser positivo.');
             }
             const id_lote = parseInt(req.params.id_lote);
             if (id_lote && !isNaN(id_lote)) {
@@ -35,14 +79,14 @@ const validateClasificacion = [
                 // Solo validar si el secado está terminado y tiene un peso_final
                 if (secadoInfo && secadoInfo.peso_final !== null && secadoInfo.id_estado_proceso === 3) {
                     if (value > secadoInfo.peso_final) {
-                        throw new Error(`El peso clasificado (${value} kg) no puede ser mayor que el peso final del secado (${secadoInfo.peso_final} kg).`);
+                        throw new Error(`El peso del café bueno (${value} kg) no puede ser mayor que el peso final del secado (${secadoInfo.peso_final} kg).`);
                     }
                 }
             }
             return true;
         }),
 
-    body('observaciones_clasificacion')
+    body('observaciones')
         .optional({ checkFalsy: true })
         .trim()
         .isLength({ max: 1000 }).withMessage('Las observaciones no pueden exceder los 1000 caracteres.')

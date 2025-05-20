@@ -5,7 +5,21 @@ const validateFermentacionLavado = [
     body('fecha_inicio_fermentacion')
         .notEmpty().withMessage('La fecha de inicio de fermentación es obligatoria.')
         .isISO8601().withMessage('Formato de fecha de inicio de fermentación inválido.')
-        .toDate(),
+        .toDate()
+        .custom(async (value, { req }) => {
+            // Validar que la fecha de inicio de fermentación sea posterior a la fecha de despulpado
+            const id_lote = parseInt(req.params.id_lote);
+            if (id_lote && !isNaN(id_lote)) {
+                const despulpadoInfo = await despulpadoDAO.getDespulpadoByLoteId(id_lote);
+                if (despulpadoInfo && despulpadoInfo.fecha_despulpado) {
+                    const fechaDespulpado = new Date(despulpadoInfo.fecha_despulpado);
+                    if (new Date(value) < fechaDespulpado) {
+                        throw new Error(`La fecha de inicio de fermentación debe ser posterior a la fecha de despulpado (${fechaDespulpado.toLocaleString()}).`);
+                    }
+                }
+            }
+            return true;
+        }),
 
     body('fecha_lavado')
         .notEmpty().withMessage('La fecha de lavado es obligatoria.')

@@ -15,21 +15,69 @@
         </div>
     </div>
 
-    <%# Mostrar mensajes flash %>
-    <% if (mensaje && mensaje.length > 0) { %>
-        <div class="alert alert-success alert-dismissible fade show" role="alert"><%= mensaje %><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
-    <% } %>
-    <% if (error && error.length > 0) { %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Error:</strong>
-            <ul><% error.forEach(function(err){ %><li><%= Array.isArray(err) ? err.join(", ") : err %></li><% }) %></ul>
+    <%# Mostrar mensajes de éxito (flash) %>
+    <% if (typeof mensaje !== 'undefined' && mensaje && mensaje.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= mensaje %>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+    <% } %>
+    
+    <%# Mostrar errores (no flash) %>
+    <% if (typeof error !== 'undefined' && error) { %>
+        <% if (Array.isArray(error) && error.length > 0 && error.some(err => err && err.toString().trim() !== '')) { %>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
+                <strong>Error:</strong>
+                <ul>
+                <% error.forEach(function(err) { %>
+                    <% if (err && err.toString().trim() !== '') { %>
+                        <li><%= Array.isArray(err) ? err.join(', ') : err %></li>
+                    <% } %>
+                <% }) %>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } else if (typeof error === 'string' && error.trim() !== '') { %>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
+                <strong>Error:</strong> <%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
     <% } %>
 
     <div class="row">
         <% procesosConEstado.forEach(proceso => { %>
             <div class="col-md-6 col-lg-4 mb-4">
+                <%# AQUÍ: Inicializar las variables para este proceso %>
+                <% 
+                    let etapaInfo = proceso.datosEtapa;
+                    let urlFormulario = '#';
+                    let urlVer = '#';
+                    let urlAccionAdicional = proceso.urlAccionAdicional;
+                    let textoAccionAdicional = proceso.textoAccionAdicional;
+                    
+                    if (proceso.nombre.toLowerCase() === 'despulpado') {
+                        urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/despulpado/registrar`;
+                    } else if (proceso.nombre.toLowerCase() === 'fermentación y lavado') {
+                        urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/fermentacion-lavado/registrar`;
+                    } else if (proceso.nombre.toLowerCase() === 'zarandeo') {
+                        urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/zarandeo/registrar`;
+                    } else if (proceso.nombre.toLowerCase() === 'secado') {
+                        if (!etapaInfo) {
+                            urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/secado/iniciar`;
+                        } else if (etapaInfo.id_estado_proceso === 2) {
+                            urlAccionAdicional = `/fincas/${finca.id}/lotes/${lote.id}/secado/finalizar`;
+                            textoAccionAdicional = 'Finalizar Secado';
+                        }
+                    } else if (proceso.nombre.toLowerCase() === 'clasificación') {
+                        urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/clasificacion/registrar`;
+                    } else if (proceso.nombre.toLowerCase() === 'trilla') {
+                        urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/trilla/registrar`;
+                    }
+
+                    // Diagnóstico para verificar que se generan bien las URLs
+                    console.log(`Proceso: ${proceso.nombre}, URL: ${urlFormulario}`);
+                %>
                 <div class="card h-100 shadow-sm proceso-card">
                     <div class="card-header bg-toastem-primary text-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0"><%= proceso.nombre %></h5>
@@ -54,14 +102,31 @@
                         <p class="card-text"><%= proceso.descripcion || 'Sin descripción.' %></p>
                         
                         <%# Detalles específicos del proceso si existen %>
-                        <% if (proceso.nombre.toLowerCase() === 'despulpado' && proceso.datosEtapa) { %>
+                        <% if (proceso.nombre.toLowerCase() === 'recolección') { %>
                             <hr>
-                            <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Remojo:</strong> <%= new Date(proceso.datosEtapa.fecha_remojo).toLocaleString("es-CO") %></p>
-                            <p class="mb-1"><strong><i class="fas fa-calendar-check text-secondary me-1"></i> Despulpado:</strong> <%= new Date(proceso.datosEtapa.fecha_despulpado).toLocaleString("es-CO") %></p>
-                            <p class="mb-1"><strong><i class="fas fa-weight-hanging text-secondary me-1"></i> Peso Inicial (Lote):</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
-                            <p class="mb-1"><strong><i class="fas fa-balance-scale text-secondary me-1"></i> Peso Final (Desp.):</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
-                            <% if (proceso.datosEtapa.observaciones) { %>
-                                <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= proceso.datosEtapa.observaciones %></small></p>
+                            <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Recolección:</strong> <%= new Date(lote.fecha_recoleccion).toLocaleDateString("es-CO") %></p>
+                            <p class="mb-1"><strong><i class="fas fa-coffee text-secondary me-1"></i> Tipo de Café:</strong> <%= lote.tipo_cafe %></p>
+                            <p class="mb-1"><strong><i class="fas fa-hand-paper text-secondary me-1"></i> Tipo Recolección:</strong> <%= lote.tipo_recoleccion %></p>
+                            <p class="mb-1"><strong><i class="fas fa-weight-hanging text-secondary me-1"></i> Peso Inicial:</strong> <%= lote.peso_inicial %> kg</p>
+                            <% if (lote.observaciones) { %>
+                                <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= lote.observaciones %></small></p>
+                            <% } %>
+                        <% } %>
+                        <%# --- FIN Detalles Recolección --- %>
+                        
+                        <%# Detalles específicos del proceso si existen %>
+                        <% if (proceso.nombre.toLowerCase() === 'despulpado') { %>
+                            <hr>
+                            <% if (proceso.datosEtapa) { %>
+                                <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Remojo:</strong> <%= new Date(proceso.datosEtapa.fecha_remojo).toLocaleString("es-CO") %></p>
+                                <p class="mb-1"><strong><i class="fas fa-calendar-check text-secondary me-1"></i> Despulpado:</strong> <%= new Date(proceso.datosEtapa.fecha_despulpado).toLocaleString("es-CO") %></p>
+                                <p class="mb-1"><strong><i class="fas fa-weight-hanging text-secondary me-1"></i> Peso Inicial (Lote):</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
+                                <p class="mb-1"><strong><i class="fas fa-balance-scale text-secondary me-1"></i> Peso Final (Desp.):</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
+                                <% if (proceso.datosEtapa.observaciones) { %>
+                                    <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= proceso.datosEtapa.observaciones %></small></p>
+                                <% } %>
+                            <% } else { %>
+                                <p class="text-muted"><i class="fas fa-info-circle me-1"></i> No se ha registrado el proceso de despulpado aún.</p>
                             <% } %>
                         <% } %>
                         <%# --- FIN Detalles Despulpado --- %>
@@ -96,14 +161,16 @@
                             <hr>
                             <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Inicio Secado:</strong> <%= new Date(proceso.datosEtapa.fecha_inicio).toLocaleString("es-CO") %></p>
                             <p class="mb-1"><strong><i class="fas fa-sun text-secondary me-1"></i> Método:</strong> <%= proceso.datosEtapa.metodo_secado %></p>
-                            <p class="mb-1"><strong><i class="fas fa-tint-slash text-secondary me-1"></i> Humedad Inicial:</strong> <%= proceso.datosEtapa.humedad_inicial !== null ? proceso.datosEtapa.humedad_inicial + ' %' : 'N/A' %></p>
-                            <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial (Post-Zarandeo):</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
+                            <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial:</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
+                            <% if (proceso.datosEtapa.humedad_inicial !== null) { %>
+                                <p class="mb-1"><strong><i class="fas fa-tint-slash text-secondary me-1"></i> Humedad Inicial:</strong> <%= proceso.datosEtapa.humedad_inicial %> %</p>
+                            <% } %>
                             
                             <% if (proceso.datosEtapa.fecha_fin) { %>
                                 <p class="mb-1"><strong><i class="fas fa-calendar-check text-secondary me-1"></i> Fin Secado:</strong> <%= new Date(proceso.datosEtapa.fecha_fin).toLocaleString("es-CO") %></p>
                             <% } %>
                             <% if (proceso.datosEtapa.peso_final !== null) { %>
-                                <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final (Post-Secado):</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
+                                <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final:</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
                             <% } %>
 
                             <% if (proceso.datosEtapa.observaciones) { %>
@@ -218,21 +285,30 @@
                     <div class="card-footer bg-light text-center">
                         <% if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 3) { // 3 = Terminado %>
                             <button class="btn btn-sm btn-success disabled"><i class="fas fa-check-circle me-1"></i> Terminado</button>
-                        <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2) { // 2 = En Progreso (para Secado) %>
-                            <a href="<%= proceso.urlAccionAdicional %>" class="btn btn-sm btn-warning">
-                                <i class="fas fa-flag-checkered me-1"></i> <%= proceso.textoAccionAdicional || 'Acción' %>
+                        <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2) { // 2 = En Progreso %>
+                            <a href="<%= urlAccionAdicional %>" class="btn btn-sm btn-warning">
+                                <i class="fas fa-flag-checkered me-1"></i> <%= textoAccionAdicional || 'Acción' %>
                             </a>
-                            <%# Aquí también podrías añadir un enlace a "Registrar Seguimiento de Secado" si lo implementas %>
-                        <% } else if (!proceso.datosEtapa && lote.id_proceso_actual === proceso.id && (lote.id_estado_proceso === 1 || lote.id_estado_proceso === 2) && proceso.urlFormulario && proceso.urlFormulario !== '#') { %>
-                            <a href="<%= proceso.urlFormulario %>" class="btn btn-sm btn-primary">
-                                <i class="fas fa-edit me-1"></i> Registrar/Iniciar <%= proceso.nombre %>
+                        <% } else if (proceso.nombre.toLowerCase() === 'recolección') { %>
+                            <button class="btn btn-sm btn-success disabled"><i class="fas fa-check-circle me-1"></i> Completado</button>
+                        <% } else if (!proceso.datosEtapa && lote.id_proceso_actual === proceso.id && (lote.id_estado_proceso === 1 || lote.id_estado_proceso === 2) && urlFormulario && urlFormulario !== '#') { %>
+                            <a href="<%= urlFormulario %>" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit me-1"></i> Registrar <%= proceso.nombre %>
                             </a>
-                        <% } else {
-                            // Si el proceso no es el actual, o el lote no está en progreso, o no hay formulario definido (ej. porque ya se completó de otra forma)
-                            let buttonText = 'No Disponible Aún';
-                            if (proceso.datosEtapa) buttonText = 'Registrado (Ver Detalles)'; // Genérico si no cae en Terminado/En Progreso
-                        %>    
-                            <button class="btn btn-sm btn-outline-secondary disabled"><%= buttonText %></button>
+                        <% } else { %>
+                            <% if (!proceso.datosEtapa && urlFormulario && urlFormulario !== '#') { %>
+                                <a href="<%= urlFormulario %>" class="btn btn-sm btn-secondary">
+                                    <i class="fas fa-clock me-1"></i> Registrar (fuera de secuencia)
+                                </a>
+                            <% } else { %>
+                                <button class="btn btn-sm btn-outline-secondary disabled">
+                                    <% if (proceso.datosEtapa) { %>
+                                        <i class="fas fa-eye me-1"></i> Ver Detalles
+                                    <% } else { %>
+                                        <i class="fas fa-clock me-1"></i> No Disponible Aún
+                                    <% } %>
+                                </button>
+                            <% } %>
                         <% } %>
                     </div>
                 </div>

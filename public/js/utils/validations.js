@@ -2,7 +2,7 @@
 const REGEX = {
   NOMBRE: /^[A-Za-zÑñÁáÉéÍíÓóÚúÜü\s]+$/,
   EMAIL: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-  PASSWORD: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
+  PASSWORD: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/,
   UBICACION: /^[A-Za-zÑñÁáÉéÍíÓóÚúÜü0-9\s.,#-]+$/
 };
 
@@ -81,7 +81,7 @@ function validarContraseña(contraseña) {
   if (!REGEX.PASSWORD.test(contraseña)) {
     return {
       valido: false,
-      mensaje: 'La contraseña debe tener al menos 8 caracteres, una letra y un número'
+      mensaje: 'La contraseña debe tener al menos 6 caracteres, una letra y un número'
     };
   }
   return { valido: true };

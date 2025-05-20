@@ -22,6 +22,69 @@ document.addEventListener('DOMContentLoaded', function() {
         button.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
     }
 
+    // Validar contraseña en tiempo real
+    const nuevaContraseñaInput = document.getElementById('nuevaContraseña');
+    const confirmarContraseñaInput = document.getElementById('confirmarContraseña');
+
+    nuevaContraseñaInput.addEventListener('input', function() {
+        const contraseña = this.value;
+        const validacion = Validaciones.validarContraseña(contraseña);
+        
+        if (validacion.valido) {
+            Validaciones.limpiarErrorCampo('nuevaContraseña');
+            this.classList.add('is-valid');
+        } else {
+            Validaciones.mostrarErrorCampo('nuevaContraseña', validacion.mensaje);
+            this.classList.remove('is-valid');
+        }
+
+        // Validar coincidencia de contraseñas si hay confirmación
+        if (confirmarContraseñaInput.value) {
+            validarContraseñas();
+        }
+    });
+
+    // Validar confirmación de contraseña en tiempo real
+    confirmarContraseñaInput.addEventListener('input', function() {
+        validarContraseñas();
+    });
+
+    // Función para validar contraseñas coincidentes
+    function validarContraseñas() {
+        const contraseña = nuevaContraseñaInput.value;
+        const confirmarContraseña = confirmarContraseñaInput.value;
+
+        // Validar formato de contraseña
+        const validacionContraseña = Validaciones.validarContraseña(contraseña);
+        if (!validacionContraseña.valido) {
+            Validaciones.mostrarErrorCampo('nuevaContraseña', validacionContraseña.mensaje);
+            nuevaContraseñaInput.classList.remove('is-valid');
+            return false;
+        } else {
+            Validaciones.limpiarErrorCampo('nuevaContraseña');
+            nuevaContraseñaInput.classList.add('is-valid');
+        }
+
+        // Validar campo vacío de confirmación
+        if (!confirmarContraseña) {
+            Validaciones.mostrarErrorCampo('confirmarContraseña', 'Debe confirmar la contraseña');
+            confirmarContraseñaInput.classList.remove('is-valid');
+            return false;
+        }
+
+        // Validar coincidencia de contraseñas
+        if (contraseña !== confirmarContraseña) {
+            Validaciones.mostrarErrorCampo('confirmarContraseña', 'Las contraseñas no coinciden');
+            confirmarContraseñaInput.classList.remove('is-valid');
+            return false;
+        } else {
+            Validaciones.limpiarErrorCampo('confirmarContraseña');
+            confirmarContraseñaInput.classList.add('is-valid');
+        }
+
+        return true;
+    }
+
     // Paso 1: Verificar correo
     formCorreo.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -69,8 +132,13 @@ document.addEventListener('DOMContentLoaded', function() {
         limpiarErrores();
 
         const respuesta = document.getElementById('respuesta').value;
-        const nuevaContraseña = document.getElementById('nuevaContraseña').value;
-        const confirmarContraseña = document.getElementById('confirmarContraseña').value;
+        const nuevaContraseña = nuevaContraseñaInput.value;
+        const confirmarContraseña = confirmarContraseñaInput.value;
+
+        // Validar contraseñas antes de enviar
+        if (!validarContraseñas()) {
+            return;
+        }
 
         try {
             const response = await fetch('/auth/reset-password', {
@@ -113,11 +181,71 @@ document.addEventListener('DOMContentLoaded', function() {
         if (elemento) {
             elemento.textContent = mensaje;
             elemento.style.display = 'block';
+            const inputElement = document.getElementById(elementId.replace('Error', ''));
+            if (inputElement) {
+                inputElement.classList.add('is-invalid');
+                inputElement.classList.remove('is-valid');
+            }
         }
     }
 
     function limpiarErrores() {
         const errores = document.querySelectorAll('.invalid-feedback');
-        errores.forEach(error => error.textContent = '');
+        errores.forEach(error => {
+            error.textContent = '';
+            error.style.display = 'none';
+        });
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.classList.remove('is-invalid', 'is-valid');
+        });
     }
+
+    // Validar email cuando el campo pierde el foco
+    const correoInput = document.getElementById('correo');
+    correoInput.addEventListener('blur', async function() {
+        const email = this.value.trim();
+        const validacion = Validaciones.validarEmail(email);
+
+        if (validacion.valido) {
+            Validaciones.limpiarErrorCampo('correo');
+            this.classList.add('is-valid');
+            this.classList.remove('is-invalid');
+            // Si el correo es válido, intentar obtener la pregunta de seguridad
+            try {
+                const response = await fetch('/auth/verificar-correo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ correo: email })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    preguntaLabel.textContent = data.pregunta;
+                    formCorreo.classList.add('d-none');
+                    formRespuesta.classList.remove('d-none');
+                    Validaciones.limpiarErrorCampo('correo'); 
+                } else {
+                    Validaciones.mostrarErrorCampo('correo', data.errores?.correo || 'Error al verificar el correo.');
+                    formCorreo.classList.remove('d-none');
+                    formRespuesta.classList.add('d-none');
+                }
+            } catch (error) {
+                Validaciones.mostrarErrorCampo('correo', 'Error al conectar con el servidor.');
+                formCorreo.classList.remove('d-none');
+                formRespuesta.classList.add('d-none');
+            }
+        } else {
+            Validaciones.mostrarErrorCampo('correo', validacion.mensaje);
+            this.classList.remove('is-valid');
+            formCorreo.classList.remove('d-none');
+            formRespuesta.classList.add('d-none'); // Ocultar pregunta si el email no es válido
+        }
+    });
+
+    // Validar respuesta de seguridad en tiempo real
+    const respuestaInput = document.getElementById('respuesta');
+    respuestaInput.addEventListener('input', function() {
+        // ... existing code ...
+    });
 }); 

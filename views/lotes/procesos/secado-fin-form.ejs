@@ -26,25 +26,43 @@
         <div class="card-body">
             <p class="mb-1"><strong>Lote:</strong> <%= lote.codigo %></p>
             <p class="mb-1"><strong>Inicio de Secado:</strong> <%= new Date(secado.fecha_inicio).toLocaleString('es-CO') %></p>
+            <p class="mb-1"><strong>Método de Secado:</strong> <%= secado.metodo_secado %></p>
             <p class="mb-3"><strong>Peso Inicial del Secado:</strong> <%= secado.peso_inicial %> kg</p>
             <hr/>
             <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/secado/finalizar" method="POST">
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="fecha_fin_secado" class="form-label">Fecha y Hora de Finalización Secado:</label>
+                        <label for="fecha_fin_secado" class="form-label">Fecha y Hora de Finalización Secado: <span class="text-danger">*</span></label>
                         <input type="datetime-local" class="form-control" id="fecha_fin_secado" name="fecha_fin_secado" value="<%= fecha_fin_secado %>" required>
+                        <small class="form-text text-muted">Campo obligatorio. Debe ser posterior a la fecha de inicio.</small>
                     </div>
                     <div class="col-md-6">
-                        <label for="peso_final_secado" class="form-label">Peso Final Después del Secado (kg):</label>
+                        <label for="peso_final_secado" class="form-label">Peso Final Después del Secado (kg): <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" class="form-control" id="peso_final_secado" name="peso_final_secado" value="<%= peso_final_secado %>" placeholder="Ej: 25.50" required>
-                        <small class="form-text text-muted">Peso del café después de completar el secado.</small>
+                        <small class="form-text text-muted">Campo obligatorio. Peso del café después de completar el secado.</small>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label for="observaciones_fin_secado" class="form-label">Observaciones Finales:</label>
                     <textarea class="form-control" id="observaciones_fin_secado" name="observaciones_fin_secado" rows="3" placeholder="Anotaciones sobre la finalización del secado"><%= observaciones_fin_secado %></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="card border-light">
+                        <div class="card-header bg-light">Decisión de Venta</div>
+                        <div class="card-body">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="decision_venta" name="decision_venta" value="1" <%= secado.decision_venta ? 'checked' : '' %>>
+                                <label class="form-check-label" for="decision_venta">
+                                    ¿Desea vender el café después del secado?
+                                </label>
+                            </div>
+                            <small class="form-text text-muted d-block">Si marca esta opción, el café se marcará para venta y no continuará con los demás procesos.</small>
+                            <small class="form-text text-muted d-block">La fecha de decisión se registrará automáticamente.</small>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="d-flex justify-content-end gap-2 mt-4">

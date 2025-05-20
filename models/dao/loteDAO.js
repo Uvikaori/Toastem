@@ -72,6 +72,25 @@ class LoteDAO {
     }
 
     /**
+     * Obtiene un lote por su ID y verifica que pertenezca al usuario especificado.
+     * @param {number} id_lote - ID del lote.
+     * @param {number} id_usuario - ID del usuario.
+     * @returns {Promise<Object|null>} - Objeto del lote o null si no se encuentra o no pertenece al usuario.
+     */
+    async getLoteByIdAndUserId(id_lote, id_usuario) {
+        try {
+            const [rows] = await db.query(
+                'SELECT l.*, ep.nombre as estado_proceso_nombre, p.nombre as proceso_actual_nombre FROM lotes l LEFT JOIN estados_proceso ep ON l.id_estado_proceso = ep.id LEFT JOIN procesos p ON l.id_proceso_actual = p.id WHERE l.id = ? AND l.id_usuario = ?',
+                [id_lote, id_usuario]
+            );
+            return rows.length > 0 ? rows[0] : null;
+        } catch (error) {
+            console.error('Error al obtener el lote por ID y usuario:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Actualiza el proceso actual y el estado general de un lote.
      * @param {number} id_lote - ID del lote a actualizar.
      * @param {number} id_nuevo_proceso_actual - ID del nuevo proceso actual (de la tabla `procesos`).

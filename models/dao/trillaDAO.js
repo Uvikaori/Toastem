@@ -11,18 +11,15 @@ class TrillaDAO {
             id_lote,
             peso_inicial,
             fecha_trilla,
-            proveedor_externo,
-            nombre_proveedor,
-            costo_servicio,
-            peso_final_trillado,
+            peso_final,
             observaciones,
             id_estado_proceso = 3 // Por defecto 'Terminado'
         } = trillaData;
 
         try {
             const [result] = await db.query(
-                'INSERT INTO trilla (id_lote, peso_inicial, fecha_trilla, proveedor_externo, nombre_proveedor, costo_servicio, peso_final_trillado, observaciones, id_estado_proceso) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [id_lote, peso_inicial, fecha_trilla, proveedor_externo, nombre_proveedor, costo_servicio, peso_final_trillado, observaciones, id_estado_proceso]
+                'INSERT INTO trilla (id_lote, peso_inicial, fecha_trilla, peso_final, observaciones, id_estado_proceso) VALUES (?, ?, ?, ?, ?, ?)',
+                [id_lote, peso_inicial, fecha_trilla, peso_final, observaciones, id_estado_proceso]
             );
             return result.insertId;
         } catch (error) {

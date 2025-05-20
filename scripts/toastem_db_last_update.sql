@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: May 06, 2025 at 08:53 PM
+-- Generation Time: May 20, 2025 at 08:24 PM
 -- Server version: 8.0.39
 -- PHP Version: 8.2.24
 
@@ -40,6 +40,13 @@ CREATE TABLE `clasificacion` (
   `observaciones` text COLLATE utf8mb4_general_ci,
   `id_estado_proceso` int DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `clasificacion`
+--
+
+INSERT INTO `clasificacion` (`id`, `id_lote`, `peso_inicial`, `fecha_clasificacion`, `peso_total`, `peso_pergamino`, `peso_pasilla`, `peso_otro`, `peso_cafe_bueno`, `observaciones`, `id_estado_proceso`) VALUES
+(1, 2, 40.00, '2025-05-20', 40.00, 20.00, 15.00, NULL, 35.00, NULL, 3);
 
 -- --------------------------------------------------------
 
@@ -80,6 +87,14 @@ CREATE TABLE `despulpado` (
   `observaciones` text COLLATE utf8mb4_general_ci,
   `id_estado_proceso` int DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `despulpado`
+--
+
+INSERT INTO `despulpado` (`id`, `id_lote`, `peso_inicial`, `fecha_remojo`, `fecha_despulpado`, `peso_final`, `peso_despues`, `observaciones`, `id_estado_proceso`) VALUES
+(1, 2, 50.00, '2025-05-15 14:24:00', '2025-05-15 18:00:00', 45.00, NULL, 'Salio mucho café sin pepa', 3),
+(2, 2, 50.00, '2025-05-15 14:24:00', '2025-05-15 18:00:00', 45.00, NULL, 'Salio mucho café sin pepa', 3);
 
 -- --------------------------------------------------------
 
@@ -163,6 +178,13 @@ CREATE TABLE `fermentacion_lavado` (
   `id_estado_proceso` int DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `fermentacion_lavado`
+--
+
+INSERT INTO `fermentacion_lavado` (`id`, `id_lote`, `peso_inicial`, `fecha_inicio_fermentacion`, `fecha_lavado`, `peso_final`, `observaciones`, `id_estado_proceso`) VALUES
+(1, 2, 45.00, '2025-05-16 10:51:00', '2025-05-17 04:51:00', 41.99, 'Mucha hoja', 3);
+
 -- --------------------------------------------------------
 
 --
@@ -182,7 +204,10 @@ CREATE TABLE `fincas` (
 --
 
 INSERT INTO `fincas` (`id`, `nombre`, `ubicacion`, `id_municipio_vereda`, `id_usuario`) VALUES
-(2, 'El Sol', 'Puerta Morada', 35, 6);
+(2, 'El Sol', 'Puerta Morada', 35, 6),
+(3, 'El Paraiso', 'Puerta Con Sangre De Borrego', 16, 7),
+(4, 'La Piscina', 'La Del Borracho En La Esquina', 1, 7),
+(5, 'La Cuesta', 'Km 125', 35, 8);
 
 -- --------------------------------------------------------
 
@@ -212,7 +237,10 @@ CREATE TABLE `lotes` (
 --
 
 INSERT INTO `lotes` (`id`, `codigo`, `id_usuario`, `id_finca`, `fecha_recoleccion`, `peso_inicial`, `tipo_recoleccion`, `tipo_cafe`, `observaciones`, `id_destino_final`, `id_estado_proceso`, `id_proceso_actual`, `fecha_finalizacion`, `fecha_registro`) VALUES
-(2, 'F2-L1746561376894', 6, 2, '2025-05-06', 50.00, 'Selectiva', 'Mezcla', '', 1, 1, NULL, NULL, '2025-05-06 21:56:17');
+(2, 'F2-L1746561376894', 6, 2, '2025-05-06', 50.00, 'Selectiva', 'Mezcla', '', 1, 3, 7, NULL, '2025-05-06 21:56:17'),
+(3, 'F3-L1746727435329', 7, 3, '2025-02-22', 100.00, 'General', 'Rojo', 'Lleno de cucarachas.', 1, 2, 1, NULL, '2025-05-08 20:03:55'),
+(4, 'F3-L1746727674609', 7, 3, '2025-02-15', 50.00, 'Selectiva', 'Amarillo', 'Todo podrido', 1, 2, 1, NULL, '2025-05-08 20:07:55'),
+(5, 'F5-L1746728849693', 8, 5, '2025-05-08', 50.00, 'Selectiva', 'Mezcla', 'Plantas con broca', 1, 2, 1, NULL, '2025-05-08 20:27:30');
 
 -- --------------------------------------------------------
 
@@ -369,7 +397,7 @@ CREATE TABLE `secado` (
   `id_lote` int NOT NULL,
   `peso_inicial` decimal(10,2) DEFAULT NULL,
   `fecha_inicio` datetime NOT NULL,
-  `metodo_secado` enum('Sol','Malla') COLLATE utf8mb4_general_ci NOT NULL,
+  `metodo_secado` enum('Secado al sol','Secado mecánico','Secado por vía húmeda (con cereza)') COLLATE utf8mb4_general_ci NOT NULL,
   `humedad_inicial` decimal(5,2) DEFAULT NULL,
   `fecha_fin` datetime DEFAULT NULL,
   `peso_final` decimal(10,2) DEFAULT NULL,
@@ -378,6 +406,13 @@ CREATE TABLE `secado` (
   `fecha_decision` datetime DEFAULT NULL,
   `id_estado_proceso` int DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `secado`
+--
+
+INSERT INTO `secado` (`id`, `id_lote`, `peso_inicial`, `fecha_inicio`, `metodo_secado`, `humedad_inicial`, `fecha_fin`, `peso_final`, `observaciones`, `decision_venta`, `fecha_decision`, `id_estado_proceso`) VALUES
+(1, 2, 40.00, '2025-05-18 15:48:00', 'Secado al sol', NULL, '2025-05-19 17:49:00', 40.00, '', 0, NULL, 3);
 
 -- --------------------------------------------------------
 
@@ -445,15 +480,19 @@ INSERT INTO `tipos_venta` (`id`, `nombre`, `descripcion`) VALUES
 CREATE TABLE `trilla` (
   `id` int NOT NULL,
   `id_lote` int NOT NULL,
-  `peso_inicial` decimal(10,2) DEFAULT NULL,
+  `peso_inicial` decimal(10,2) NOT NULL,
   `fecha_trilla` date NOT NULL,
-  `peso_final` decimal(10,2) DEFAULT NULL,
-  `peso_premium` decimal(10,2) DEFAULT '0.00',
-  `peso_normal` decimal(10,2) DEFAULT '0.00',
-  `peso_bajo` decimal(10,2) DEFAULT '0.00',
-  `observaciones` text COLLATE utf8mb4_general_ci,
+  `peso_final` decimal(10,2) NOT NULL,
+  `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `id_estado_proceso` int DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `trilla`
+--
+
+INSERT INTO `trilla` (`id`, `id_lote`, `peso_inicial`, `fecha_trilla`, `peso_final`, `observaciones`, `id_estado_proceso`) VALUES
+(1, 2, 35.00, '2025-05-20', 33.00, '', 3);
 
 -- --------------------------------------------------------
 
@@ -494,7 +533,9 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `nombre`, `email`, `password`, `id_pregunta_seguridad`, `respuesta_seguridad`, `fecha_registro`) VALUES
-(6, 'Andres Diaz', 'andresd@gmail.com', '$2b$10$CakDz.ISDMA92NLyBqUWq.PbS0LnjB2ThYSuFu6nfhkSCq6Px70IW', 5, 'azul', '2025-05-06 19:15:33');
+(6, 'Andres Diaz', 'andresd@gmail.com', '$2b$10$CakDz.ISDMA92NLyBqUWq.PbS0LnjB2ThYSuFu6nfhkSCq6Px70IW', 5, 'azul', '2025-05-06 19:15:33'),
+(7, 'Sergio Diaz', 'Sergiod9122@gmail.com', '$2b$10$DSG5FdByQYBwETzcOq/pJu8xjNBhxcbWodSeLpo/Iz.LOBQfQZ8jy', 1, 'Uvi', '2025-05-08 19:56:00'),
+(8, 'Adriana Moreno', 'adrianam@gmail.com', '$2b$10$Bxtrz4eS.yIwgERdvg1ONeSfhWnwB5ho74PwRPe.0tnRRN9f3ohMW', 5, 'rojo', '2025-05-08 20:25:59');
 
 -- --------------------------------------------------------
 
@@ -520,65 +561,65 @@ CREATE TABLE `ventas` (
 -- (See below for the actual view)
 --
 CREATE TABLE `vista_flujo_lote` (
-`lote_id` int
-,`lote_codigo` varchar(20)
-,`fecha_recoleccion` date
-,`lote_peso_inicial` decimal(10,2)
-,`destino_final` varchar(50)
-,`fecha_finalizacion` date
-,`tipo_venta` varchar(50)
-,`fecha_venta` date
-,`cantidad_vendida` decimal(10,2)
-,`fecha_remojo` datetime
-,`fecha_despulpado` datetime
-,`despulpado_peso_inicial` decimal(10,2)
-,`despulpado_peso_final` decimal(10,2)
+`cantidad_vendida` decimal(10,2)
+,`clasificacion_id_estado_proceso` int
+,`clasificacion_peso_inicial` decimal(10,2)
+,`clasificacion_peso_otro` varchar(255)
+,`clasificacion_peso_pasilla` decimal(10,2)
+,`clasificacion_peso_pergamino` decimal(10,2)
+,`clasificacion_peso_total` decimal(10,2)
+,`control_calidad_id_estado_proceso` int
+,`control_calidad_peso_final` decimal(10,2)
+,`control_calidad_peso_inicial` decimal(10,2)
 ,`despulpado_id_estado_proceso` int
+,`despulpado_peso_final` decimal(10,2)
+,`despulpado_peso_inicial` decimal(10,2)
+,`destino_final` varchar(50)
+,`empacado_id_estado_proceso` int
+,`empacado_id_tipo_producto` int
+,`empacado_peso_final` decimal(10,2)
+,`empacado_peso_inicial` decimal(10,2)
+,`fecha_clasificacion` date
+,`fecha_despulpado` datetime
+,`fecha_empacado` date
+,`fecha_evaluacion` date
+,`fecha_finalizacion` date
 ,`fecha_inicio_fermentacion` datetime
 ,`fecha_lavado` datetime
-,`fermentacion_peso_inicial` decimal(10,2)
-,`fermentacion_peso_final` decimal(10,2)
-,`fermentacion_id_estado_proceso` int
-,`fecha_zarandeo` datetime
-,`zarandeo_peso_inicial` decimal(10,2)
-,`zarandeo_peso_final` decimal(10,2)
-,`zarandeo_id_estado_proceso` int
-,`secado_fecha_inicio` datetime
-,`secado_fecha_fin` datetime
-,`secado_peso_inicial` decimal(10,2)
-,`secado_peso_final` decimal(10,2)
-,`secado_decision_venta` tinyint(1)
-,`secado_fecha_decision` datetime
-,`secado_id_estado_proceso` int
-,`fecha_clasificacion` date
-,`clasificacion_peso_inicial` decimal(10,2)
-,`clasificacion_peso_total` decimal(10,2)
-,`clasificacion_peso_pergamino` decimal(10,2)
-,`clasificacion_peso_pasilla` decimal(10,2)
-,`clasificacion_peso_otro` varchar(255)
-,`clasificacion_id_estado_proceso` int
-,`fecha_trilla` date
-,`trilla_peso_inicial` decimal(10,2)
-,`trilla_peso_final` decimal(10,2)
-,`trilla_id_estado_proceso` int
-,`fecha_tueste` date
-,`tueste_peso_inicial` decimal(10,2)
-,`tueste_peso_final` decimal(10,2)
-,`tueste_id_estado_proceso` int
 ,`fecha_molienda` date
-,`molienda_peso_inicial` decimal(10,2)
-,`molienda_peso_final` decimal(10,2)
+,`fecha_recoleccion` date
+,`fecha_remojo` datetime
+,`fecha_trilla` date
+,`fecha_tueste` date
+,`fecha_venta` date
+,`fecha_zarandeo` datetime
+,`fermentacion_id_estado_proceso` int
+,`fermentacion_peso_final` decimal(10,2)
+,`fermentacion_peso_inicial` decimal(10,2)
+,`lote_codigo` varchar(20)
+,`lote_id` int
+,`lote_peso_inicial` decimal(10,2)
 ,`molienda_es_grano` tinyint(1)
 ,`molienda_id_estado_proceso` int
-,`fecha_empacado` date
-,`empacado_peso_inicial` decimal(10,2)
-,`empacado_peso_final` decimal(10,2)
-,`empacado_id_tipo_producto` int
-,`empacado_id_estado_proceso` int
-,`fecha_evaluacion` date
-,`control_calidad_peso_inicial` decimal(10,2)
-,`control_calidad_peso_final` decimal(10,2)
-,`control_calidad_id_estado_proceso` int
+,`molienda_peso_final` decimal(10,2)
+,`molienda_peso_inicial` decimal(10,2)
+,`secado_decision_venta` tinyint(1)
+,`secado_fecha_decision` datetime
+,`secado_fecha_fin` datetime
+,`secado_fecha_inicio` datetime
+,`secado_id_estado_proceso` int
+,`secado_peso_final` decimal(10,2)
+,`secado_peso_inicial` decimal(10,2)
+,`tipo_venta` varchar(50)
+,`trilla_id_estado_proceso` int
+,`trilla_peso_final` decimal(10,2)
+,`trilla_peso_inicial` decimal(10,2)
+,`tueste_id_estado_proceso` int
+,`tueste_peso_final` decimal(10,2)
+,`tueste_peso_inicial` decimal(10,2)
+,`zarandeo_id_estado_proceso` int
+,`zarandeo_peso_final` decimal(10,2)
+,`zarandeo_peso_inicial` decimal(10,2)
 );
 
 -- --------------------------------------------------------
@@ -596,6 +637,13 @@ CREATE TABLE `zarandeo` (
   `observaciones` text COLLATE utf8mb4_general_ci,
   `id_estado_proceso` int DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `zarandeo`
+--
+
+INSERT INTO `zarandeo` (`id`, `id_lote`, `peso_inicial`, `fecha_zarandeo`, `peso_final`, `observaciones`, `id_estado_proceso`) VALUES
+(1, 2, 41.99, '2025-05-14 10:53:00', 40.00, '', 3);
 
 -- --------------------------------------------------------
 
@@ -797,7 +845,7 @@ ALTER TABLE `zarandeo`
 -- AUTO_INCREMENT for table `clasificacion`
 --
 ALTER TABLE `clasificacion`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `control_calidad`
@@ -809,7 +857,7 @@ ALTER TABLE `control_calidad`
 -- AUTO_INCREMENT for table `despulpado`
 --
 ALTER TABLE `despulpado`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `destinos_finales`
@@ -833,19 +881,19 @@ ALTER TABLE `estados_proceso`
 -- AUTO_INCREMENT for table `fermentacion_lavado`
 --
 ALTER TABLE `fermentacion_lavado`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `fincas`
 --
 ALTER TABLE `fincas`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `lotes`
 --
 ALTER TABLE `lotes`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `molienda`
@@ -881,7 +929,7 @@ ALTER TABLE `procesos`
 -- AUTO_INCREMENT for table `secado`
 --
 ALTER TABLE `secado`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `seguimiento_secado`
@@ -905,7 +953,7 @@ ALTER TABLE `tipos_venta`
 -- AUTO_INCREMENT for table `trilla`
 --
 ALTER TABLE `trilla`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `tueste`
@@ -917,7 +965,7 @@ ALTER TABLE `tueste`
 -- AUTO_INCREMENT for table `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `ventas`
@@ -929,7 +977,7 @@ ALTER TABLE `ventas`
 -- AUTO_INCREMENT for table `zarandeo`
 --
 ALTER TABLE `zarandeo`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Constraints for dumped tables

@@ -8,8 +8,14 @@ const validateLote = [
 
     body('peso_inicial')
         .notEmpty().withMessage('El peso inicial es obligatorio.')
-        .isDecimal({ decimal_digits: '1,2' }).withMessage('El peso inicial debe ser un número decimal (ej: 100.50).')
-        .toFloat(),
+        .isNumeric().withMessage('El peso inicial debe ser un número.')
+        .toFloat()
+        .custom(value => {
+            if (value <= 0) {
+                throw new Error('El peso inicial debe ser mayor que cero.');
+            }
+            return true;
+        }),
 
     body('tipo_cafe')
         .notEmpty().withMessage('El tipo de café es obligatorio.')

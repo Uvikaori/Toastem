@@ -3,8 +3,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const nombreInput = document.getElementById('nombre');
     const ubicacionInput = document.getElementById('ubicacion');
     const searchInput = document.getElementById('searchInput');
+    const fincaForm = document.getElementById('fincaForm');
+    const fincaModal = document.getElementById('fincaModal');
 
-    nombreInput.addEventListener('input', validateNombre);
+    // Solo agregar event listeners si los elementos existen
+    if (nombreInput) {
+        nombreInput.addEventListener('input', validateNombre);
+    }
     
     function validateNombre() {
         const nombre = nombreInput.value.trim();
@@ -23,63 +28,65 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Búsqueda en tiempo real
-    searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        const cards = document.querySelectorAll('.finca-card');
-        
-        cards.forEach(card => {
-            const nombre = card.querySelector('.card-title').textContent.toLowerCase();
-            const ubicacion = card.querySelector('.card-text').textContent.toLowerCase();
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const cards = document.querySelectorAll('.finca-card');
             
-            if (nombre.includes(searchTerm) || ubicacion.includes(searchTerm)) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
-            }
+            cards.forEach(card => {
+                const nombre = card.querySelector('.card-title').textContent.toLowerCase();
+                const ubicacion = card.querySelector('.card-text').textContent.toLowerCase();
+                
+                if (nombre.includes(searchTerm) || ubicacion.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         });
-    });
+    }
 
     // Manejo del formulario de creación/edición
-    const fincaForm = document.getElementById('fincaForm');
-    const fincaModal = document.getElementById('fincaModal');
-    const modal = new bootstrap.Modal(fincaModal);
+    if (fincaForm && fincaModal) {
+        const modal = new bootstrap.Modal(fincaModal);
 
-    fincaForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        if (!validateNombre()) return;
+        fincaForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!validateNombre()) return;
 
-        const formData = new FormData(this);
-        const fincaId = this.dataset.fincaId;
-        const url = fincaId ? `/fincas/${fincaId}` : '/fincas';
-        const method = fincaId ? 'PUT' : 'POST';
+            const formData = new FormData(this);
+            const fincaId = this.dataset.fincaId;
+            const url = fincaId ? `/fincas/${fincaId}` : '/fincas';
+            const method = fincaId ? 'PUT' : 'POST';
 
-        try {
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(Object.fromEntries(formData))
-            });
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
 
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.message || 'Error al procesar la solicitud');
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Error al procesar la solicitud');
+                }
+
+                if (data.success) {
+                    modal.hide();
+                    // Redirigir a la página de gestión de fincas después de crear/editar
+                    window.location.href = '/fincas';
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                showError(error.message);
             }
-
-            if (data.success) {
-                modal.hide();
-                // Redirigir a la página de gestión de fincas después de crear/editar
-                window.location.href = '/fincas';
-            } else {
-                showError(data.message);
-            }
-        } catch (error) {
-            showError(error.message);
-        }
-    });
+        });
+    }
 
     // Manejo de eliminación
     document.querySelectorAll('.delete-finca').forEach(button => {
@@ -127,11 +134,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showError(message) {
         const errorDiv = document.createElement('div');
-        errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+        errorDiv.className = 'alert alert-danger alert-dismissible';
         errorDiv.innerHTML = `
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-        document.querySelector('.container').insertAdjacentElement('afterbegin', errorDiv);
+        const container = document.querySelector('.container');
+        if (container) {
+            container.insertAdjacentElement('afterbegin', errorDiv);
+        }
     }
 });

@@ -11,7 +11,11 @@ class ClasificacionDAO {
             id_lote,
             peso_inicial,
             fecha_clasificacion,
-            peso_final_clasificado,
+            peso_cafe_bueno,
+            peso_total,
+            peso_pergamino,
+            peso_pasilla,
+            peso_otro,
             observaciones,
             id_estado_proceso = 3 // Por defecto 'Terminado'
         } = clasificacionData;
@@ -19,7 +23,7 @@ class ClasificacionDAO {
         try {
             const [result] = await db.query(
                 'INSERT INTO clasificacion (id_lote, peso_inicial, fecha_clasificacion, peso_cafe_bueno, observaciones, id_estado_proceso, peso_total, peso_pergamino, peso_pasilla, peso_otro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [id_lote, peso_inicial, fecha_clasificacion, peso_final_clasificado, observaciones, id_estado_proceso, peso_final_clasificado, null, null, null]
+                [id_lote, peso_inicial, fecha_clasificacion, peso_cafe_bueno, observaciones, id_estado_proceso, peso_total, peso_pergamino, peso_pasilla, peso_otro]
             );
             return result.insertId;
         } catch (error) {

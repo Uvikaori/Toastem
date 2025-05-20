@@ -98,3 +98,60 @@ node --version
 
 ## Soporte
 Para reportar problemas o solicitar ayuda, por favor crea un issue en el repositorio del proyecto. 
+
+## Seguridad en Toastem
+
+Toastem implementa diversas medidas de seguridad para proteger los datos de los usuarios y mantener la integridad de la información:
+
+### Autenticación y Autorización
+
+- **Sesiones seguras**: Configuración de sesiones con cookies HttpOnly y SameSite para prevenir ataques XSS y CSRF.
+- **Autorización por usuario**: Cada usuario solo puede acceder y modificar sus propios datos gracias a middleware de autorización personalizado.
+- **Verificación de propiedad**: Middleware de verificación para fincas y lotes que garantiza que un usuario solo puede acceder a sus propios recursos.
+
+### Protección contra ataques
+
+- **Protección XSS**: Uso de helmet para establecer encabezados de seguridad.
+- **Limitación de tasas**: Implementación de rate limiting para prevenir ataques de fuerza bruta.
+- **Validación de datos**: Validación estricta de todas las entradas de usuario mediante express-validator.
+
+### Seguridad de datos
+
+- **Almacenamiento seguro de contraseñas**: Uso de bcrypt para hashear contraseñas.
+- **Filtraje por usuario**: Todas las consultas a la base de datos filtran por ID de usuario.
+- **Aislamiento de datos**: Cada usuario solo puede ver y modificar los datos relacionados con sus propias fincas y procesos.
+
+## Funcionalidades principales
+
+1. Gestión de usuarios con autenticación segura
+2. Administración de fincas y lotes de café
+3. Registro detallado del proceso post-cosecha:
+   - Recolección
+   - Despulpado
+   - Fermentación y lavado
+   - Zarandeo
+   - Secado
+   - Clasificación
+   - Trilla
+   - Tueste (opcional)
+   - Molienda (opcional)
+   - Empacado
+4. Generación de informes del proceso productivo
+
+## Tecnologías utilizadas
+
+- Node.js y Express
+- MySQL
+- EJS (plantillas)
+- Bootstrap
+- JavaScript
+
+## Arquitectura
+
+La aplicación sigue un patrón MVC (Modelo-Vista-Controlador) con capas adicionales:
+- Modelos (entidades y DAOs)
+- Vistas (plantillas EJS)
+- Controladores
+- Middlewares (para autenticación y autorización)
+- Validadores (para validación de datos)
+- Utilidades (helpers)

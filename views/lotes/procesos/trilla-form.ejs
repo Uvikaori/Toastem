@@ -29,37 +29,20 @@
             <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/trilla" method="POST">
                 
                 <div class="mb-3">
-                    <label for="fecha_trilla" class="form-label">Fecha y Hora de Trilla:</label>
-                    <input type="datetime-local" class="form-control" id="fecha_trilla" name="fecha_trilla" value="<%= fecha_trilla %>" required>
-                </div>
-
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="proveedor_externo" name="proveedor_externo" value="true" <%= proveedor_externo ? 'checked' : '' %> onchange="toggleProveedorTrillaFields()">
-                    <label class="form-check-label" for="proveedor_externo">¿Servicio realizado por proveedor externo?</label>
-                </div>
-
-                <div id="campos_proveedor_externo_trilla" style="display: <%= proveedor_externo ? 'block' : 'none' %>;">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="nombre_proveedor" class="form-label">Nombre del Proveedor:</label>
-                            <input type="text" class="form-control" id="nombre_proveedor" name="nombre_proveedor" value="<%= nombre_proveedor %>" placeholder="Nombre de la empresa o persona">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="costo_servicio" class="form-label">Costo del Servicio (Opcional):</label>
-                            <input type="number" step="0.01" class="form-control" id="costo_servicio" name="costo_servicio" value="<%= costo_servicio %>" placeholder="Ej: 70000">
-                        </div>
-                    </div>
+                    <label for="fecha_trilla" class="form-label">Fecha de Trilla: <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="fecha_trilla" name="fecha_trilla" value="<%= fecha_trilla %>" required>
+                    <small class="form-text text-muted">Campo obligatorio. Fecha en que se realizó la trilla.</small>
                 </div>
 
                 <div class="mb-3">
-                    <label for="peso_final_trillado" class="form-label">Peso Final Trillado (kg):</label>
-                    <input type="number" step="0.01" class="form-control" id="peso_final_trillado" name="peso_final_trillado" value="<%= peso_final_trillado %>" placeholder="Ej: 20.50" required>
-                    <small class="form-text text-muted">Peso del café después del proceso de trilla (café verde o "almendra").</small>
+                    <label for="peso_final" class="form-label">Peso Final (kg): <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" class="form-control" id="peso_final" name="peso_final" value="<%= peso_final %>" placeholder="Ej: 20.50" required>
+                    <small class="form-text text-muted">Campo obligatorio. Peso del café después del proceso de trilla (café verde o "almendra").</small>
                 </div>
 
                 <div class="mb-3">
-                    <label for="observaciones_trilla" class="form-label">Observaciones:</label>
-                    <textarea class="form-control" id="observaciones_trilla" name="observaciones_trilla" rows="3" placeholder="Anotaciones sobre el proceso de trilla"><%= observaciones_trilla %></textarea>
+                    <label for="observaciones" class="form-label">Observaciones:</label>
+                    <textarea class="form-control" id="observaciones" name="observaciones" rows="3" placeholder="Anotaciones sobre el proceso de trilla"><%= observaciones %></textarea>
                 </div>
                 
                 <div class="d-flex justify-content-end gap-2 mt-4">
@@ -70,22 +53,6 @@
         </div>
     </div>
 </div>
-
-<script>
-function toggleProveedorTrillaFields() {
-    const checkbox = document.getElementById('proveedor_externo');
-    const camposProveedor = document.getElementById('campos_proveedor_externo_trilla');
-    const nombreProveedorInput = document.getElementById('nombre_proveedor'); // Asume que el ID es el mismo o ajusta
-    if (checkbox.checked) {
-        camposProveedor.style.display = 'block';
-        nombreProveedorInput.required = true;
-    } else {
-        camposProveedor.style.display = 'none';
-        nombreProveedorInput.required = false;
-    }
-}
-document.addEventListener('DOMContentLoaded', toggleProveedorTrillaFields);
-</script>
 
 <style>
     .text-toastem-primary {

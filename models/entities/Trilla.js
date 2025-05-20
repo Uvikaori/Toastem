@@ -2,12 +2,9 @@ class Trilla {
     constructor(
         id = null,
         id_lote,
-        peso_inicial, // Peso ANTES de la trilla (del proceso anterior, ej. clasificacion_atributos.peso_final_clasificado)
+        peso_inicial, // Peso ANTES de la trilla (del proceso anterior, clasificacion.peso_cafe_bueno)
         fecha_trilla,
-        proveedor_externo = false,
-        nombre_proveedor = null,
-        costo_servicio = null,
-        peso_final_trillado, // Peso DESPUÉS de la trilla
+        peso_final, // Peso DESPUÉS de la trilla
         observaciones = null,
         id_estado_proceso = 3 // ID 3 para 'Terminado' para esta ETAPA
     ) {
@@ -15,10 +12,7 @@ class Trilla {
         this.id_lote = id_lote;
         this.peso_inicial = peso_inicial;
         this.fecha_trilla = fecha_trilla;
-        this.proveedor_externo = proveedor_externo;
-        this.nombre_proveedor = nombre_proveedor;
-        this.costo_servicio = costo_servicio;
-        this.peso_final_trillado = peso_final_trillado;
+        this.peso_final = peso_final;
         this.observaciones = observaciones;
         this.id_estado_proceso = id_estado_proceso;
     }
