@@ -1,0 +1,577 @@
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/fincas/gestionar">Mis Fincas</a></li>
+            <li class="breadcrumb-item"><a href="/fincas/<%= finca.id %>/lotes">Lotes de: <%= finca.nombre %></a></li>
+            <li class="breadcrumb-item"><a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos">Procesos Lote: <%= lote.codigo %></a></li>
+            <li class="breadcrumb-item active" aria-current="page">Flujo Completo</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="text-toastem-primary"><%= titulo %></h1>
+        <div>
+            <span class="badge bg-info fs-6 me-2">Lote Estado: <%= lote.estado_proceso_nombre %></span>
+            <span class="badge bg-secondary fs-6">Proceso Actual: <%= lote.proceso_actual_nombre %></span>
+        </div>
+    </div>
+
+    <%# Mostrar mensajes de éxito (flash) %>
+    <% if (typeof mensaje !== 'undefined' && mensaje && mensaje.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= mensaje %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
+    
+    <%# Mostrar errores (no flash) %>
+    <% if (typeof error !== 'undefined' && error) { %>
+        <% if (Array.isArray(error) && error.length > 0 && error.some(err => err && err.toString().trim() !== '')) { %>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
+                <strong>Error:</strong>
+                <ul>
+                <% error.forEach(function(err) { %>
+                    <% if (err && err.toString().trim() !== '') { %>
+                        <li><%= Array.isArray(err) ? err.join(', ') : err %></li>
+                    <% } %>
+                <% }) %>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } else if (typeof error === 'string' && error.trim() !== '') { %>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
+                <strong>Error:</strong> <%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+    <% } %>
+
+    <div class="card mb-4">
+        <div class="card-header bg-toastem-primary text-white">
+            <h4 class="mb-0">Información General del Lote</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <p><strong>Código:</strong> <%= flujo.lote_codigo %></p>
+                </div>
+                <div class="col-md-3">
+                    <p><strong>Fecha Recolección:</strong> <%= new Date(flujo.fecha_recoleccion).toLocaleDateString('es-CO') %></p>
+                </div>
+                <div class="col-md-3">
+                    <p><strong>Peso Inicial:</strong> <%= flujo.lote_peso_inicial %> kg</p>
+                </div>
+                <div class="col-md-3">
+                    <p><strong>Destino Final:</strong> <%= flujo.destino_final || 'No definido' %></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="progress mb-4" style="height: 30px;">
+                <% const procesos = ['Recolección', 'Despulpado', 'Fermentación', 'Zarandeo', 'Secado', 'Clasificación', 'Trilla', 'Tueste', 'Molienda', 'Empacado', 'Control de Calidad']; %>
+                <% procesos.forEach((proceso, index) => { %>
+                    <% let completado = false; %>
+                    <% 
+                        switch(proceso) {
+                            case 'Recolección': completado = true; break; // Siempre completado
+                            case 'Despulpado': completado = flujo.despulpado_id_estado_proceso === 3; break;
+                            case 'Fermentación': completado = flujo.fermentacion_id_estado_proceso === 3; break;
+                            case 'Zarandeo': completado = flujo.zarandeo_id_estado_proceso === 3; break;
+                            case 'Secado': completado = flujo.secado_id_estado_proceso === 3; break;
+                            case 'Clasificación': completado = flujo.clasificacion_id_estado_proceso === 3; break;
+                            case 'Trilla': completado = flujo.trilla_id_estado_proceso === 3; break;
+                            case 'Tueste': completado = flujo.tueste_id_estado_proceso === 3; break;
+                            case 'Molienda': completado = flujo.molienda_id_estado_proceso === 3; break;
+                            case 'Empacado': completado = flujo.empacado_id_estado_proceso === 3; break;
+                            case 'Control de Calidad': completado = flujo.control_calidad_id_estado_proceso === 3; break;
+                        }
+                    %>
+                    <div class="progress-bar <%= completado ? 'bg-success' : 'bg-secondary' %>" 
+                         role="progressbar" 
+                         style="width: <%= 100/procesos.length %>%;"
+                         aria-valuenow="<%= 100/procesos.length %>" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                        <%= proceso %>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion" id="flujoLoteAccordion">
+        <!-- DESPULPADO -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingDespulpado">
+                <button class="accordion-button <%= flujo.despulpado_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#collapseDespulpado" 
+                        aria-expanded="<%= flujo.despulpado_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-controls="collapseDespulpado">
+                    <span class="badge <%= flujo.despulpado_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
+                        <%= flujo.despulpado_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    </span>
+                    Despulpado
+                </button>
+            </h2>
+            <div id="collapseDespulpado" 
+                class="accordion-collapse collapse <%= flujo.despulpado_id_estado_proceso === 3 ? 'show' : '' %>" 
+                aria-labelledby="headingDespulpado" 
+                data-bs-parent="#flujoLoteAccordion">
+                <div class="accordion-body">
+                    <% if (flujo.despulpado_id_estado_proceso === 3) { %>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Fecha Remojo:</strong> <%= flujo.fecha_remojo ? new Date(flujo.fecha_remojo).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Fecha Despulpado:</strong> <%= flujo.fecha_despulpado ? new Date(flujo.fecha_despulpado).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Inicial:</strong> <%= flujo.despulpado_peso_inicial %> kg</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Final:</strong> <%= flujo.despulpado_peso_final %> kg</p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">No hay datos de despulpado registrados para este lote.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- FERMENTACIÓN Y LAVADO -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingFermentacion">
+                <button class="accordion-button <%= flujo.fermentacion_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#collapseFermentacion" 
+                        aria-expanded="<%= flujo.fermentacion_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-controls="collapseFermentacion">
+                    <span class="badge <%= flujo.fermentacion_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
+                        <%= flujo.fermentacion_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    </span>
+                    Fermentación y Lavado
+                </button>
+            </h2>
+            <div id="collapseFermentacion" 
+                class="accordion-collapse collapse <%= flujo.fermentacion_id_estado_proceso === 3 ? 'show' : '' %>" 
+                aria-labelledby="headingFermentacion" 
+                data-bs-parent="#flujoLoteAccordion">
+                <div class="accordion-body">
+                    <% if (flujo.fermentacion_id_estado_proceso === 3) { %>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Inicio Fermentación:</strong> <%= flujo.fecha_inicio_fermentacion ? new Date(flujo.fecha_inicio_fermentacion).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Fecha Lavado:</strong> <%= flujo.fecha_lavado ? new Date(flujo.fecha_lavado).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Inicial:</strong> <%= flujo.fermentacion_peso_inicial %> kg</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Final:</strong> <%= flujo.fermentacion_peso_final %> kg</p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">No hay datos de fermentación y lavado registrados para este lote.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- ZARANDEO -->
+        <% if (flujo.zarandeo_id_estado_proceso) { %>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingZarandeo">
+                <button class="accordion-button <%= flujo.zarandeo_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#collapseZarandeo" 
+                        aria-expanded="<%= flujo.zarandeo_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-controls="collapseZarandeo">
+                    <span class="badge <%= flujo.zarandeo_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
+                        <%= flujo.zarandeo_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    </span>
+                    Zarandeo
+                </button>
+            </h2>
+            <div id="collapseZarandeo" 
+                class="accordion-collapse collapse <%= flujo.zarandeo_id_estado_proceso === 3 ? 'show' : '' %>" 
+                aria-labelledby="headingZarandeo" 
+                data-bs-parent="#flujoLoteAccordion">
+                <div class="accordion-body">
+                    <% if (flujo.zarandeo_id_estado_proceso === 3) { %>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Fecha Zarandeo:</strong> <%= flujo.fecha_zarandeo ? new Date(flujo.fecha_zarandeo).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Inicial:</strong> <%= flujo.zarandeo_peso_inicial %> kg</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Final:</strong> <%= flujo.zarandeo_peso_final %> kg</p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">Proceso de zarandeo en progreso o pendiente.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- SECADO -->
+        <% if (flujo.secado_id_estado_proceso) { %>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingSecado">
+                <button class="accordion-button <%= flujo.secado_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#collapseSecado" 
+                        aria-expanded="<%= flujo.secado_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-controls="collapseSecado">
+                    <span class="badge <%= flujo.secado_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
+                        <%= flujo.secado_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    </span>
+                    Secado
+                </button>
+            </h2>
+            <div id="collapseSecado" 
+                class="accordion-collapse collapse <%= flujo.secado_id_estado_proceso === 3 ? 'show' : '' %>" 
+                aria-labelledby="headingSecado" 
+                data-bs-parent="#flujoLoteAccordion">
+                <div class="accordion-body">
+                    <% if (flujo.secado_fecha_inicio) { %>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Inicio Secado:</strong> <%= flujo.secado_fecha_inicio ? new Date(flujo.secado_fecha_inicio).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Fin Secado:</strong> <%= flujo.secado_fecha_fin ? new Date(flujo.secado_fecha_fin).toLocaleString('es-CO') : 'En progreso' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Inicial:</strong> <%= flujo.secado_peso_inicial %> kg</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Final:</strong> <%= flujo.secado_peso_final || 'No registrado' %> <%= flujo.secado_peso_final ? 'kg' : '' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Decisión Venta:</strong> <%= flujo.secado_decision_venta ? 'Sí' : 'No' %></p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">Proceso de secado en progreso o pendiente.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- CLASIFICACIÓN -->
+        <% if (flujo.clasificacion_id_estado_proceso) { %>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingClasificacion">
+                <button class="accordion-button <%= flujo.clasificacion_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#collapseClasificacion" 
+                        aria-expanded="<%= flujo.clasificacion_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-controls="collapseClasificacion">
+                    <span class="badge <%= flujo.clasificacion_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
+                        <%= flujo.clasificacion_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    </span>
+                    Clasificación
+                </button>
+            </h2>
+            <div id="collapseClasificacion" 
+                class="accordion-collapse collapse <%= flujo.clasificacion_id_estado_proceso === 3 ? 'show' : '' %>" 
+                aria-labelledby="headingClasificacion" 
+                data-bs-parent="#flujoLoteAccordion">
+                <div class="accordion-body">
+                    <% if (flujo.clasificacion_id_estado_proceso === 3) { %>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Fecha Clasificación:</strong> <%= flujo.fecha_clasificacion ? new Date(flujo.fecha_clasificacion).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Inicial:</strong> <%= flujo.clasificacion_peso_inicial %> kg</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Total:</strong> <%= flujo.clasificacion_peso_total || 'No registrado' %> <%= flujo.clasificacion_peso_total ? 'kg' : '' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Café Bueno:</strong> <%= flujo.clasificacion_peso_cafe_bueno %> kg</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Pergamino:</strong> <%= flujo.clasificacion_peso_pergamino || 'No registrado' %> <%= flujo.clasificacion_peso_pergamino ? 'kg' : '' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Pasilla:</strong> <%= flujo.clasificacion_peso_pasilla || 'No registrado' %> <%= flujo.clasificacion_peso_pasilla ? 'kg' : '' %></p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">Proceso de clasificación en progreso o pendiente.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- TRILLA -->
+        <% if (flujo.trilla_id_estado_proceso) { %>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTrilla">
+                <button class="accordion-button <%= flujo.trilla_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#collapseTrilla" 
+                        aria-expanded="<%= flujo.trilla_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-controls="collapseTrilla">
+                    <span class="badge <%= flujo.trilla_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
+                        <%= flujo.trilla_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    </span>
+                    Trilla
+                </button>
+            </h2>
+            <div id="collapseTrilla" 
+                class="accordion-collapse collapse <%= flujo.trilla_id_estado_proceso === 3 ? 'show' : '' %>" 
+                aria-labelledby="headingTrilla" 
+                data-bs-parent="#flujoLoteAccordion">
+                <div class="accordion-body">
+                    <% if (flujo.trilla_id_estado_proceso === 3) { %>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Fecha Trilla:</strong> <%= flujo.fecha_trilla ? new Date(flujo.fecha_trilla).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Inicial:</strong> <%= flujo.trilla_peso_inicial %> kg</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Final:</strong> <%= flujo.trilla_peso_final %> kg</p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">Proceso de trilla en progreso o pendiente.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- TUESTE -->
+        <% if (flujo.tueste_id_estado_proceso) { %>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTueste">
+                <button class="accordion-button <%= flujo.tueste_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#collapseTueste" 
+                        aria-expanded="<%= flujo.tueste_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-controls="collapseTueste">
+                    <span class="badge <%= flujo.tueste_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
+                        <%= flujo.tueste_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    </span>
+                    Tueste
+                </button>
+            </h2>
+            <div id="collapseTueste" 
+                class="accordion-collapse collapse <%= flujo.tueste_id_estado_proceso === 3 ? 'show' : '' %>" 
+                aria-labelledby="headingTueste" 
+                data-bs-parent="#flujoLoteAccordion">
+                <div class="accordion-body">
+                    <% if (flujo.tueste_id_estado_proceso === 3) { %>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Fecha Tueste:</strong> <%= flujo.fecha_tueste ? new Date(flujo.fecha_tueste).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Tipo Calidad:</strong> <%= flujo.tueste_tipo_calidad || 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Nivel Tueste:</strong> <%= flujo.tueste_nivel_tueste || 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Inicial:</strong> <%= flujo.tueste_peso_inicial %> kg</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Final:</strong> <%= flujo.tueste_peso_final %> kg</p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">Proceso de tueste en progreso o pendiente.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- MOLIENDA -->
+        <% if (flujo.molienda_id_estado_proceso) { %>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingMolienda">
+                <button class="accordion-button <%= flujo.molienda_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#collapseMolienda" 
+                        aria-expanded="<%= flujo.molienda_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-controls="collapseMolienda">
+                    <span class="badge <%= flujo.molienda_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
+                        <%= flujo.molienda_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    </span>
+                    Molienda
+                </button>
+            </h2>
+            <div id="collapseMolienda" 
+                class="accordion-collapse collapse <%= flujo.molienda_id_estado_proceso === 3 ? 'show' : '' %>" 
+                aria-labelledby="headingMolienda" 
+                data-bs-parent="#flujoLoteAccordion">
+                <div class="accordion-body">
+                    <% if (flujo.molienda_id_estado_proceso === 3) { %>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Fecha Molienda:</strong> <%= flujo.fecha_molienda ? new Date(flujo.fecha_molienda).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Tipo Molienda:</strong> <%= flujo.molienda_tipo_molienda || 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Es Grano:</strong> <%= flujo.molienda_es_grano ? 'Sí' : 'No' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Inicial:</strong> <%= flujo.molienda_peso_inicial %> kg</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Final:</strong> <%= flujo.molienda_peso_final %> kg</p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">Proceso de molienda en progreso o pendiente.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- EMPACADO -->
+        <% if (flujo.empacado_id_estado_proceso) { %>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingEmpacado">
+                <button class="accordion-button <%= flujo.empacado_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#collapseEmpacado" 
+                        aria-expanded="<%= flujo.empacado_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-controls="collapseEmpacado">
+                    <span class="badge <%= flujo.empacado_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
+                        <%= flujo.empacado_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    </span>
+                    Empacado
+                </button>
+            </h2>
+            <div id="collapseEmpacado" 
+                class="accordion-collapse collapse <%= flujo.empacado_id_estado_proceso === 3 ? 'show' : '' %>" 
+                aria-labelledby="headingEmpacado" 
+                data-bs-parent="#flujoLoteAccordion">
+                <div class="accordion-body">
+                    <% if (flujo.empacado_id_estado_proceso === 3) { %>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Fecha Empacado:</strong> <%= flujo.fecha_empacado ? new Date(flujo.fecha_empacado).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Inicial:</strong> <%= flujo.empacado_peso_inicial %> kg</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Final:</strong> <%= flujo.empacado_peso_final || 'No registrado' %> <%= flujo.empacado_peso_final ? 'kg' : '' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Empacado Total:</strong> <%= flujo.empacado_peso_empacado %> kg</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Tipo Producto:</strong> <%= flujo.empacado_id_tipo_producto || 'No especificado' %></p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">Proceso de empacado en progreso o pendiente.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- CONTROL DE CALIDAD -->
+        <% if (flujo.control_calidad_id_estado_proceso) { %>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingControlCalidad">
+                <button class="accordion-button <%= flujo.control_calidad_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#collapseControlCalidad" 
+                        aria-expanded="<%= flujo.control_calidad_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-controls="collapseControlCalidad">
+                    <span class="badge <%= flujo.control_calidad_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
+                        <%= flujo.control_calidad_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    </span>
+                    Control de Calidad
+                </button>
+            </h2>
+            <div id="collapseControlCalidad" 
+                class="accordion-collapse collapse <%= flujo.control_calidad_id_estado_proceso === 3 ? 'show' : '' %>" 
+                aria-labelledby="headingControlCalidad" 
+                data-bs-parent="#flujoLoteAccordion">
+                <div class="accordion-body">
+                    <% if (flujo.control_calidad_id_estado_proceso === 3) { %>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Fecha Evaluación:</strong> <%= flujo.fecha_evaluacion ? new Date(flujo.fecha_evaluacion).toLocaleString('es-CO') : 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Color Grano:</strong> <%= flujo.control_calidad_color_grano || 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Uniformidad:</strong> <%= flujo.control_calidad_uniformidad || 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Defectos:</strong> <%= flujo.control_calidad_defectos || 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Olor:</strong> <%= flujo.control_calidad_olor || 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Apariencia:</strong> <%= flujo.control_calidad_apariencia || 'No registrado' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Calificación:</strong> <%= flujo.control_calidad_calificacion || 'No registrado' %></p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">Proceso de control de calidad en progreso o pendiente.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+    </div>
+
+    <div class="mt-4 d-flex justify-content-between">
+        <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Volver a Procesos
+        </a>
+        <% if (flujo.control_calidad_id_estado_proceso === 3) { %>
+            <button class="btn btn-success disabled">
+                <i class="fas fa-check-circle me-1"></i> Proceso Completo
+            </button>
+        <% } %>
+    </div>
+</div>
+
+<link rel="stylesheet" href="/css/lotes/procesos.css"> 

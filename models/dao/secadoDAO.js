@@ -83,6 +83,40 @@ class SecadoDAO {
             throw error;
         }
     }
+
+    /**
+     * Reinicia el proceso de secado para un lote específico.
+     * Esto cambia el estado del proceso a "Por hacer" (id_estado_proceso = 1).
+     * @param {number} id_secado - ID del registro de secado a reiniciar.
+     * @returns {Promise<boolean>} - True si fue exitoso, false en caso contrario.
+     */
+    async reiniciarSecado(id_secado) {
+        try {
+            // Obtener información actual del secado
+            const [secadoActual] = await db.query(
+                'SELECT observaciones FROM secado WHERE id = ?',
+                [id_secado]
+            );
+            
+            if (secadoActual.length === 0) {
+                throw new Error('No se encontró el registro de secado');
+            }
+            
+            let observaciones = secadoActual[0].observaciones || '';
+            observaciones += '\n[CORRECCIÓN] Proceso reiniciado para corrección de datos: ' + new Date().toLocaleString();
+            
+            // Actualizar a estado "Por hacer" (id=1) y añadir indicador de corrección en observaciones
+            // También limpiar fecha_fin y peso_final para permitir nueva entrada
+            const [result] = await db.query(
+                'UPDATE secado SET id_estado_proceso = 1, fecha_fin = NULL, peso_final = NULL, observaciones = ? WHERE id = ?',
+                [observaciones, id_secado]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            console.error('Error al reiniciar secado:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new SecadoDAO(); 

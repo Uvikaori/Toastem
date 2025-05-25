@@ -7,14 +7,20 @@ const validateClasificacion = [
         .isISO8601().withMessage('Formato de fecha inválido.')
         .toDate()
         .custom(async (value, { req }) => {
-            // Validar que la fecha de clasificación sea posterior a la fecha de fin de secado
+            // Validar que la fecha de clasificación sea posterior o igual a la fecha de fin de secado
             const id_lote = parseInt(req.params.id_lote);
             if (id_lote && !isNaN(id_lote)) {
                 const secadoInfo = await secadoDAO.getSecadoByLoteId(id_lote);
                 if (secadoInfo && secadoInfo.fecha_fin) {
                     const fechaFinSecado = new Date(secadoInfo.fecha_fin);
-                    if (new Date(value) < fechaFinSecado) {
-                        throw new Error(`La fecha de clasificación debe ser posterior a la fecha de finalización del secado (${fechaFinSecado.toLocaleString()}).`);
+                    const fechaClasificacion = new Date(value);
+                    
+                    // Comparar solo las fechas (sin horas) para permitir el mismo día
+                    fechaFinSecado.setHours(0, 0, 0, 0);
+                    fechaClasificacion.setHours(0, 0, 0, 0);
+                    
+                    if (fechaClasificacion < fechaFinSecado) {
+                        throw new Error(`La fecha de clasificación debe ser igual o posterior a la fecha de finalización del secado (${new Date(secadoInfo.fecha_fin).toLocaleDateString()}).`);
                     }
                 }
             }
@@ -50,38 +56,6 @@ const validateClasificacion = [
         .custom((value) => {
             if (value < 0) {
                 throw new Error('El peso de la pasilla no puede ser negativo.');
-            }
-            return true;
-        }),
-
-    body('peso_otro')
-        .optional({ checkFalsy: true })
-        .isNumeric().withMessage('El peso de otros debe ser un número.')
-        .toFloat()
-        .custom((value) => {
-            if (value < 0) {
-                throw new Error('El peso de otros no puede ser negativo.');
-            }
-            return true;
-        }),
-
-    body('peso_cafe_bueno')
-        .notEmpty().withMessage('El peso del café bueno es obligatorio.')
-        .isNumeric().withMessage('El peso del café bueno debe ser un número.')
-        .toFloat()
-        .custom(async (value, { req }) => {
-            if (value <= 0) {
-                throw new Error('El peso del café bueno debe ser positivo.');
-            }
-            const id_lote = parseInt(req.params.id_lote);
-            if (id_lote && !isNaN(id_lote)) {
-                const secadoInfo = await secadoDAO.getSecadoByLoteId(id_lote);
-                // Solo validar si el secado está terminado y tiene un peso_final
-                if (secadoInfo && secadoInfo.peso_final !== null && secadoInfo.id_estado_proceso === 3) {
-                    if (value > secadoInfo.peso_final) {
-                        throw new Error(`El peso del café bueno (${value} kg) no puede ser mayor que el peso final del secado (${secadoInfo.peso_final} kg).`);
-                    }
-                }
             }
             return true;
         }),

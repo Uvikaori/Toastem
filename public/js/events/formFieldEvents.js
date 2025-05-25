@@ -1,3 +1,5 @@
+// Este archivo maneja eventos comunes para campos de formulario
+
 document.addEventListener('DOMContentLoaded', () => {
     // Asegurarse que Validaciones esté cargado (contiene capitalizarPalabras)
     if (typeof Validaciones === 'undefined') {
@@ -37,4 +39,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // applyRealtimeCapitalization(nombreFincaInput); // Comentado porque nombreUserInput ya lo cubre si el ID es el mismo.
     applyRealtimeCapitalization(ubicacionInput);
 
+    // Toggle para mostrar/ocultar contraseñas
+    const setupPasswordToggles = () => {
+        const passwordToggles = document.querySelectorAll('[id^="toggle"]');
+        
+        passwordToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const targetId = this.id.replace('toggle', '');
+                let targetInput;
+                
+                if (targetId === 'Password') {
+                    targetInput = document.getElementById('contraseña');
+                } else if (targetId === 'ConfirmPassword') {
+                    targetInput = document.getElementById('confirmarContraseña');
+                } else if (targetId.includes('Nueva')) {
+                    targetInput = document.getElementById('nuevaContraseña');
+                } else if (targetId.includes('Confirmar')) {
+                    targetInput = document.getElementById('confirmarNuevaContraseña');
+                }
+                
+                if (targetInput) {
+                    const tipo = targetInput.type === 'password' ? 'text' : 'password';
+                    targetInput.type = tipo;
+                    this.querySelector('i').classList.toggle('fa-eye');
+                    this.querySelector('i').classList.toggle('fa-eye-slash');
+                }
+            });
+        });
+    };
+    
+    setupPasswordToggles();
 }); 

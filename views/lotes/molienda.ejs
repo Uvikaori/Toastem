@@ -1,0 +1,63 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0"><%= titulo %></h2>
+                </div>
+                <div class="card-body">
+                    <% if (error && error.length > 0) { %>
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                <% error.forEach(function(err) { %>
+                                    <li><%= err %></li>
+                                <% }); %>
+                            </ul>
+                        </div>
+                    <% } %>
+
+                    <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/molienda" method="POST">
+                        <div class="mb-3">
+                            <label for="fecha_molienda" class="form-label">Fecha de Molienda</label>
+                            <input type="date" class="form-control" id="fecha_molienda" name="fecha_molienda" value="<%= fecha_molienda %>" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="peso_inicial_molienda" class="form-label">Peso Inicial (kg)</label>
+                            <input type="number" step="0.01" class="form-control" id="peso_inicial_molienda" name="peso_inicial_molienda" value="<%= peso_inicial_molienda %>" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tipo_molienda" class="form-label">Tipo de Molienda</label>
+                            <select class="form-select" id="tipo_molienda" name="tipo_molienda" required>
+                                <option value="">Seleccione un tipo</option>
+                                <option value="Fina" <%= tipo_molienda === 'Fina' ? 'selected' : '' %>>Fina</option>
+                                <option value="Media" <%= tipo_molienda === 'Media' ? 'selected' : '' %>>Media</option>
+                                <option value="Gruesa" <%= tipo_molienda === 'Gruesa' ? 'selected' : '' %>>Gruesa</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="peso_final_molido" class="form-label">Peso Final Molido (kg)</label>
+                            <input type="number" step="0.01" class="form-control" id="peso_final_molido" name="peso_final_molido" value="<%= peso_final_molido %>" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observaciones" name="observaciones" rows="3"><%= observaciones %></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Registrar Molienda</button>
+                            <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %> 

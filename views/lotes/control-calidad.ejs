@@ -1,0 +1,70 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0"><%= titulo %></h2>
+                </div>
+                <div class="card-body">
+                    <% if (error && error.length > 0) { %>
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                <% error.forEach(function(err) { %>
+                                    <li><%= err %></li>
+                                <% }); %>
+                            </ul>
+                        </div>
+                    <% } %>
+
+                    <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/control-calidad" method="POST">
+                        <div class="mb-3">
+                            <label for="fecha_control" class="form-label">Fecha de Control</label>
+                            <input type="date" class="form-control" id="fecha_control" name="fecha_control" value="<%= fecha_control %>" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tipo_control" class="form-label">Tipo de Control</label>
+                            <select class="form-select" id="tipo_control" name="tipo_control" required>
+                                <option value="">Seleccione un tipo</option>
+                                <option value="Cata" <%= tipo_control === 'Cata' ? 'selected' : '' %>>Cata</option>
+                                <option value="Análisis Físico" <%= tipo_control === 'Análisis Físico' ? 'selected' : '' %>>Análisis Físico</option>
+                                <option value="Análisis Químico" <%= tipo_control === 'Análisis Químico' ? 'selected' : '' %>>Análisis Químico</option>
+                                <option value="Otro" <%= tipo_control === 'Otro' ? 'selected' : '' %>>Otro</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="resultado_control" class="form-label">Resultado del Control</label>
+                            <select class="form-select" id="resultado_control" name="resultado_control" required>
+                                <option value="">Seleccione un resultado</option>
+                                <option value="Aprobado" <%= resultado_control === 'Aprobado' ? 'selected' : '' %>>Aprobado</option>
+                                <option value="Rechazado" <%= resultado_control === 'Rechazado' ? 'selected' : '' %>>Rechazado</option>
+                                <option value="Condicional" <%= resultado_control === 'Condicional' ? 'selected' : '' %>>Condicional</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="puntaje_cata" class="form-label">Puntaje de Cata (0-100)</label>
+                            <input type="number" step="0.01" min="0" max="100" class="form-control" id="puntaje_cata" name="puntaje_cata" value="<%= puntaje_cata %>">
+                            <div class="form-text">Solo requerido si el tipo de control es "Cata"</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observaciones" name="observaciones" rows="3"><%= observaciones %></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Registrar Control de Calidad</button>
+                            <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %> 

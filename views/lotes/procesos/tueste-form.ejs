@@ -1,0 +1,87 @@
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/fincas/gestionar">Mis Fincas</a></li>
+            <li class="breadcrumb-item"><a href="/fincas/<%= finca.id %>/lotes">Lotes de: <%= finca.nombre %></a></li>
+            <li class="breadcrumb-item"><a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos">Procesos Lote: <%= lote.codigo %></a></li>
+            <li class="breadcrumb-item active" aria-current="page"><%= titulo %></li>
+        </ol>
+    </nav>
+
+    <h1 class="text-toastem-primary mb-4"><%= titulo %></h1>
+
+    <%# Mostrar mensajes flash %>
+    <% if (mensaje && mensaje.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert"><%= mensaje %><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+    <% } %>
+    <% if (error && error.length > 0) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong>
+            <ul><% error.forEach(function(err){ %><li><%= Array.isArray(err) ? err.join(', ') : err %></li><% }) %></ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <p class="mb-3"><strong>Peso del lote después de Trilla (Peso inicial para tueste):</strong> <%= peso_trilla_final %> kg</p>
+            <hr/>
+            <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/tueste" method="POST">
+                
+                <div class="mb-3">
+                    <label for="peso_inicial" class="form-label">Peso Inicial (kg): <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" class="form-control" id="peso_inicial" name="peso_inicial" value="<%= peso_inicial %>" placeholder="Ej: 20.50" required>
+                    <small class="form-text text-muted">Campo obligatorio. Peso del café antes del proceso de tueste.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="tipo_calidad" class="form-label">Calidad del Café: <span class="text-danger">*</span></label>
+                    <select class="form-select" id="tipo_calidad" name="tipo_calidad" required>
+                        <option value="" disabled <% if (!tipo_calidad) { %>selected<% } %>>Seleccione la calidad...</option>
+                        <option value="Premium" <% if (tipo_calidad === 'Premium') { %>selected<% } %>>Premium</option>
+                        <option value="Normal" <% if (tipo_calidad === 'Normal') { %>selected<% } %>>Normal</option>
+                        <option value="Baja" <% if (tipo_calidad === 'Baja') { %>selected<% } %>>Baja</option>
+                    </select>
+                    <small class="form-text text-muted">Campo obligatorio. Calidad del café a tostar.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="fecha_tueste" class="form-label">Fecha de Tueste: <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="fecha_tueste" name="fecha_tueste" value="<%= fecha_tueste %>" required>
+                    <small class="form-text text-muted">Campo obligatorio. Fecha en que se realizó el tueste.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="nivel_tueste" class="form-label">Nivel de Tueste: <span class="text-danger">*</span></label>
+                    <select class="form-select" id="nivel_tueste" name="nivel_tueste" required>
+                        <option value="" disabled <% if (!nivel_tueste) { %>selected<% } %>>Seleccione el nivel...</option>
+                        <option value="Alto" <% if (nivel_tueste === 'Alto') { %>selected<% } %>>Alto</option>
+                        <option value="Medio" <% if (nivel_tueste === 'Medio') { %>selected<% } %>>Medio</option>
+                        <option value="Bajo" <% if (nivel_tueste === 'Bajo') { %>selected<% } %>>Bajo</option>
+                    </select>
+                    <small class="form-text text-muted">Campo obligatorio. Nivel de tueste aplicado al café.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="peso_final" class="form-label">Peso Final (kg): <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" class="form-control" id="peso_final" name="peso_final" value="<%= peso_final %>" placeholder="Ej: 18.50" required>
+                    <small class="form-text text-muted">Campo obligatorio. Peso del café después del proceso de tueste.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="observaciones" class="form-label">Observaciones:</label>
+                    <textarea class="form-control" id="observaciones" name="observaciones" rows="3" placeholder="Anotaciones sobre el proceso de tueste"><%= observaciones %></textarea>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Registrar Tueste</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<link rel="stylesheet" href="/css/lotes/procesos.css">
+<script src="/js/lotes/procesos.js"></script> 

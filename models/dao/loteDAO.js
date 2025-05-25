@@ -110,6 +110,102 @@ class LoteDAO {
         }
     }
 
+    /**
+     * Marca un lote como "Cancelado" (estado id=4).
+     * @param {number} id_lote - ID del lote a cancelar.
+     * @param {string} motivo - Motivo de la cancelación.
+     * @returns {Promise<boolean>} - True si fue exitoso, false en caso contrario.
+     */
+    async cancelarLote(id_lote, motivo) {
+        try {
+            // Obtener el lote para añadir el motivo a las observaciones
+            const loteActual = await this.getLoteById(id_lote);
+            if (!loteActual) {
+                throw new Error('No se encontró el lote');
+            }
+            
+            // Actualizar observaciones
+            let observaciones = loteActual.observaciones || '';
+            observaciones += `\n[CANCELADO] ${motivo} - Fecha: ${new Date().toLocaleString()}`;
+            
+            // Actualizar el estado del lote a "Cancelado" (id=4)
+            const [result] = await db.query(
+                'UPDATE lotes SET id_estado_proceso = 4, observaciones = ? WHERE id = ?',
+                [observaciones, id_lote]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            console.error('Error al cancelar el lote:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Duplica un lote para reiniciarlo, manteniendo algunos datos básicos.
+     * @param {number} id_lote_original - ID del lote a duplicar.
+     * @param {string} motivo - Motivo de la duplicación.
+     * @returns {Promise<number>} - ID del nuevo lote creado.
+     */
+    async duplicarLote(id_lote_original, motivo) {
+        try {
+            // Obtener el lote original
+            const loteOriginal = await this.getLoteById(id_lote_original);
+            if (!loteOriginal) {
+                throw new Error('No se encontró el lote original');
+            }
+            
+            // Generar un nuevo código para el lote duplicado
+            const fechaActual = new Date();
+            const anio = fechaActual.getFullYear();
+            const mes = String(fechaActual.getMonth() + 1).padStart(2, '0');
+            const fincaId = loteOriginal.id_finca;
+            
+            // Obtener el último código de lote para esta finca
+            const [ultimosLotes] = await db.query(
+                'SELECT codigo FROM lotes WHERE id_finca = ? ORDER BY id DESC LIMIT 1',
+                [fincaId]
+            );
+            
+            let secuencia = 1;
+            if (ultimosLotes.length > 0) {
+                const ultimoCodigo = ultimosLotes[0].codigo;
+                const match = ultimoCodigo.match(/(\d+)$/);
+                if (match) {
+                    secuencia = parseInt(match[1], 10) + 1;
+                }
+            }
+            
+            const nuevoCodigo = `${anio}${mes}-F${fincaId}-${secuencia}`;
+            
+            // Crear el nuevo lote con los datos básicos del original
+            const nuevoLote = {
+                codigo: nuevoCodigo,
+                id_usuario: loteOriginal.id_usuario,
+                id_finca: loteOriginal.id_finca,
+                fecha_recoleccion: loteOriginal.fecha_recoleccion,
+                peso_inicial: loteOriginal.peso_inicial,
+                tipo_cafe: loteOriginal.tipo_cafe,
+                tipo_recoleccion: loteOriginal.tipo_recoleccion,
+                observaciones: `Lote duplicado a partir del lote ${loteOriginal.codigo}. Motivo: ${motivo}. Fecha: ${fechaActual.toLocaleString()}`,
+                id_estado_proceso: 2, // En progreso
+                id_proceso_actual: 1, // Recolección
+                id_destino_final: loteOriginal.id_destino_final,
+                fecha_registro: fechaActual
+            };
+            
+            // Insertar el nuevo lote
+            const [result] = await db.query(
+                'INSERT INTO lotes (codigo, id_usuario, id_finca, fecha_recoleccion, peso_inicial, tipo_cafe, tipo_recoleccion, observaciones, id_estado_proceso, id_proceso_actual, id_destino_final, fecha_registro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [nuevoLote.codigo, nuevoLote.id_usuario, nuevoLote.id_finca, nuevoLote.fecha_recoleccion, nuevoLote.peso_inicial, nuevoLote.tipo_cafe, nuevoLote.tipo_recoleccion, nuevoLote.observaciones, nuevoLote.id_estado_proceso, nuevoLote.id_proceso_actual, nuevoLote.id_destino_final, nuevoLote.fecha_registro]
+            );
+            
+            return result.insertId;
+        } catch (error) {
+            console.error('Error al duplicar el lote:', error);
+            throw error;
+        }
+    }
+
     // TODO: Añadir métodos para actualizar estado, peso final, etc.
 }
 

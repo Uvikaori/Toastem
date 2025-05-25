@@ -45,6 +45,39 @@ class TrillaDAO {
             throw error;
         }
     }
+
+    /**
+     * Reinicia el proceso de trilla para un lote específico.
+     * Esto cambia el estado del proceso a "Por hacer" (id_estado_proceso = 1).
+     * @param {number} id_trilla - ID del registro de trilla a reiniciar.
+     * @returns {Promise<boolean>} - True si fue exitoso, false en caso contrario.
+     */
+    async reiniciarTrilla(id_trilla) {
+        try {
+            // Obtener información actual de la trilla
+            const [trillaActual] = await db.query(
+                'SELECT observaciones FROM trilla WHERE id = ?',
+                [id_trilla]
+            );
+            
+            if (trillaActual.length === 0) {
+                throw new Error('No se encontró el registro de trilla');
+            }
+            
+            let observaciones = trillaActual[0].observaciones || '';
+            observaciones += '\n[CORRECCIÓN] Proceso reiniciado para corrección de datos: ' + new Date().toLocaleString();
+            
+            // Actualizar a estado "Por hacer" (id=1) y añadir indicador de corrección en observaciones
+            const [result] = await db.query(
+                'UPDATE trilla SET id_estado_proceso = 1, observaciones = ? WHERE id = ?',
+                [observaciones, id_trilla]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            console.error('Error al reiniciar trilla:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new TrillaDAO(); 

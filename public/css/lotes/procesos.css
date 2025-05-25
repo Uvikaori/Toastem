@@ -1,0 +1,130 @@
+.text-toastem-primary { 
+    color: #5D4037; 
+}
+
+.bg-toastem-primary { 
+    background-color: #5D4037; 
+    color: white; 
+}
+
+/* Estilos para tarjetas de lotes */
+.lot-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    transition: transform .2s ease-in-out, box-shadow .2s ease-in-out;
+}
+
+/* Estilos para tarjetas de procesos */
+.proceso-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 .3rem .8rem rgba(0,0,0,.1)!important;
+    transition: transform .2s ease-in-out, box-shadow .2s ease-in-out;
+}
+
+/* Estilos para formularios de procesos */
+.required-field::after {
+    content: " *";
+    color: red;
+}
+
+.form-fecha-tooltip {
+    cursor: help;
+    border-bottom: 1px dotted #ccc;
+}
+
+.form-fecha-tooltip:hover::after {
+    content: "Formato: DD/MM/AAAA";
+    position: absolute;
+    background: #f8f9fa;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    z-index: 100;
+}
+
+/* Estilos para cancelar y duplicar lotes */
+.confirmation-container {
+    border-left: 4px solid #dc3545;
+    background-color: #f8f9fa;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.confirmation-warning {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Estilos para clasificación */
+.weight-distribution {
+    background-color: #f8f9fa;
+    border-left: 4px solid #0d6efd;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+/* Estilos para secado */
+.decision-venta-container {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+/* Estilos para el acordeón de flujo */
+.accordion-button:not(.collapsed) {
+    background-color: #f8f0eb;
+    color: #5D4037;
+}
+
+/* Estilos para la barra de progreso */
+.progress {
+    height: 30px;
+}
+
+.progress-bar {
+    width: calc(100% / 11);
+    text-align: center;
+    line-height: 30px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Estilos para información de corrección de datos */
+.correction-info {
+    background-color: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 12px;
+    font-size: 0.85rem;
+}
+
+.correction-info ul {
+    margin-bottom: 0;
+    padding-left: 1.2rem;
+}
+
+.correction-info li {
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+}
+
+.correction-info .fas {
+    color: #1976d2;
+}
+
+/* Estilo para el texto del dropdown */
+.dropdown-item-text.text-muted {
+    padding: 0.25rem 1rem;
+    font-style: italic;
+}
+
+/* Hover effect para el botón de corrección */
+.dropdown-item.text-warning:hover {
+    background-color: #fff3cd;
+    color: #856404 !important;
+} 

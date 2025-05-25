@@ -9,6 +9,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const successMessage = document.getElementById('successMessage');
   const successMessageText = document.getElementById('successMessageText');
   const loginLink = document.getElementById('loginLink');
+  const nombreInput = document.getElementById('nombre');
+  const correoInput = document.getElementById('correo');
+  const preguntaSeguridadInput = document.getElementById('pregunta_seguridad');
+  const respuestaSeguridadInput = document.getElementById('respuesta_seguridad');
 
   // Función para mostrar errores generales
   function mostrarError(mensaje) {
@@ -74,15 +78,15 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Validar nombre y apellido en tiempo real
-  nombreCompletoInput.addEventListener('input', function() {
+  nombreInput.addEventListener('input', function() {
     const nombre = this.value;
     const validacion = Validaciones.validarNombreCompleto(nombre);
     if (validacion.valido) {
-      Validaciones.limpiarErrorCampo('nombre_completo');
+      Validaciones.limpiarErrorCampo('nombre');
       this.classList.add('is-valid');
       this.classList.remove('is-invalid');
     } else {
-      Validaciones.mostrarErrorCampo('nombre_completo', validacion.mensaje);
+      Validaciones.mostrarErrorCampo('nombre', validacion.mensaje);
       this.classList.remove('is-valid');
     }
   });
@@ -136,7 +140,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Validar respuesta de seguridad
-  const respuestaSeguridadInput = document.getElementById('respuesta_seguridad');
   respuestaSeguridadInput.addEventListener('blur', function() {
     const validacion = Validaciones.validarRespuestaSeguridad(this.value);
     if (validacion.valido) {
@@ -183,7 +186,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Validar y capitalizar nombre
-  const nombreInput = document.getElementById('nombre');
   nombreInput.addEventListener('blur', function() {
     const nombre = this.value.trim();
     const validacion = Validaciones.validarNombreCompleto(nombre);
@@ -193,17 +195,6 @@ document.addEventListener('DOMContentLoaded', function() {
       Validaciones.limpiarErrorCampo('nombre');
     } else {
       Validaciones.mostrarErrorCampo('nombre', validacion.mensaje);
-    }
-  });
-
-  // Validar pregunta de seguridad
-  const preguntaSeguridadInput = document.getElementById('pregunta_seguridad');
-  preguntaSeguridadInput.addEventListener('change', function() {
-    const validacion = Validaciones.validarPreguntaSeguridad(this.value);
-    if (validacion.valido) {
-      Validaciones.limpiarErrorCampo('pregunta_seguridad');
-    } else {
-      Validaciones.mostrarErrorCampo('pregunta_seguridad', validacion.mensaje);
     }
   });
 
@@ -248,18 +239,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 2000);
       } else {
         if (responseData.errores) {
-          if (responseData.errores.general) {
-            mostrarError(responseData.errores.general);
-          } else {
-            mostrarErroresCampos(responseData.errores);
-          }
+          // Mostrar errores de campos
+          mostrarErroresCampos(responseData.errores);
         } else {
-          mostrarError('Error al procesar el registro');
+          // Mostrar error general
+          mostrarError(responseData.error || 'Error al procesar el registro');
         }
       }
     } catch (error) {
-      console.error('Error en la solicitud:', error);
-      mostrarError('Error al procesar la solicitud: ' + error.message);
+      console.error('Error al enviar formulario:', error);
+      mostrarError('Error de conexión al procesar el registro');
     }
   });
 });

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: May 20, 2025 at 08:24 PM
+-- Generation Time: May 25, 2025 at 07:18 PM
 -- Server version: 8.0.39
 -- PHP Version: 8.2.24
 
@@ -35,8 +35,6 @@ CREATE TABLE `clasificacion` (
   `peso_total` decimal(10,2) DEFAULT NULL,
   `peso_pergamino` decimal(10,2) DEFAULT NULL,
   `peso_pasilla` decimal(10,2) DEFAULT NULL,
-  `peso_otro` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `peso_cafe_bueno` decimal(10,2) NOT NULL,
   `observaciones` text COLLATE utf8mb4_general_ci,
   `id_estado_proceso` int DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -45,8 +43,9 @@ CREATE TABLE `clasificacion` (
 -- Dumping data for table `clasificacion`
 --
 
-INSERT INTO `clasificacion` (`id`, `id_lote`, `peso_inicial`, `fecha_clasificacion`, `peso_total`, `peso_pergamino`, `peso_pasilla`, `peso_otro`, `peso_cafe_bueno`, `observaciones`, `id_estado_proceso`) VALUES
-(1, 2, 40.00, '2025-05-20', 40.00, 20.00, 15.00, NULL, 35.00, NULL, 3);
+INSERT INTO `clasificacion` (`id`, `id_lote`, `peso_inicial`, `fecha_clasificacion`, `peso_total`, `peso_pergamino`, `peso_pasilla`, `observaciones`, `id_estado_proceso`) VALUES
+(1, 2, 40.00, '2025-05-20', 40.00, 20.00, 15.00, NULL, 3),
+(2, 7, 71.50, '2025-05-25', NULL, 50.00, 20.00, NULL, 3);
 
 -- --------------------------------------------------------
 
@@ -94,7 +93,9 @@ CREATE TABLE `despulpado` (
 
 INSERT INTO `despulpado` (`id`, `id_lote`, `peso_inicial`, `fecha_remojo`, `fecha_despulpado`, `peso_final`, `peso_despues`, `observaciones`, `id_estado_proceso`) VALUES
 (1, 2, 50.00, '2025-05-15 14:24:00', '2025-05-15 18:00:00', 45.00, NULL, 'Salio mucho café sin pepa', 3),
-(2, 2, 50.00, '2025-05-15 14:24:00', '2025-05-15 18:00:00', 45.00, NULL, 'Salio mucho café sin pepa', 3);
+(2, 2, 50.00, '2025-05-15 14:24:00', '2025-05-15 18:00:00', 45.00, NULL, 'Salio mucho café sin pepa', 3),
+(3, 6, 230.00, '2025-05-21 21:26:00', '2025-05-21 22:27:00', 60.00, NULL, 'no', 3),
+(4, 7, 80.00, '2025-05-16 10:46:00', '2025-05-16 15:46:00', 75.00, NULL, '\n[CORRECCIÓN COMPLETADA] 25/5/2025, 10:46:54', 3);
 
 -- --------------------------------------------------------
 
@@ -129,13 +130,13 @@ CREATE TABLE `empacado` (
   `id_lote` int NOT NULL,
   `peso_inicial` decimal(10,2) DEFAULT NULL,
   `fecha_empacado` date NOT NULL,
-  `peso_final` decimal(10,2) DEFAULT NULL,
   `peso_empacado` decimal(10,2) NOT NULL,
-  `id_tipo_producto` int NOT NULL DEFAULT '1',
   `observaciones` text COLLATE utf8mb4_general_ci,
   `id_estado_proceso` int DEFAULT '1',
   `id_tueste` int DEFAULT NULL,
-  `id_molienda` int DEFAULT NULL
+  `id_molienda` int DEFAULT NULL,
+  `total_empaques` int NOT NULL DEFAULT '1' COMMENT 'Número total de empaques generados',
+  `tipo_producto_empacado` enum('Grano','Molido','Pasilla Molido') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Grano' COMMENT 'Tipo de producto empacado'
 ) ;
 
 -- --------------------------------------------------------
@@ -183,7 +184,8 @@ CREATE TABLE `fermentacion_lavado` (
 --
 
 INSERT INTO `fermentacion_lavado` (`id`, `id_lote`, `peso_inicial`, `fecha_inicio_fermentacion`, `fecha_lavado`, `peso_final`, `observaciones`, `id_estado_proceso`) VALUES
-(1, 2, 45.00, '2025-05-16 10:51:00', '2025-05-17 04:51:00', 41.99, 'Mucha hoja', 3);
+(1, 2, 45.00, '2025-05-16 10:51:00', '2025-05-17 04:51:00', 41.99, 'Mucha hoja', 3),
+(2, 7, 75.00, '2025-05-17 16:00:00', '2025-05-17 17:40:00', 75.00, '\n[CORRECCIÓN COMPLETADA] 25/5/2025, 12:40:19', 3);
 
 -- --------------------------------------------------------
 
@@ -207,7 +209,8 @@ INSERT INTO `fincas` (`id`, `nombre`, `ubicacion`, `id_municipio_vereda`, `id_us
 (2, 'El Sol', 'Puerta Morada', 35, 6),
 (3, 'El Paraiso', 'Puerta Con Sangre De Borrego', 16, 7),
 (4, 'La Piscina', 'La Del Borracho En La Esquina', 1, 7),
-(5, 'La Cuesta', 'Km 125', 35, 8);
+(5, 'La Cuesta', 'Km 125', 35, 8),
+(6, 'Abc', 'Ladera', 36, 9);
 
 -- --------------------------------------------------------
 
@@ -237,10 +240,13 @@ CREATE TABLE `lotes` (
 --
 
 INSERT INTO `lotes` (`id`, `codigo`, `id_usuario`, `id_finca`, `fecha_recoleccion`, `peso_inicial`, `tipo_recoleccion`, `tipo_cafe`, `observaciones`, `id_destino_final`, `id_estado_proceso`, `id_proceso_actual`, `fecha_finalizacion`, `fecha_registro`) VALUES
-(2, 'F2-L1746561376894', 6, 2, '2025-05-06', 50.00, 'Selectiva', 'Mezcla', '', 1, 3, 7, NULL, '2025-05-06 21:56:17'),
+(2, 'F2-L1746561376894', 6, 2, '2025-05-06', 50.00, 'Selectiva', 'Mezcla', '', 1, 3, 8, NULL, '2025-05-06 21:56:17'),
 (3, 'F3-L1746727435329', 7, 3, '2025-02-22', 100.00, 'General', 'Rojo', 'Lleno de cucarachas.', 1, 2, 1, NULL, '2025-05-08 20:03:55'),
 (4, 'F3-L1746727674609', 7, 3, '2025-02-15', 50.00, 'Selectiva', 'Amarillo', 'Todo podrido', 1, 2, 1, NULL, '2025-05-08 20:07:55'),
-(5, 'F5-L1746728849693', 8, 5, '2025-05-08', 50.00, 'Selectiva', 'Mezcla', 'Plantas con broca', 1, 2, 1, NULL, '2025-05-08 20:27:30');
+(5, 'F5-L1746728849693', 8, 5, '2025-05-08', 50.00, 'Selectiva', 'Mezcla', 'Plantas con broca', 1, 2, 1, NULL, '2025-05-08 20:27:30'),
+(6, 'F6-L1747846558769', 9, 6, '2024-09-24', 230.00, 'Selectiva', 'Rojo', 'ninguna', 1, 2, 3, NULL, '2025-05-21 18:55:59'),
+(7, 'F2-L1748113017079', 6, 2, '2025-05-15', 80.00, 'Selectiva', 'Mezcla', '', 1, 3, 5, NULL, '2025-05-24 20:56:57'),
+(8, 'F2-L1748192274739', 6, 2, '2025-05-25', 100.00, 'Selectiva', 'Rojo', '', 1, 2, 1, NULL, '2025-05-25 18:57:55');
 
 -- --------------------------------------------------------
 
@@ -412,7 +418,8 @@ CREATE TABLE `secado` (
 --
 
 INSERT INTO `secado` (`id`, `id_lote`, `peso_inicial`, `fecha_inicio`, `metodo_secado`, `humedad_inicial`, `fecha_fin`, `peso_final`, `observaciones`, `decision_venta`, `fecha_decision`, `id_estado_proceso`) VALUES
-(1, 2, 40.00, '2025-05-18 15:48:00', 'Secado al sol', NULL, '2025-05-19 17:49:00', 40.00, '', 0, NULL, 3);
+(1, 2, 40.00, '2025-05-18 15:48:00', 'Secado al sol', NULL, '2025-05-19 17:49:00', 40.00, '', 0, NULL, 3),
+(2, 7, 72.00, '2025-05-18 10:00:00', 'Secado al sol', NULL, '2025-05-20 15:11:00', 71.50, '', 1, '2025-05-25 15:11:26', 3);
 
 -- --------------------------------------------------------
 
@@ -423,9 +430,10 @@ INSERT INTO `secado` (`id`, `id_lote`, `peso_inicial`, `fecha_inicio`, `metodo_s
 CREATE TABLE `seguimiento_secado` (
   `id` int NOT NULL,
   `id_secado` int NOT NULL,
-  `fecha` date NOT NULL,
-  `condiciones_climaticas` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `observaciones` text COLLATE utf8mb4_general_ci
+  `fecha` datetime NOT NULL COMMENT 'Fecha y hora del seguimiento',
+  `observaciones` text COLLATE utf8mb4_general_ci,
+  `temperatura` decimal(5,2) DEFAULT NULL COMMENT 'Temperatura en grados Celsius',
+  `humedad` decimal(5,2) DEFAULT NULL COMMENT 'Humedad relativa en porcentaje'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -466,10 +474,8 @@ CREATE TABLE `tipos_venta` (
 --
 
 INSERT INTO `tipos_venta` (`id`, `nombre`, `descripcion`) VALUES
-(1, 'Pergamino', 'Venta de café en pergamino'),
-(2, 'Trillado', 'Venta de café trillado (verde)'),
-(3, 'Tostado', 'Venta de café tostado'),
-(4, 'Molido', 'Venta de café molido');
+(1, 'Pergamino', 'Venta de café en pergamino (después del secado)'),
+(2, 'Empacado', 'Venta de café empacado (grano o molido)');
 
 -- --------------------------------------------------------
 
@@ -512,6 +518,13 @@ CREATE TABLE `tueste` (
   `id_estado_proceso` int DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `tueste`
+--
+
+INSERT INTO `tueste` (`id`, `id_lote`, `peso_inicial`, `tipo_calidad`, `fecha_tueste`, `peso_final`, `nivel_tueste`, `observaciones`, `id_estado_proceso`) VALUES
+(1, 2, 33.00, 'Normal', '2025-05-21', 32.50, 'Medio', '', 3);
+
 -- --------------------------------------------------------
 
 --
@@ -535,7 +548,9 @@ CREATE TABLE `usuarios` (
 INSERT INTO `usuarios` (`id`, `nombre`, `email`, `password`, `id_pregunta_seguridad`, `respuesta_seguridad`, `fecha_registro`) VALUES
 (6, 'Andres Diaz', 'andresd@gmail.com', '$2b$10$CakDz.ISDMA92NLyBqUWq.PbS0LnjB2ThYSuFu6nfhkSCq6Px70IW', 5, 'azul', '2025-05-06 19:15:33'),
 (7, 'Sergio Diaz', 'Sergiod9122@gmail.com', '$2b$10$DSG5FdByQYBwETzcOq/pJu8xjNBhxcbWodSeLpo/Iz.LOBQfQZ8jy', 1, 'Uvi', '2025-05-08 19:56:00'),
-(8, 'Adriana Moreno', 'adrianam@gmail.com', '$2b$10$Bxtrz4eS.yIwgERdvg1ONeSfhWnwB5ho74PwRPe.0tnRRN9f3ohMW', 5, 'rojo', '2025-05-08 20:25:59');
+(8, 'Adriana Moreno', 'adrianam@gmail.com', '$2b$10$Bxtrz4eS.yIwgERdvg1ONeSfhWnwB5ho74PwRPe.0tnRRN9f3ohMW', 5, 'rojo', '2025-05-08 20:25:59'),
+(9, 'Danny Moreno', 'danny@gmail.com', '$2b$10$1HuonbYwPU5mBr6xi26ey.yfXa3QNpH0ewHBPIUdOXCDZoa.C3hJ2', 2, 'bogota', '2025-05-21 18:54:04'),
+(10, 'Daniela Moreno', 'daniela@gmail.com', '$2b$10$kQ66UUWAtxHOBBVJddOuYuWKE4K.eoRUb2VdA/bZyJdObdY4YAos6', 5, 'rosa', '2025-05-21 19:24:19');
 
 -- --------------------------------------------------------
 
@@ -564,21 +579,27 @@ CREATE TABLE `vista_flujo_lote` (
 `cantidad_vendida` decimal(10,2)
 ,`clasificacion_id_estado_proceso` int
 ,`clasificacion_peso_inicial` decimal(10,2)
-,`clasificacion_peso_otro` varchar(255)
 ,`clasificacion_peso_pasilla` decimal(10,2)
 ,`clasificacion_peso_pergamino` decimal(10,2)
 ,`clasificacion_peso_total` decimal(10,2)
+,`control_calidad_apariencia` enum('Buena','Normal','Mala')
+,`control_calidad_calificacion` int
+,`control_calidad_color_grano` enum('Claro','Medio','Oscuro')
+,`control_calidad_defectos` enum('Ninguno','Pocos','Muchos')
 ,`control_calidad_id_estado_proceso` int
+,`control_calidad_olor` enum('Bueno','Normal','Malo')
 ,`control_calidad_peso_final` decimal(10,2)
 ,`control_calidad_peso_inicial` decimal(10,2)
+,`control_calidad_uniformidad` enum('Uniforme','Poco uniforme','No uniforme')
 ,`despulpado_id_estado_proceso` int
 ,`despulpado_peso_final` decimal(10,2)
 ,`despulpado_peso_inicial` decimal(10,2)
 ,`destino_final` varchar(50)
 ,`empacado_id_estado_proceso` int
-,`empacado_id_tipo_producto` int
-,`empacado_peso_final` decimal(10,2)
+,`empacado_peso_empacado` decimal(10,2)
 ,`empacado_peso_inicial` decimal(10,2)
+,`empacado_tipo_producto` enum('Grano','Molido','Pasilla Molido')
+,`empacado_total_empaques` int
 ,`fecha_clasificacion` date
 ,`fecha_despulpado` datetime
 ,`fecha_empacado` date
@@ -603,6 +624,7 @@ CREATE TABLE `vista_flujo_lote` (
 ,`molienda_id_estado_proceso` int
 ,`molienda_peso_final` decimal(10,2)
 ,`molienda_peso_inicial` decimal(10,2)
+,`molienda_tipo_molienda` enum('Granulado','Fino')
 ,`secado_decision_venta` tinyint(1)
 ,`secado_fecha_decision` datetime
 ,`secado_fecha_fin` datetime
@@ -615,8 +637,10 @@ CREATE TABLE `vista_flujo_lote` (
 ,`trilla_peso_final` decimal(10,2)
 ,`trilla_peso_inicial` decimal(10,2)
 ,`tueste_id_estado_proceso` int
+,`tueste_nivel_tueste` enum('Alto','Medio','Bajo')
 ,`tueste_peso_final` decimal(10,2)
 ,`tueste_peso_inicial` decimal(10,2)
+,`tueste_tipo_calidad` enum('Premium','Normal','Baja')
 ,`zarandeo_id_estado_proceso` int
 ,`zarandeo_peso_final` decimal(10,2)
 ,`zarandeo_peso_inicial` decimal(10,2)
@@ -643,7 +667,8 @@ CREATE TABLE `zarandeo` (
 --
 
 INSERT INTO `zarandeo` (`id`, `id_lote`, `peso_inicial`, `fecha_zarandeo`, `peso_final`, `observaciones`, `id_estado_proceso`) VALUES
-(1, 2, 41.99, '2025-05-14 10:53:00', 40.00, '', 3);
+(1, 2, 41.99, '2025-05-14 10:53:00', 40.00, '', 3),
+(2, 7, 75.00, '2025-05-18 08:00:00', 72.00, '', 3);
 
 -- --------------------------------------------------------
 
@@ -652,7 +677,7 @@ INSERT INTO `zarandeo` (`id`, `id_lote`, `peso_inicial`, `fecha_zarandeo`, `peso
 --
 DROP TABLE IF EXISTS `vista_flujo_lote`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_flujo_lote`  AS SELECT `l`.`id` AS `lote_id`, `l`.`codigo` AS `lote_codigo`, `l`.`fecha_recoleccion` AS `fecha_recoleccion`, `l`.`peso_inicial` AS `lote_peso_inicial`, `df`.`nombre` AS `destino_final`, `l`.`fecha_finalizacion` AS `fecha_finalizacion`, `tv`.`nombre` AS `tipo_venta`, `v`.`fecha_venta` AS `fecha_venta`, `v`.`cantidad` AS `cantidad_vendida`, `d`.`fecha_remojo` AS `fecha_remojo`, `d`.`fecha_despulpado` AS `fecha_despulpado`, `d`.`peso_inicial` AS `despulpado_peso_inicial`, `d`.`peso_final` AS `despulpado_peso_final`, `d`.`id_estado_proceso` AS `despulpado_id_estado_proceso`, `fl`.`fecha_inicio_fermentacion` AS `fecha_inicio_fermentacion`, `fl`.`fecha_lavado` AS `fecha_lavado`, `fl`.`peso_inicial` AS `fermentacion_peso_inicial`, `fl`.`peso_final` AS `fermentacion_peso_final`, `fl`.`id_estado_proceso` AS `fermentacion_id_estado_proceso`, `z`.`fecha_zarandeo` AS `fecha_zarandeo`, `z`.`peso_inicial` AS `zarandeo_peso_inicial`, `z`.`peso_final` AS `zarandeo_peso_final`, `z`.`id_estado_proceso` AS `zarandeo_id_estado_proceso`, `s`.`fecha_inicio` AS `secado_fecha_inicio`, `s`.`fecha_fin` AS `secado_fecha_fin`, `s`.`peso_inicial` AS `secado_peso_inicial`, `s`.`peso_final` AS `secado_peso_final`, `s`.`decision_venta` AS `secado_decision_venta`, `s`.`fecha_decision` AS `secado_fecha_decision`, `s`.`id_estado_proceso` AS `secado_id_estado_proceso`, `c`.`fecha_clasificacion` AS `fecha_clasificacion`, `c`.`peso_inicial` AS `clasificacion_peso_inicial`, `c`.`peso_total` AS `clasificacion_peso_total`, `c`.`peso_pergamino` AS `clasificacion_peso_pergamino`, `c`.`peso_pasilla` AS `clasificacion_peso_pasilla`, `c`.`peso_otro` AS `clasificacion_peso_otro`, `c`.`id_estado_proceso` AS `clasificacion_id_estado_proceso`, `t`.`fecha_trilla` AS `fecha_trilla`, `t`.`peso_inicial` AS `trilla_peso_inicial`, `t`.`peso_final` AS `trilla_peso_final`, `t`.`id_estado_proceso` AS `trilla_id_estado_proceso`, `tu`.`fecha_tueste` AS `fecha_tueste`, `tu`.`peso_inicial` AS `tueste_peso_inicial`, `tu`.`peso_final` AS `tueste_peso_final`, `tu`.`id_estado_proceso` AS `tueste_id_estado_proceso`, `m`.`fecha_molienda` AS `fecha_molienda`, `m`.`peso_inicial` AS `molienda_peso_inicial`, `m`.`peso_final` AS `molienda_peso_final`, `m`.`es_grano` AS `molienda_es_grano`, `m`.`id_estado_proceso` AS `molienda_id_estado_proceso`, `e`.`fecha_empacado` AS `fecha_empacado`, `e`.`peso_inicial` AS `empacado_peso_inicial`, `e`.`peso_final` AS `empacado_peso_final`, `e`.`id_tipo_producto` AS `empacado_id_tipo_producto`, `e`.`id_estado_proceso` AS `empacado_id_estado_proceso`, `cc`.`fecha_evaluacion` AS `fecha_evaluacion`, `cc`.`peso_inicial` AS `control_calidad_peso_inicial`, `cc`.`peso_final` AS `control_calidad_peso_final`, `cc`.`id_estado_proceso` AS `control_calidad_id_estado_proceso` FROM (((((((((((((`lotes` `l` left join `destinos_finales` `df` on((`l`.`id_destino_final` = `df`.`id`))) left join `ventas` `v` on((`l`.`id` = `v`.`id_lote`))) left join `tipos_venta` `tv` on((`v`.`id_tipo_venta` = `tv`.`id`))) left join `despulpado` `d` on((`l`.`id` = `d`.`id_lote`))) left join `fermentacion_lavado` `fl` on((`l`.`id` = `fl`.`id_lote`))) left join `zarandeo` `z` on((`l`.`id` = `z`.`id_lote`))) left join `secado` `s` on((`l`.`id` = `s`.`id_lote`))) left join `clasificacion` `c` on((`l`.`id` = `c`.`id_lote`))) left join `trilla` `t` on((`l`.`id` = `t`.`id_lote`))) left join `tueste` `tu` on((`l`.`id` = `tu`.`id_lote`))) left join `molienda` `m` on((`tu`.`id` = `m`.`id_tueste`))) left join `empacado` `e` on((`l`.`id` = `e`.`id_lote`))) left join `control_calidad` `cc` on((`l`.`id` = `cc`.`id_lote`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_flujo_lote`  AS SELECT `l`.`id` AS `lote_id`, `l`.`codigo` AS `lote_codigo`, `l`.`fecha_recoleccion` AS `fecha_recoleccion`, `l`.`peso_inicial` AS `lote_peso_inicial`, `df`.`nombre` AS `destino_final`, `l`.`fecha_finalizacion` AS `fecha_finalizacion`, `tv`.`nombre` AS `tipo_venta`, `v`.`fecha_venta` AS `fecha_venta`, `v`.`cantidad` AS `cantidad_vendida`, `d`.`fecha_remojo` AS `fecha_remojo`, `d`.`fecha_despulpado` AS `fecha_despulpado`, `d`.`peso_inicial` AS `despulpado_peso_inicial`, `d`.`peso_final` AS `despulpado_peso_final`, `d`.`id_estado_proceso` AS `despulpado_id_estado_proceso`, `fl`.`fecha_inicio_fermentacion` AS `fecha_inicio_fermentacion`, `fl`.`fecha_lavado` AS `fecha_lavado`, `fl`.`peso_inicial` AS `fermentacion_peso_inicial`, `fl`.`peso_final` AS `fermentacion_peso_final`, `fl`.`id_estado_proceso` AS `fermentacion_id_estado_proceso`, `z`.`fecha_zarandeo` AS `fecha_zarandeo`, `z`.`peso_inicial` AS `zarandeo_peso_inicial`, `z`.`peso_final` AS `zarandeo_peso_final`, `z`.`id_estado_proceso` AS `zarandeo_id_estado_proceso`, `s`.`fecha_inicio` AS `secado_fecha_inicio`, `s`.`fecha_fin` AS `secado_fecha_fin`, `s`.`peso_inicial` AS `secado_peso_inicial`, `s`.`peso_final` AS `secado_peso_final`, `s`.`decision_venta` AS `secado_decision_venta`, `s`.`fecha_decision` AS `secado_fecha_decision`, `s`.`id_estado_proceso` AS `secado_id_estado_proceso`, `c`.`fecha_clasificacion` AS `fecha_clasificacion`, `c`.`peso_inicial` AS `clasificacion_peso_inicial`, `c`.`peso_total` AS `clasificacion_peso_total`, `c`.`peso_pergamino` AS `clasificacion_peso_pergamino`, `c`.`peso_pasilla` AS `clasificacion_peso_pasilla`, `c`.`id_estado_proceso` AS `clasificacion_id_estado_proceso`, `t`.`fecha_trilla` AS `fecha_trilla`, `t`.`peso_inicial` AS `trilla_peso_inicial`, `t`.`peso_final` AS `trilla_peso_final`, `t`.`id_estado_proceso` AS `trilla_id_estado_proceso`, `tu`.`fecha_tueste` AS `fecha_tueste`, `tu`.`peso_inicial` AS `tueste_peso_inicial`, `tu`.`peso_final` AS `tueste_peso_final`, `tu`.`tipo_calidad` AS `tueste_tipo_calidad`, `tu`.`nivel_tueste` AS `tueste_nivel_tueste`, `tu`.`id_estado_proceso` AS `tueste_id_estado_proceso`, `m`.`fecha_molienda` AS `fecha_molienda`, `m`.`peso_inicial` AS `molienda_peso_inicial`, `m`.`peso_final` AS `molienda_peso_final`, `m`.`es_grano` AS `molienda_es_grano`, `m`.`tipo_molienda` AS `molienda_tipo_molienda`, `m`.`id_estado_proceso` AS `molienda_id_estado_proceso`, `e`.`fecha_empacado` AS `fecha_empacado`, `e`.`peso_inicial` AS `empacado_peso_inicial`, `e`.`peso_empacado` AS `empacado_peso_empacado`, `e`.`total_empaques` AS `empacado_total_empaques`, `e`.`tipo_producto_empacado` AS `empacado_tipo_producto`, `e`.`id_estado_proceso` AS `empacado_id_estado_proceso`, `cc`.`fecha_evaluacion` AS `fecha_evaluacion`, `cc`.`peso_inicial` AS `control_calidad_peso_inicial`, `cc`.`peso_final` AS `control_calidad_peso_final`, `cc`.`color_grano` AS `control_calidad_color_grano`, `cc`.`uniformidad` AS `control_calidad_uniformidad`, `cc`.`defectos` AS `control_calidad_defectos`, `cc`.`olor` AS `control_calidad_olor`, `cc`.`apariencia` AS `control_calidad_apariencia`, `cc`.`calificacion` AS `control_calidad_calificacion`, `cc`.`id_estado_proceso` AS `control_calidad_id_estado_proceso` FROM (((((((((((((`lotes` `l` left join `destinos_finales` `df` on((`l`.`id_destino_final` = `df`.`id`))) left join `ventas` `v` on((`l`.`id` = `v`.`id_lote`))) left join `tipos_venta` `tv` on((`v`.`id_tipo_venta` = `tv`.`id`))) left join `despulpado` `d` on((`l`.`id` = `d`.`id_lote`))) left join `fermentacion_lavado` `fl` on((`l`.`id` = `fl`.`id_lote`))) left join `zarandeo` `z` on((`l`.`id` = `z`.`id_lote`))) left join `secado` `s` on((`l`.`id` = `s`.`id_lote`))) left join `clasificacion` `c` on((`l`.`id` = `c`.`id_lote`))) left join `trilla` `t` on((`l`.`id` = `t`.`id_lote`))) left join `tueste` `tu` on((`l`.`id` = `tu`.`id_lote`))) left join `molienda` `m` on((`tu`.`id` = `m`.`id_tueste`))) left join `empacado` `e` on((`l`.`id` = `e`.`id_lote`))) left join `control_calidad` `cc` on((`l`.`id` = `cc`.`id_lote`))) ;
 
 --
 -- Indexes for dumped tables
@@ -697,7 +722,6 @@ ALTER TABLE `empacado`
   ADD KEY `id_lote` (`id_lote`),
   ADD KEY `id_tueste` (`id_tueste`),
   ADD KEY `id_molienda` (`id_molienda`),
-  ADD KEY `id_tipo_producto` (`id_tipo_producto`),
   ADD KEY `id_estado_proceso` (`id_estado_proceso`);
 
 --
@@ -845,7 +869,7 @@ ALTER TABLE `zarandeo`
 -- AUTO_INCREMENT for table `clasificacion`
 --
 ALTER TABLE `clasificacion`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `control_calidad`
@@ -857,7 +881,7 @@ ALTER TABLE `control_calidad`
 -- AUTO_INCREMENT for table `despulpado`
 --
 ALTER TABLE `despulpado`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `destinos_finales`
@@ -881,19 +905,19 @@ ALTER TABLE `estados_proceso`
 -- AUTO_INCREMENT for table `fermentacion_lavado`
 --
 ALTER TABLE `fermentacion_lavado`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `fincas`
 --
 ALTER TABLE `fincas`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `lotes`
 --
 ALTER TABLE `lotes`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `molienda`
@@ -929,7 +953,7 @@ ALTER TABLE `procesos`
 -- AUTO_INCREMENT for table `secado`
 --
 ALTER TABLE `secado`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `seguimiento_secado`
@@ -959,13 +983,13 @@ ALTER TABLE `trilla`
 -- AUTO_INCREMENT for table `tueste`
 --
 ALTER TABLE `tueste`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `ventas`
@@ -977,7 +1001,7 @@ ALTER TABLE `ventas`
 -- AUTO_INCREMENT for table `zarandeo`
 --
 ALTER TABLE `zarandeo`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
@@ -1010,7 +1034,6 @@ ALTER TABLE `despulpado`
 ALTER TABLE `empacado`
   ADD CONSTRAINT `empacado_ibfk_1` FOREIGN KEY (`id_tueste`) REFERENCES `tueste` (`id`),
   ADD CONSTRAINT `empacado_ibfk_2` FOREIGN KEY (`id_molienda`) REFERENCES `molienda` (`id`),
-  ADD CONSTRAINT `empacado_ibfk_3` FOREIGN KEY (`id_tipo_producto`) REFERENCES `tipos_producto` (`id`),
   ADD CONSTRAINT `empacado_ibfk_4` FOREIGN KEY (`id_estado_proceso`) REFERENCES `estados_proceso` (`id`);
 
 --

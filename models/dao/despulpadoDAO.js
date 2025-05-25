@@ -47,6 +47,74 @@ class DespulpadoDAO {
             throw error;
         }
     }
+
+    /**
+     * Actualiza un registro de despulpado existente.
+     * @param {number} id_despulpado - ID del registro a actualizar.
+     * @param {object} despulpadoData - Nuevos datos del despulpado.
+     * @returns {Promise<boolean>} - True si la actualización fue exitosa.
+     */
+    async updateDespulpado(id_despulpado, despulpadoData) {
+        const {
+            peso_inicial,
+            fecha_remojo,
+            fecha_despulpado,
+            peso_final,
+            observaciones,
+            id_estado_proceso
+        } = despulpadoData;
+
+        try {
+            const [result] = await db.query(
+                `UPDATE despulpado 
+                SET peso_inicial = ?, 
+                    fecha_remojo = ?, 
+                    fecha_despulpado = ?, 
+                    peso_final = ?, 
+                    observaciones = ?, 
+                    id_estado_proceso = ? 
+                WHERE id = ?`,
+                [peso_inicial, fecha_remojo, fecha_despulpado, peso_final, observaciones, id_estado_proceso, id_despulpado]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            console.error('Error al actualizar registro de despulpado:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Reinicia el proceso de despulpado para un lote específico.
+     * Esto cambia el estado del proceso a "Por hacer" (id_estado_proceso = 1).
+     * @param {number} id_despulpado - ID del registro de despulpado a reiniciar.
+     * @returns {Promise<boolean>} - True si fue exitoso, false en caso contrario.
+     */
+    async reiniciarDespulpado(id_despulpado) {
+        try {
+            // Obtener información actual del despulpado
+            const [despulpadoActual] = await db.query(
+                'SELECT observaciones FROM despulpado WHERE id = ?',
+                [id_despulpado]
+            );
+            
+            if (despulpadoActual.length === 0) {
+                throw new Error('No se encontró el registro de despulpado');
+            }
+            
+            let observaciones = despulpadoActual[0].observaciones || '';
+            observaciones += '\n[CORRECCIÓN] Proceso reiniciado para corrección de datos: ' + new Date().toLocaleString();
+            
+            // Actualizar a estado "Por hacer" (id=1) y añadir indicador de corrección en observaciones
+            const [result] = await db.query(
+                'UPDATE despulpado SET id_estado_proceso = 1, observaciones = ? WHERE id = ?',
+                [observaciones, id_despulpado]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            console.error('Error al reiniciar despulpado:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new DespulpadoDAO(); 

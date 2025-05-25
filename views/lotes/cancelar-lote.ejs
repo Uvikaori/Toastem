@@ -1,0 +1,56 @@
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/fincas/gestionar">Mis Fincas</a></li>
+            <li class="breadcrumb-item"><a href="/fincas/<%= finca.id %>/lotes">Lotes de: <%= finca.nombre %></a></li>
+            <li class="breadcrumb-item"><a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos">Procesos Lote: <%= lote.codigo %></a></li>
+            <li class="breadcrumb-item active" aria-current="page">Cancelar Lote</li>
+        </ol>
+    </nav>
+
+    <h1 class="text-toastem-primary mb-4"><%= titulo %></h1>
+
+    <%# Mostrar mensajes flash %>
+    <% if (mensaje && mensaje.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert"><%= mensaje %><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+    <% } %>
+    <% if (error && error.length > 0) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong>
+            <ul><% error.forEach(function(err){ %><li><%= Array.isArray(err) ? err.join(', ') : err %></li><% }) %></ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white">
+            <i class="fas fa-exclamation-triangle me-2"></i>Atención: Esta acción no se puede deshacer
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <p><strong>Está a punto de cancelar el lote <%= lote.codigo %>.</strong></p>
+                <p>Al cancelar un lote:</p>
+                <ul>
+                    <li>El lote se marcará como "Cancelado" y no se podrá procesar más.</li>
+                    <li>El historial y los procesos asociados se mantendrán para fines de registro.</li>
+                    <li>Si necesita continuar con este café, puede crear un duplicado del lote.</li>
+                </ul>
+            </div>
+
+            <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/cancelar" method="POST">
+                <div class="mb-3">
+                    <label for="motivo" class="form-label">Motivo de la cancelación: <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="motivo" name="motivo" rows="3" placeholder="Explique el motivo por el que está cancelando este lote" required></textarea>
+                    <small class="form-text text-muted">Esta información se guardará en el historial del lote.</small>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary">Volver</a>
+                    <button type="submit" class="btn btn-danger">Cancelar Lote</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="/css/lotes/procesos.css"> 

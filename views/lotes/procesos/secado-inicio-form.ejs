@@ -10,8 +10,7 @@
 
     <h1 class="text-toastem-primary mb-4"><%= titulo %></h1>
 
-    <%# Mostrar mensajes flash %>
-    <% if (mensaje && mensaje.length > 0) { %>
+        <% if (mensaje && mensaje.length > 0) { %>
         <div class="alert alert-success alert-dismissible fade show" role="alert"><%= mensaje %><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
     <% } %>
     <% if (error && error.length > 0) { %>
@@ -32,12 +31,12 @@
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="fecha_inicio_secado" class="form-label">Fecha y Hora Inicio Secado: <span class="text-danger">*</span></label>
+                        <label for="fecha_inicio_secado" class="form-label">Fecha y Hora Inicio Secado:</label>
                         <input type="datetime-local" class="form-control" id="fecha_inicio_secado" name="fecha_inicio_secado" value="<%= fecha_inicio_secado || '' %>" required>
                         <small class="form-text text-muted">Campo obligatorio. Fecha y hora en que inicia el proceso de secado.</small>
                     </div>
                     <div class="col-md-6">
-                        <label for="metodo_secado" class="form-label">Método de Secado: <span class="text-danger">*</span></label>
+                        <label for="metodo_secado" class="form-label">Método de Secado:</label>
                         <select class="form-select" id="metodo_secado" name="metodo_secado" required>
                             <option value="" disabled <%= !metodo_secado ? 'selected' : '' %>>Seleccione un método...</option>
                             <option value="Secado al sol" <%= metodo_secado === 'Secado al sol' ? 'selected' : '' %>>Secado al sol</option>
@@ -78,8 +77,6 @@
     </div>
 </div>
 
-<style>
-    .text-toastem-primary {
-        color: #5D4037; /* Color principal de Toastem */
-    }
-</style> 
+
+<link rel="stylesheet" href="/css/lotes/procesos.css">
+<script src="/js/lotes/procesos.js"></script> 

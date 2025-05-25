@@ -13,7 +13,7 @@
         </div>
     <% } %>
 
-    <%# Mostrar errores (no flash) %>
+   
     <% if (typeof error !== 'undefined' && error) { %>
         <% if (Array.isArray(error) && error.length > 0) { %>
             <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
@@ -70,8 +70,6 @@
     </div>
 </div>
 
-<!-- Modal para agregar/editar finca -->
-<%- include('partials/finca-modal') %>
 
-<!-- Scripts para la validación en tiempo real y gestión de fincas -->
-<script src="/js/fincas.js"></script>
+<%- include('partials/finca-modal') %>
+<script type="module" src="/js/fincas/fincas.js"></script>

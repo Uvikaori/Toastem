@@ -84,25 +84,6 @@
     </form>
 </div>
 
-<%# Script para inicializar tooltips de Bootstrap (si no está global) e validación de formulario %>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Inicializar tooltips para el ícono de información
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'))
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        });
 
-        // Validación de formularios de Bootstrap
-        var forms = document.querySelectorAll('.needs-validation');
-        Array.prototype.slice.call(forms).forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    });
-</script> 
+<script type="module" src="/js/lotes/forms/crear.js"></script>
+<script type="module" src="/js/lotes/events/lotesEvents.js"></script> 
