@@ -4,7 +4,7 @@ const secadoDAO = require('../models/dao/secadoDAO'); // Para obtener el peso fi
 const validateClasificacion = [
     body('fecha_clasificacion')
         .notEmpty().withMessage('La fecha de clasificación es obligatoria.')
-        .isISO8601().withMessage('Formato de fecha inválido.')
+        .isISO8601().withMessage('Formato de fecha y hora inválido.')
         .toDate()
         .custom(async (value, { req }) => {
             // Validar que la fecha de clasificación sea posterior o igual a la fecha de fin de secado
@@ -15,12 +15,8 @@ const validateClasificacion = [
                     const fechaFinSecado = new Date(secadoInfo.fecha_fin);
                     const fechaClasificacion = new Date(value);
                     
-                    // Comparar solo las fechas (sin horas) para permitir el mismo día
-                    fechaFinSecado.setHours(0, 0, 0, 0);
-                    fechaClasificacion.setHours(0, 0, 0, 0);
-                    
                     if (fechaClasificacion < fechaFinSecado) {
-                        throw new Error(`La fecha de clasificación debe ser igual o posterior a la fecha de finalización del secado (${new Date(secadoInfo.fecha_fin).toLocaleDateString()}).`);
+                        throw new Error(`La fecha de clasificación debe ser igual o posterior a la fecha de finalización del secado (${new Date(secadoInfo.fecha_fin).toLocaleString()}).`);
                     }
                 }
             }

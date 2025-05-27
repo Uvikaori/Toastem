@@ -521,11 +521,20 @@
                         <%# --- FIN Detalles Clasificación --- %>
 
                         <%# Detalles específicos del proceso si existen %>
-                        <% if (proceso.nombre.toLowerCase() === 'trilla' && proceso.datosEtapa) { %>
+                        <% if (proceso.nombre.toLowerCase() === 'trilla' && proceso.datosEtapa && (proceso.datosEtapa.id_estado_proceso === 3 || proceso.datosEtapa.id_estado_proceso === 1)) { %>
                             <hr>
                             <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha:</strong> <%= new Date(proceso.datosEtapa.fecha_trilla).toLocaleString("es-CO") %></p>
-                            <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial (Post-Clasif.):</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
-                            <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final Trillado:</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial Pergamino:</strong> <%= proceso.datosEtapa.peso_pergamino_inicial %> kg</p>
+                                    <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial Pasilla:</strong> <%= proceso.datosEtapa.peso_pasilla_inicial %> kg</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final Pergamino:</strong> <%= proceso.datosEtapa.peso_pergamino_final %> kg</p>
+                                    <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final Pasilla:</strong> <%= proceso.datosEtapa.peso_pasilla_final %> kg</p>
+                                </div>
+                            </div>
+                            <p class="mb-1"><strong><i class="fas fa-calculator text-secondary me-1"></i> Peso Total Final:</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
                             <% if (proceso.datosEtapa.observaciones) { %>
                                 <% 
                                     // Filtrar observaciones para ocultar textos de corrección automática
@@ -565,11 +574,33 @@
                         <%# Detalles específicos del proceso si existen %>
                         <% if (proceso.nombre.toLowerCase() === 'tueste' && proceso.datosEtapa) { %>
                             <hr>
-                            <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Tueste:</strong> <%= new Date(proceso.datosEtapa.fecha_tueste).toLocaleString("es-CO") %></p>
-                            <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial (Post-Trilla):</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
-                            <p class="mb-1"><strong><i class="fas fa-coffee text-secondary me-1"></i> Calidad:</strong> <%= proceso.datosEtapa.tipo_calidad %></p>
-                            <p class="mb-1"><strong><i class="fas fa-fire text-secondary me-1"></i> Nivel de Tueste:</strong> <%= proceso.datosEtapa.nivel_tueste %></p>
-                            <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final (Tostado):</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
+                            <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Registro:</strong> <%= new Date(proceso.datosEtapa.fecha_tueste).toLocaleString("es-CO") %></p>
+                            <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial Total:</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
+                            
+                            <% if (proceso.datosEtapa.peso_pergamino_inicial) { %>
+                                <div class="mt-2 mb-2 border-start border-3 border-success ps-2">
+                                    <h6 class="mb-2"><i class="fas fa-coffee text-success"></i> Café Pergamino</h6>
+                                    <p class="mb-1 ms-2"><strong>Peso Inicial:</strong> <%= proceso.datosEtapa.peso_pergamino_inicial %> kg</p>
+                                    <p class="mb-1 ms-2"><strong>Calidad:</strong> <%= proceso.datosEtapa.tipo_calidad_pergamino %></p>
+                                    <p class="mb-1 ms-2"><strong>Nivel de Tueste:</strong> <%= proceso.datosEtapa.nivel_tueste_pergamino %></p>
+                                    <p class="mb-1 ms-2"><strong>Fecha:</strong> <%= new Date(proceso.datosEtapa.fecha_tueste_pergamino).toLocaleString("es-CO") %></p>
+                                    <p class="mb-1 ms-2"><strong>Peso Final:</strong> <%= proceso.datosEtapa.peso_pergamino_final %> kg</p>
+                                </div>
+                            <% } %>
+                            
+                            <% if (proceso.datosEtapa.peso_pasilla_inicial) { %>
+                                <div class="mt-2 mb-2 border-start border-3 border-warning ps-2">
+                                    <h6 class="mb-2"><i class="fas fa-coffee text-warning"></i> Café Pasilla</h6>
+                                    <p class="mb-1 ms-2"><strong>Peso Inicial:</strong> <%= proceso.datosEtapa.peso_pasilla_inicial %> kg</p>
+                                    <p class="mb-1 ms-2"><strong>Calidad:</strong> <%= proceso.datosEtapa.tipo_calidad_pasilla %></p>
+                                    <p class="mb-1 ms-2"><strong>Nivel de Tueste:</strong> <%= proceso.datosEtapa.nivel_tueste_pasilla %></p>
+                                    <p class="mb-1 ms-2"><strong>Fecha:</strong> <%= new Date(proceso.datosEtapa.fecha_tueste_pasilla).toLocaleString("es-CO") %></p>
+                                    <p class="mb-1 ms-2"><strong>Peso Final:</strong> <%= proceso.datosEtapa.peso_pasilla_final %> kg</p>
+                                </div>
+                            <% } %>
+                            
+                            <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final Total:</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
+                            
                             <% if (proceso.datosEtapa.observaciones) { %>
                                 <% 
                                     // Filtrar observaciones para ocultar textos de corrección automática
@@ -769,6 +800,15 @@
                                         <% if (proceso.nombre.toLowerCase() === 'clasificación') { %>
                                             <li>
                                                 <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/clasificacion/<%= proceso.datosEtapa.id %>/reiniciar" method="POST">
+                                                    <button type="submit" class="dropdown-item text-warning">
+                                                        <i class="fas fa-redo-alt me-1"></i> Reiniciar Proceso
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        <% } %>
+                                        <% if (proceso.nombre.toLowerCase() === 'trilla' && proceso.datosEtapa && (proceso.datosEtapa.id_estado_proceso === 3 || proceso.datosEtapa.id_estado_proceso === 1)) { %>
+                                            <li>
+                                                <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/trilla/<%= proceso.datosEtapa.id %>/reiniciar" method="POST">
                                                     <button type="submit" class="dropdown-item text-warning">
                                                         <i class="fas fa-redo-alt me-1"></i> Reiniciar Proceso
                                                     </button>

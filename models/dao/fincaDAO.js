@@ -23,7 +23,7 @@ class FincaDAO {
    */
   async getLotesByFincaId(fincaId) {
     try {
-      const [rows] = await db.query('SELECT * FROM lotes WHERE finca_id = ?', [fincaId]);
+      const [rows] = await db.query('SELECT * FROM lotes WHERE id_finca = ?', [fincaId]);
       return rows;
     } catch (error) {
       console.error('Error al obtener los lotes de la finca:', error);

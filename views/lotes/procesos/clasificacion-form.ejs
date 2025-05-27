@@ -29,8 +29,8 @@
             <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/clasificacion" method="POST">
                 
                 <div class="mb-3">
-                    <label for="fecha_clasificacion" class="form-label">Fecha de Clasificación:</label>
-                    <input type="date" class="form-control" id="fecha_clasificacion" name="fecha_clasificacion" value="<%= fecha_clasificacion %>" required>
+                    <label for="fecha_clasificacion" class="form-label">Fecha y Hora de Clasificación:</label>
+                    <input type="datetime-local" class="form-control" id="fecha_clasificacion" name="fecha_clasificacion" value="<%= fecha_clasificacion %>" required>
                 </div>
 
                 <div class="mb-3">

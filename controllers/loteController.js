@@ -906,10 +906,10 @@ class LoteController {
             // Si no hay fecha de fin de secado, usar la fecha actual
             let fechaPorDefecto;
             if (secadoInfo.fecha_fin) {
-                fechaPorDefecto = new Date(secadoInfo.fecha_fin).toISOString().split('T')[0];
+                fechaPorDefecto = new Date(secadoInfo.fecha_fin).toISOString().slice(0, 16); // Formato YYYY-MM-DDTHH:mm
             } else {
                 const now = new Date();
-                fechaPorDefecto = now.toISOString().split('T')[0];
+                fechaPorDefecto = now.toISOString().slice(0, 16); // Formato YYYY-MM-DDTHH:mm
             }
             
             res.render('lotes/procesos/clasificacion-form', {
@@ -917,8 +917,7 @@ class LoteController {
                 finca: finca,
                 lote: lote,
                 peso_secado_final: secadoInfo.peso_final || 0,
-                secado_info: secadoInfo, // Pasar info del secado para mostrar en el formulario
-                // Valores para repoblar el formulario
+                secado_info: secadoInfo,
                 fecha_clasificacion: req.flash('fecha_clasificacion')[0] || fechaPorDefecto,
                 peso_total: req.flash('peso_total')[0] || '',
                 peso_pergamino: req.flash('peso_pergamino')[0] || '',
@@ -1031,104 +1030,94 @@ class LoteController {
     // --- Controladores para TRILLA ---
     async mostrarFormularioTrilla(req, res) {
         try {
-            const id_finca = parseInt(req.params.id_finca);
-            const id_lote = parseInt(req.params.id_lote);
-
+            const { id_finca, id_lote } = req.params;
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
-            if (!finca) { 
-                req.flash('error', 'Finca no encontrada o no tiene permiso.');
-                return res.redirect('/fincas/gestionar'); 
-            }
             const lote = await loteDAO.getLoteById(id_lote);
-            if (!lote || lote.id_finca !== id_finca) { 
-                req.flash('error', 'Lote no encontrado o no pertenece a la finca.');
-                return res.redirect(`/fincas/${id_finca}/lotes`); 
+            const clasificacion = await clasificacionDAO.getClasificacionByLoteId(id_lote);
+            const trilla = await trillaDAO.getTrillaByLoteId(id_lote);
+
+            if (!finca) {
+                req.flash('error', 'No tienes permisos para acceder a esta finca.');
+                return res.redirect('/fincas/gestionar');
             }
 
-            const trillaExistente = await trillaDAO.getTrillaByLoteId(id_lote);
-            if (trillaExistente) {
-                req.flash('info', 'La Trilla ya ha sido registrada para este lote.');
+            if (!lote || lote.id_finca !== parseInt(id_finca)) {
+                req.flash('error', 'El lote no existe o no pertenece a esta finca.');
+                return res.redirect(`/fincas/${id_finca}/lotes`);
+            }
+
+            if (!clasificacion) {
+                req.flash('error', 'No se encontró el registro de clasificación para este lote.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
-            const clasificacionInfo = await clasificacionDAO.getClasificacionByLoteId(id_lote);
-            if (!clasificacionInfo || clasificacionInfo.id_estado_proceso !== 3) { // 3 = Terminado
-                req.flash('error', 'El proceso de Clasificación debe estar completado antes de registrar la Trilla.');
-                return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
-            }
-            
             res.render('lotes/procesos/trilla-form', {
-                titulo: `Registrar Trilla - Lote ${lote.codigo}`,
-                finca: finca,
-                lote: lote,
-                peso_clasificado_final: clasificacionInfo.peso_pergamino || clasificacionInfo.peso_total,
-                // Para repoblar
-                fecha_trilla: req.flash('fecha_trilla')[0] || '',
-                peso_final: req.flash('peso_final')[0] || '',
-                observaciones: req.flash('observaciones')[0] || '',
+                titulo: 'Registrar Trilla',
+                finca,
+                lote,
+                peso_clasificado_final: clasificacion.peso_total,
+                peso_pergamino: clasificacion.peso_pergamino,
+                peso_pasilla: clasificacion.peso_pasilla,
+                fecha_trilla: trilla ? trilla.fecha_trilla : new Date().toISOString().slice(0, 16),
+                peso_pergamino_final: trilla ? trilla.peso_pergamino_final : '',
+                peso_pasilla_final: trilla ? trilla.peso_pasilla_final : '',
+                observaciones: trilla ? trilla.observaciones : '',
                 mensaje: req.flash('mensaje'),
                 error: req.flash('error')
             });
         } catch (error) {
-            console.error('Error al mostrar form de trilla:', error);
+            console.error('Error al mostrar formulario de trilla:', error);
             req.flash('error', 'Error al cargar el formulario de trilla.');
             res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/procesos`);
         }
     }
 
     async registrarTrilla(req, res) {
-        const id_finca = parseInt(req.params.id_finca);
-        const id_lote = parseInt(req.params.id_lote);
-        const errors = validationResult(req);
-
-        if (!errors.isEmpty()) {
-            req.flash('error', errors.array().map(e => e.msg));
-            req.flash('fecha_trilla', req.body.fecha_trilla);
-            req.flash('peso_final', req.body.peso_final);
-            req.flash('observaciones', req.body.observaciones);
-            return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/trilla/registrar`);
-        }
-
         try {
-            const clasificacionInfo = await clasificacionDAO.getClasificacionByLoteId(id_lote);
-            if (!clasificacionInfo || (!clasificacionInfo.peso_pergamino && !clasificacionInfo.peso_total)) {
-                req.flash('error', 'No se encontró el peso de la clasificación (pergamino o total).');
-                return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/trilla/registrar`);
+            const { id_finca, id_lote } = req.params;
+            const { fecha_trilla, peso_pergamino_final, peso_pasilla_final, observaciones } = req.body;
+
+            // Validar que el lote existe
+            const lote = await loteDAO.getLoteById(id_lote);
+            if (!lote) {
+                req.flash('error', 'No se encontró el lote especificado.');
+                return res.redirect('/fincas/gestionar');
             }
 
-            const trillaData = new Trilla(
-                null, // id
-                id_lote,
-                clasificacionInfo.peso_pergamino || clasificacionInfo.peso_total, // peso_inicial para trilla (usamos pergamino o total)
-                req.body.fecha_trilla,
-                req.body.peso_final,
-                req.body.observaciones,
-                3 // id_estado_proceso = 3 (Terminado)
-            );
-            
-            await trillaDAO.createTrilla(trillaData);
-
-            // Actualizar estado general y proceso actual del LOTE
-            // Trilla suele ser el último proceso de beneficio, así que el lote pasará a estado 'Finalizado' (3)
-            // y su proceso actual será 'Trilla' (ya que no hay siguiente en este flujo básico).
-            const todosLosProcesos = await procesosDAO.getAllProcesosOrdenados();
-            const procesoTrillaDef = todosLosProcesos.find(p => p.nombre.toLowerCase() === 'trilla');
-
-            if (!procesoTrillaDef) {
-                req.flash('error', "Error de configuración: Proceso 'Trilla' no encontrado.");
+            // Obtener datos de clasificación
+            const clasificacion = await clasificacionDAO.getClasificacionByLoteId(id_lote);
+            if (!clasificacion) {
+                req.flash('error', 'No se encontró el registro de clasificación para este lote.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
-            
-            // Como Trilla es el último proceso en la lista de la BD que me diste, el lote se considera finalizado.
-            await loteDAO.updateLoteProcesoYEstado(id_lote, procesoTrillaDef.id, 3);
 
-            req.flash('mensaje', 'Trilla registrada exitosamente. El lote ha completado su ciclo de procesos.');
+            // Calcular peso final total
+            const peso_final = parseFloat(peso_pergamino_final) + parseFloat(peso_pasilla_final);
+
+            // Crear objeto con datos de trilla
+            const trillaData = {
+                id_lote,
+                fecha_trilla,
+                peso_pergamino_inicial: clasificacion.peso_pergamino,
+                peso_pasilla_inicial: clasificacion.peso_pasilla,
+                peso_pergamino_final: parseFloat(peso_pergamino_final),
+                peso_pasilla_final: parseFloat(peso_pasilla_final),
+                peso_final,
+                observaciones
+            };
+
+            // Registrar trilla
+            await trillaDAO.createTrilla(trillaData);
+
+            // Actualizar estado del lote
+            await loteDAO.updateLoteProcesoYEstado(id_lote, 8, 2); // 8 = Tueste, 2 = En progreso
+
+            req.flash('mensaje', 'Trilla registrada exitosamente.');
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
-
         } catch (error) {
             console.error('Error al registrar trilla:', error);
-            req.flash('error', 'Error interno al registrar la trilla.');
-            res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/trilla/registrar`);
+            req.flash('error', 'Error al registrar la trilla.');
+            res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/procesos`);
         }
     }
 
@@ -1151,7 +1140,7 @@ class LoteController {
             }
 
             const tuesteExistente = await tuesteDAO.getTuesteByLoteId(id_lote);
-            if (tuesteExistente) {
+            if (tuesteExistente && tuesteExistente.id_estado_proceso !== 1) {
                 req.flash('info', 'El Tueste ya ha sido registrado para este lote.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
@@ -1162,21 +1151,36 @@ class LoteController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
             
-            // Usamos los datos del flash si existen, o valores por defecto si no
+            // Usar datos del flash si existen, o valores por defecto si no
             const formData = req.flash('formData')[0] || {};
             
             res.render('lotes/procesos/tueste-form', {
                 titulo: `Registrar Tueste - Lote ${lote.codigo}`,
                 finca: finca,
                 lote: lote,
+                trilla_info: trillaInfo,
                 peso_trilla_final: trillaInfo.peso_final,
-                // Para repopular
+                
+                // Para café pergamino
+                peso_pergamino_inicial: formData.peso_pergamino_inicial || '',
+                tipo_calidad_pergamino: formData.tipo_calidad_pergamino || '',
+                nivel_tueste_pergamino: formData.nivel_tueste_pergamino || '',
+                fecha_tueste_pergamino: formData.fecha_tueste_pergamino || '',
+                peso_pergamino_final: formData.peso_pergamino_final || '',
+                
+                // Para café pasilla
+                peso_pasilla_inicial: formData.peso_pasilla_inicial || '',
+                tipo_calidad_pasilla: 'Baja', // Siempre 'Baja'
+                nivel_tueste_pasilla: 'Alto', // Siempre 'Alto'
+                fecha_tueste_pasilla: formData.fecha_tueste_pasilla || '',
+                peso_pasilla_final: formData.peso_pasilla_final || '',
+                
+                // Datos generales
                 peso_inicial: formData.peso_inicial || trillaInfo.peso_final || '',
-                tipo_calidad: formData.tipo_calidad || '',
-                fecha_tueste: formData.fecha_tueste || '',
-                nivel_tueste: formData.nivel_tueste || '',
+                fecha_tueste: formData.fecha_tueste || new Date().toISOString().split('T')[0],
                 peso_final: formData.peso_final || '',
                 observaciones: formData.observaciones || '',
+                
                 mensaje: req.flash('mensaje'),
                 error: req.flash('error')
             });
@@ -1192,44 +1196,145 @@ class LoteController {
         const id_lote = parseInt(req.params.id_lote);
 
         try {
+            console.log("Iniciando registro de tueste para lote:", id_lote);
+            console.log("Datos recibidos:", JSON.stringify(req.body));
+            
             const trillaInfo = await trillaDAO.getTrillaByLoteId(id_lote);
-            if (!trillaInfo || !trillaInfo.peso_final) {
-                req.flash('error', 'No se encontró el peso final de la trilla.');
+            if (!trillaInfo) {
+                req.flash('error', 'No se encontró información de trilla para este lote.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/tueste/registrar`);
             }
 
-            const tuesteData = new Tueste(
-                null, // id
-                id_lote,
-                req.body.peso_inicial,
-                req.body.tipo_calidad,
-                req.body.fecha_tueste,
-                req.body.peso_final,
-                req.body.nivel_tueste,
-                req.body.observaciones,
-                3 // id_estado_proceso = 3 (Terminado)
-            );
+            // Validar según los requisitos
+            const errores = [];
+
+            // 1. Validar que se haya registrado al menos un tipo de café (pergamino o pasilla)
+            const tienePergamino = trillaInfo.peso_pergamino_final > 0;
+            const tienePasilla = trillaInfo.peso_pasilla_final > 0;
             
-            await tuesteDAO.createTueste(tuesteData);
+            // Validar café pergamino si viene de la trilla
+            if (tienePergamino) {
+                if (!req.body.peso_pergamino_inicial) {
+                    errores.push('Debe ingresar el peso inicial del café pergamino.');
+                }
+                if (!req.body.tipo_calidad_pergamino) {
+                    errores.push('Debe seleccionar la calidad del café pergamino.');
+                } else if (!['Premium', 'Normal'].includes(req.body.tipo_calidad_pergamino)) {
+                    errores.push('La calidad del café pergamino debe ser Premium o Normal.');
+                }
+                if (!req.body.nivel_tueste_pergamino) {
+                    errores.push('Debe seleccionar el nivel de tueste para el café pergamino.');
+                }
+                if (!req.body.fecha_tueste_pergamino) {
+                    errores.push('Debe ingresar la fecha de tueste del café pergamino.');
+                }
+                if (!req.body.peso_pergamino_final) {
+                    errores.push('Debe ingresar el peso final del café pergamino.');
+                }
+            }
+            
+            // Validar café pasilla si viene de la trilla
+            if (tienePasilla) {
+                if (!req.body.peso_pasilla_inicial) {
+                    errores.push('Debe ingresar el peso inicial del café pasilla.');
+                }
+                if (req.body.tipo_calidad_pasilla !== 'Baja') {
+                    errores.push('La calidad del café pasilla debe ser Baja.');
+                }
+                if (req.body.nivel_tueste_pasilla !== 'Alto') {
+                    errores.push('El nivel de tueste del café pasilla debe ser Alto.');
+                }
+                if (!req.body.fecha_tueste_pasilla) {
+                    errores.push('Debe ingresar la fecha de tueste del café pasilla.');
+                }
+                if (!req.body.peso_pasilla_final) {
+                    errores.push('Debe ingresar el peso final del café pasilla.');
+                }
+            }
+
+            // Validar fecha general de registro
+            if (!req.body.fecha_tueste) {
+                errores.push('Debe ingresar la fecha de registro del tueste.');
+            }
+
+            // Si hay errores, devolver al formulario
+            if (errores.length > 0) {
+                req.flash('error', errores);
+                req.flash('formData', req.body);
+                return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/tueste/registrar`);
+            }
+
+            // Calcular peso final total (suma de pergamino y pasilla)
+            const pesoPergaminoFinal = parseFloat(req.body.peso_pergamino_final || 0);
+            const pesoPasillaFinal = parseFloat(req.body.peso_pasilla_final || 0);
+            const pesoFinalTotal = pesoPergaminoFinal + pesoPasillaFinal;
+
+            console.log("Peso final calculado:", pesoFinalTotal);
+
+            // Crear objeto tueste con todos los datos
+            const tuesteData = {
+                id_lote: id_lote,
+                fecha_tueste: req.body.fecha_tueste,
+                peso_inicial: trillaInfo.peso_final,
+                
+                // Datos pergamino
+                peso_pergamino_inicial: tienePergamino ? req.body.peso_pergamino_inicial : null,
+                tipo_calidad_pergamino: tienePergamino ? req.body.tipo_calidad_pergamino : null,
+                nivel_tueste_pergamino: tienePergamino ? req.body.nivel_tueste_pergamino : null,
+                fecha_tueste_pergamino: tienePergamino ? req.body.fecha_tueste_pergamino : null,
+                peso_pergamino_final: tienePergamino ? req.body.peso_pergamino_final : null,
+                
+                // Datos pasilla
+                peso_pasilla_inicial: tienePasilla ? req.body.peso_pasilla_inicial : null,
+                tipo_calidad_pasilla: tienePasilla ? req.body.tipo_calidad_pasilla : null,
+                nivel_tueste_pasilla: tienePasilla ? req.body.nivel_tueste_pasilla : null,
+                fecha_tueste_pasilla: tienePasilla ? req.body.fecha_tueste_pasilla : null,
+                peso_pasilla_final: tienePasilla ? req.body.peso_pasilla_final : null,
+                
+                peso_final: pesoFinalTotal,
+                observaciones: req.body.observaciones || null,
+                id_estado_proceso: 3 // Terminado
+            };
+            
+            console.log("Datos de tueste a registrar:", JSON.stringify(tuesteData));
+            
+            // Registrar tueste en la base de datos
+            try {
+                await tuesteDAO.createTueste(tuesteData);
+                console.log("Tueste registrado correctamente en la base de datos");
+            } catch (dbError) {
+                console.error("Error en la inserción en la base de datos:", dbError);
+                throw new Error(`Error en la base de datos: ${dbError.message}`);
+            }
 
             // Actualizar estado general y proceso actual del LOTE
-            // Tueste suele ser el último proceso, así que el lote pasará a estado 'Finalizado' (3)
-            // y su proceso actual será 'Tueste' (ya que no hay siguiente en este flujo).
+            // Buscar el ID del proceso de tueste o usar el último proceso disponible
             const todosLosProcesos = await procesosDAO.getAllProcesosOrdenados();
             const procesoTuesteDef = todosLosProcesos.find(p => p.nombre.toLowerCase() === 'tueste');
-
-            // Si no existe el proceso de tueste en la BD, usamos el último proceso disponible
             const procesoId = procesoTuesteDef ? procesoTuesteDef.id : todosLosProcesos[todosLosProcesos.length - 1].id;
             
-            // El lote se considera finalizado después del tueste
-            await loteDAO.updateLoteProcesoYEstado(id_lote, procesoId, 3);
+            // Encontrar el siguiente proceso en la secuencia, basado en el campo 'orden'
+            const ordenProcesoTueste = procesoTuesteDef ? procesoTuesteDef.orden : 0;
+            const siguienteProcesoDef = todosLosProcesos.find(p => p.orden === (ordenProcesoTueste + 1));
+            
+            // Si hay un siguiente proceso, marcar como "En progreso", sino "Finalizado"
+            const idNuevoProcesoActualParaLote = siguienteProcesoDef ? siguienteProcesoDef.id : procesoId;
+            const nuevoEstadoLote = siguienteProcesoDef ? 2 : 3; // 2 = En progreso, 3 = Finalizado
+            
+            console.log("Actualizando estado del lote:", {
+                idNuevoProcesoActualParaLote,
+                nuevoEstadoLote
+            });
+            
+            await loteDAO.updateLoteProcesoYEstado(id_lote, idNuevoProcesoActualParaLote, nuevoEstadoLote);
 
-            req.flash('mensaje', 'Tueste registrado exitosamente. El lote ha completado su ciclo de procesos.');
+            req.flash('mensaje', 'Tueste registrado exitosamente.');
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
 
         } catch (error) {
             console.error('Error al registrar tueste:', error);
-            req.flash('error', 'Error interno al registrar el tueste.');
+            req.flash('error', `Error interno al registrar el tueste: ${error.message || 'Error desconocido'}`);
+            req.flash('formData', req.body);
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/tueste/registrar`);
         }
     }

@@ -55,9 +55,9 @@ const dashboardController = require('../controllers/dashboardController');
 router.use(isAuthenticated);
 
 // Ruta principal del dashboard
-router.get('/', dashboardController.index.bind(dashboardController));
+router.get('/', dashboardController.index);
 
 // Ruta para redirigir a gestión de fincas
-router.get('/fincas', dashboardController.redirigirAFincas.bind(dashboardController));
+router.get('/fincas', dashboardController.redirigirAFincas);
 
 module.exports = router; 

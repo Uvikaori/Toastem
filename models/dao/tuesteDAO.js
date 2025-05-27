@@ -11,21 +11,123 @@ class TuesteDAO {
             id_lote,
             fecha_tueste,
             peso_inicial,
-            tipo_calidad,
-            nivel_tueste,
+            
+            // Campos para pergamino
+            peso_pergamino_inicial,
+            tipo_calidad_pergamino,
+            nivel_tueste_pergamino,
+            fecha_tueste_pergamino,
+            peso_pergamino_final,
+            
+            // Campos para pasilla
+            peso_pasilla_inicial,
+            tipo_calidad_pasilla,
+            nivel_tueste_pasilla,
+            fecha_tueste_pasilla,
+            peso_pasilla_final,
+            
             peso_final,
             observaciones,
             id_estado_proceso = 3 // Por defecto 'Terminado'
         } = tuesteData;
 
         try {
-            const [result] = await db.query(
-                'INSERT INTO tueste (id_lote, fecha_tueste, peso_inicial, tipo_calidad, nivel_tueste, peso_final, observaciones, id_estado_proceso) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [id_lote, fecha_tueste, peso_inicial, tipo_calidad, nivel_tueste, peso_final, observaciones, id_estado_proceso]
+            console.log("Ejecutando query de inserción para tueste en lote:", id_lote);
+            
+            // Primero, verificar si ya existe un registro de tueste para este lote
+            const [existing] = await db.query(
+                'SELECT id FROM tueste WHERE id_lote = ?',
+                [id_lote]
             );
-            return result.insertId;
+            
+            if (existing && existing.length > 0) {
+                console.log("Ya existe un registro de tueste para este lote, actualizando...");
+                // Si ya existe, actualizar en lugar de insertar
+                const [result] = await db.query(
+                    `UPDATE tueste SET 
+                        fecha_tueste = ?,
+                        peso_inicial = ?,
+                        peso_pergamino_inicial = ?,
+                        tipo_calidad_pergamino = ?,
+                        nivel_tueste_pergamino = ?,
+                        fecha_tueste_pergamino = ?,
+                        peso_pergamino_final = ?,
+                        peso_pasilla_inicial = ?,
+                        tipo_calidad_pasilla = ?,
+                        nivel_tueste_pasilla = ?,
+                        fecha_tueste_pasilla = ?,
+                        peso_pasilla_final = ?,
+                        peso_final = ?,
+                        observaciones = ?,
+                        id_estado_proceso = ?
+                    WHERE id_lote = ?`,
+                    [
+                        fecha_tueste, 
+                        peso_inicial,
+                        peso_pergamino_inicial || null,
+                        tipo_calidad_pergamino || null,
+                        nivel_tueste_pergamino || null,
+                        fecha_tueste_pergamino || null,
+                        peso_pergamino_final || null,
+                        peso_pasilla_inicial || null,
+                        tipo_calidad_pasilla || null,
+                        nivel_tueste_pasilla || null,
+                        fecha_tueste_pasilla || null,
+                        peso_pasilla_final || null,
+                        peso_final,
+                        observaciones || null,
+                        id_estado_proceso,
+                        id_lote
+                    ]
+                );
+                console.log("Registro de tueste actualizado:", result);
+                return existing[0].id;
+            } else {
+                // Si no existe, insertar nuevo registro
+                console.log("Creando nuevo registro de tueste...");
+                const [result] = await db.query(
+                    `INSERT INTO tueste (
+                        id_lote, fecha_tueste, peso_inicial,
+                        peso_pergamino_inicial, tipo_calidad_pergamino, nivel_tueste_pergamino, 
+                        fecha_tueste_pergamino, peso_pergamino_final,
+                        peso_pasilla_inicial, tipo_calidad_pasilla, nivel_tueste_pasilla, 
+                        fecha_tueste_pasilla, peso_pasilla_final,
+                        peso_final, observaciones, id_estado_proceso
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                        id_lote, 
+                        fecha_tueste, 
+                        peso_inicial,
+                        peso_pergamino_inicial || null,
+                        tipo_calidad_pergamino || null,
+                        nivel_tueste_pergamino || null,
+                        fecha_tueste_pergamino || null,
+                        peso_pergamino_final || null,
+                        peso_pasilla_inicial || null,
+                        tipo_calidad_pasilla || null,
+                        nivel_tueste_pasilla || null,
+                        fecha_tueste_pasilla || null,
+                        peso_pasilla_final || null,
+                        peso_final,
+                        observaciones || null,
+                        id_estado_proceso
+                    ]
+                );
+                console.log("Nuevo registro de tueste creado:", result);
+                return result.insertId;
+            }
         } catch (error) {
-            console.error('Error al crear registro de tueste:', error);
+            console.error('Error al crear/actualizar registro de tueste:', error);
+            // Imprimir información más detallada sobre el error
+            if (error.code) {
+                console.error('Código de error SQL:', error.code);
+            }
+            if (error.sqlMessage) {
+                console.error('Mensaje de error SQL:', error.sqlMessage);
+            }
+            if (error.sql) {
+                console.error('SQL ejecutado:', error.sql);
+            }
             throw error;
         }
     }

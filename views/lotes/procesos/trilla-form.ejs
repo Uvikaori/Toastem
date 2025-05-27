@@ -24,20 +24,38 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <p class="mb-3"><strong>Peso del lote después de Clasificación (Peso inicial para trilla):</strong> <%= peso_clasificado_final %> kg</p>
+            <h5 class="card-title mb-4">Pesos de Clasificación</h5>
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <p><strong>Peso Total:</strong> <%= peso_clasificado_final %> kg</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Peso Pergamino:</strong> <%= peso_pergamino %> kg</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Peso Pasilla:</strong> <%= peso_pasilla %> kg</p>
+                </div>
+            </div>
             <hr/>
             <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/trilla" method="POST">
                 
                 <div class="mb-3">
-                    <label for="fecha_trilla" class="form-label">Fecha de Trilla: <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" id="fecha_trilla" name="fecha_trilla" value="<%= fecha_trilla %>" required>
-                    <small class="form-text text-muted">Campo obligatorio. Fecha en que se realizó la trilla.</small>
+                    <label for="fecha_trilla" class="form-label">Fecha y Hora de Trilla: <span class="text-danger">*</span></label>
+                    <input type="datetime-local" class="form-control" id="fecha_trilla" name="fecha_trilla" value="<%= fecha_trilla %>" required>
+                    <small class="form-text text-muted">Campo obligatorio. Fecha y hora en que se realizó la trilla.</small>
                 </div>
 
-                <div class="mb-3">
-                    <label for="peso_final" class="form-label">Peso Final (kg): <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" class="form-control" id="peso_final" name="peso_final" value="<%= peso_final %>" placeholder="Ej: 20.50" required>
-                    <small class="form-text text-muted">Campo obligatorio. Peso del café después del proceso de trilla (café verde o "almendra").</small>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="peso_pergamino_final" class="form-label">Peso Final Pergamino (kg): <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" class="form-control" id="peso_pergamino_final" name="peso_pergamino_final" value="<%= peso_pergamino_final %>" placeholder="Ej: 15.50" required>
+                        <small class="form-text text-muted">Peso del pergamino después de la trilla.</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="peso_pasilla_final" class="form-label">Peso Final Pasilla (kg): <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" class="form-control" id="peso_pasilla_final" name="peso_pasilla_final" value="<%= peso_pasilla_final %>" placeholder="Ej: 5.00" required>
+                        <small class="form-text text-muted">Peso de la pasilla después de la trilla.</small>
+                    </div>
                 </div>
 
                 <div class="mb-3">
@@ -53,7 +71,6 @@
         </div>
     </div>
 </div>
-
 
 <link rel="stylesheet" href="/css/lotes/procesos.css">
 <script src="/js/lotes/procesos.js"></script> 

@@ -53,7 +53,7 @@ const setupLoginForm = () => {
         const data = await response.json();
 
         if (response.ok) {
-          window.location.href = '/dashboard';
+          window.location.href = '/fincas/gestionar';
         } else {
           if (data.errors) {
             if (data.errors.email) showError('emailError', data.errors.email);

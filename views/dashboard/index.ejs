@@ -11,29 +11,19 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/dashboard/lotes">
+            <a class="nav-link" href="/fincas/gestionar">
+              <i class="fas fa-seedling me-2"></i>
+              Gestionar Fincas
+            </a>
+          </li>
+          <% if (fincasUsuario && fincasUsuario.length > 0) { %>
+          <li class="nav-item">
+            <a class="nav-link" href="/fincas/<%= fincasUsuario[0].id %>/lotes">
               <i class="fas fa-boxes me-2"></i>
-              Lotes
+              Gestionar Lotes
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/dashboard/procesos">
-              <i class="fas fa-cogs me-2"></i>
-              Procesos
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/dashboard/reportes">
-              <i class="fas fa-chart-bar me-2"></i>
-              Reportes
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/dashboard/configuracion">
-              <i class="fas fa-cog me-2"></i>
-              Configuración
-            </a>
-          </li>
+          <% } %>
         </ul>
       </div>
     </nav>
@@ -41,29 +31,40 @@
     <!-- Contenido principal -->
     <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Dashboard</h1>
+        <h1 class="h2">Dashboard de Gestión</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary">Exportar</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary">Imprimir</button>
+            <a href="/dashboard" class="btn btn-sm btn-outline-secondary">
+              <i class="fas fa-sync-alt me-1"></i>Actualizar
+            </a>
           </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
-            <i class="fas fa-calendar me-1"></i>
-            Esta semana
-          </button>
         </div>
       </div>
 
+      <!-- Mensajes Flash -->
+      <% if (typeof mensaje !== 'undefined' && mensaje) { %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= mensaje %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      <% } %>
+      <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <%= error %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      <% } %>
+
       <!-- Tarjetas de resumen -->
-      <div class="row">
+      <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
           <div class="card border-left-primary shadow h-100 py-2">
             <div class="card-body">
               <div class="row no-gutters align-items-center">
                 <div class="col mr-2">
                   <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                    Lotes Activos</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800"><%= lotesActivos || 0 %></div>
+                    Total de Lotes</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800"><%= lotesStats.totalLotes || 0 %></div>
                 </div>
                 <div class="col-auto">
                   <i class="fas fa-boxes fa-2x text-gray-300"></i>
@@ -79,11 +80,11 @@
               <div class="row no-gutters align-items-center">
                 <div class="col mr-2">
                   <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                    Lotes en Secado</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800"><%= lotesEnSecado || 0 %></div>
+                    Lotes Activos</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800"><%= lotesStats.lotesActivos || 0 %></div>
                 </div>
                 <div class="col-auto">
-                  <i class="fas fa-spinner fa-2x text-gray-300"></i>
+                  <i class="fas fa-coffee fa-2x text-gray-300"></i>
                 </div>
               </div>
             </div>
@@ -96,14 +97,143 @@
               <div class="row no-gutters align-items-center">
                 <div class="col mr-2">
                   <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                    Precio del Café</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">$<%= precioCafe || '0.00' %></div>
+                    Lotes Finalizados</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800"><%= lotesStats.lotesFinalizados || 0 %></div>
                 </div>
                 <div class="col-auto">
-                  <i class="fas fa-coffee fa-2x text-gray-300"></i>
+                  <i class="fas fa-check-circle fa-2x text-gray-300"></i>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                    Lotes Cancelados</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800"><%= lotesStats.lotesCancelados || 0 %></div>
+                </div>
+                <div class="col-auto">
+                  <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lotes Terminados por Tipo -->
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Lotes Terminados por Tipo</h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <!-- Pergamino -->
+            <div class="col-md-4">
+              <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                  <i class="fas fa-seedling me-2"></i>Pergamino
+                </div>
+                <div class="card-body text-center">
+                  <h3 class="font-weight-bold mb-1"><%= lotesTerminadosPorTipo.pergamino.cantidad %></h3>
+                  <p class="text-muted">Lotes</p>
+                  <div class="border-top pt-2">
+                    <h4 class="format-number"><%= lotesTerminadosPorTipo.pergamino.total_kg.toFixed(2) %></h4>
+                    <p class="text-muted">Kilogramos</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Tostado en Grano -->
+            <div class="col-md-4">
+              <div class="card mb-3">
+                <div class="card-header bg-danger text-white">
+                  <i class="fas fa-coffee me-2"></i>Tostado en Grano
+                </div>
+                <div class="card-body text-center">
+                  <h3 class="font-weight-bold mb-1"><%= lotesTerminadosPorTipo.tostadoGrano.cantidad %></h3>
+                  <p class="text-muted">Lotes</p>
+                  <div class="border-top pt-2">
+                    <h4 class="format-number"><%= lotesTerminadosPorTipo.tostadoGrano.total_kg.toFixed(2) %></h4>
+                    <p class="text-muted">Kilogramos</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Tostado Molido -->
+            <div class="col-md-4">
+              <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                  <i class="fas fa-mortar-pestle me-2"></i>Tostado Molido
+                </div>
+                <div class="card-body text-center">
+                  <h3 class="font-weight-bold mb-1"><%= lotesTerminadosPorTipo.tostadoMolido.cantidad %></h3>
+                  <p class="text-muted">Lotes</p>
+                  <div class="border-top pt-2">
+                    <h4 class="format-number"><%= lotesTerminadosPorTipo.tostadoMolido.total_kg.toFixed(2) %></h4>
+                    <p class="text-muted">Kilogramos</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen de Ventas -->
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Resumen de Ventas (Últimos 30 días)</h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>Tipo de Producto</th>
+                  <th class="text-center">Kilogramos</th>
+                  <th class="text-center">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><i class="fas fa-cookie-bite me-2 text-warning"></i>Pasilla</td>
+                  <td class="text-center format-number"><%= resumenVentas.pasilla.kg.toFixed(2) %></td>
+                  <td class="text-center format-currency"><%= resumenVentas.pasilla.total %></td>
+                </tr>
+                <tr>
+                  <td><i class="fas fa-seedling me-2 text-success"></i>Pergamino</td>
+                  <td class="text-center format-number"><%= resumenVentas.pergamino.kg.toFixed(2) %></td>
+                  <td class="text-center format-currency"><%= resumenVentas.pergamino.total %></td>
+                </tr>
+                <tr>
+                  <td><i class="fas fa-coffee me-2 text-danger"></i>Tostado en Grano</td>
+                  <td class="text-center format-number"><%= resumenVentas.tostadoGrano.kg.toFixed(2) %></td>
+                  <td class="text-center format-currency"><%= resumenVentas.tostadoGrano.total %></td>
+                </tr>
+                <tr>
+                  <td><i class="fas fa-mortar-pestle me-2 text-primary"></i>Tostado Molido</td>
+                  <td class="text-center format-number"><%= resumenVentas.tostadoMolido.kg.toFixed(2) %></td>
+                  <td class="text-center format-currency"><%= resumenVentas.tostadoMolido.total %></td>
+                </tr>
+                <tr class="table-secondary">
+                  <td class="fw-bold">Total</td>
+                  <td class="text-center fw-bold format-number">
+                    <%= (resumenVentas.pasilla.kg + resumenVentas.pergamino.kg + resumenVentas.tostadoGrano.kg + resumenVentas.tostadoMolido.kg).toFixed(2) %>
+                  </td>
+                  <td class="text-center fw-bold format-currency">
+                    <%= resumenVentas.pasilla.total + resumenVentas.pergamino.total + resumenVentas.tostadoGrano.total + resumenVentas.tostadoMolido.total %>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -113,11 +243,11 @@
         <div class="col-xl-8 col-lg-7">
           <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-              <h6 class="m-0 font-weight-bold text-primary">Procesos por Mes</h6>
+              <h6 class="m-0 font-weight-bold text-primary">Lotes por Mes</h6>
             </div>
             <div class="card-body">
               <div class="chart-area">
-                <canvas id="procesosChart"></canvas>
+                <canvas id="procesosChart" data-procesos='<%= procesosDataForChart %>'></canvas>
               </div>
             </div>
           </div>
@@ -126,12 +256,282 @@
         <div class="col-xl-4 col-lg-5">
           <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-              <h6 class="m-0 font-weight-bold text-primary">Estado de Procesos</h6>
+              <h6 class="m-0 font-weight-bold text-primary">Estado de Lotes</h6>
             </div>
             <div class="card-body">
               <div class="chart-pie pt-4 pb-2">
-                <canvas id="estadoProcesosChart"></canvas>
+                <canvas id="estadoProcesosChart" data-estado='<%= estadoProcesosDataForChart %>'></canvas>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico de Lotes en Proceso por Tipo -->
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Lotes por Tipo de Proceso</h6>
+        </div>
+        <div class="card-body">
+          <div class="chart-bar" style="height: 300px;">
+            <canvas id="tipoProcesoChart" data-tipoproceso='<%= tipoProcesoDataForChart %>'></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lotes en Proceso -->
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Lotes en Proceso</h6>
+        </div>
+        <div class="card-body">
+          <ul class="nav nav-tabs" id="procesosTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="despulpado-tab" data-bs-toggle="tab" data-bs-target="#despulpado" type="button" role="tab">
+                Despulpado <span class="badge bg-primary"><%= lotesEnProceso.conteos.despulpado_count || 0 %></span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="lavado-tab" data-bs-toggle="tab" data-bs-target="#lavado" type="button" role="tab">
+                Lavado <span class="badge bg-primary"><%= lotesEnProceso.conteos.lavado_count || 0 %></span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="secado-tab" data-bs-toggle="tab" data-bs-target="#secado" type="button" role="tab">
+                Secado <span class="badge bg-primary"><%= lotesEnProceso.conteos.secado_count || 0 %></span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="trilla-tab" data-bs-toggle="tab" data-bs-target="#trilla" type="button" role="tab">
+                Trilla <span class="badge bg-primary"><%= lotesEnProceso.conteos.trilla_count || 0 %></span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tueste-tab" data-bs-toggle="tab" data-bs-target="#tueste" type="button" role="tab">
+                Tueste <span class="badge bg-primary"><%= lotesEnProceso.conteos.tueste_count || 0 %></span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="molido-tab" data-bs-toggle="tab" data-bs-target="#molido" type="button" role="tab">
+                Molido <span class="badge bg-primary"><%= lotesEnProceso.conteos.molido_count || 0 %></span>
+              </button>
+            </li>
+          </ul>
+          <div class="tab-content mt-3" id="procesosTabsContent">
+            <!-- Despulpado -->
+            <div class="tab-pane fade show active" id="despulpado" role="tabpanel">
+              <% if (lotesEnProceso.despulpado && lotesEnProceso.despulpado.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Código</th>
+                        <th>Finca</th>
+                        <th>Fecha Inicio</th>
+                        <th>Peso Inicial (kg)</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% lotesEnProceso.despulpado.forEach(lote => { %>
+                        <tr>
+                          <td><%= lote.codigo %></td>
+                          <td><%= lote.finca %></td>
+                          <td><%= new Date(lote.fecha_inicio).toLocaleDateString() %></td>
+                          <td class="format-number"><%= lote.peso_inicial.toFixed(2) %></td>
+                          <td>
+                            <a href="/fincas/<%= lote.id_finca %>/lotes/<%= lote.id %>/procesos" class="btn btn-sm btn-info">
+                              <i class="fas fa-eye"></i> Ver
+                            </a>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="alert alert-info">No hay lotes en proceso de despulpado.</div>
+              <% } %>
+            </div>
+            
+            <!-- Lavado -->
+            <div class="tab-pane fade" id="lavado" role="tabpanel">
+              <% if (lotesEnProceso.lavado && lotesEnProceso.lavado.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Código</th>
+                        <th>Finca</th>
+                        <th>Fecha Inicio</th>
+                        <th>Peso Inicial (kg)</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% lotesEnProceso.lavado.forEach(lote => { %>
+                        <tr>
+                          <td><%= lote.codigo %></td>
+                          <td><%= lote.finca %></td>
+                          <td><%= new Date(lote.fecha_inicio).toLocaleDateString() %></td>
+                          <td class="format-number"><%= lote.peso_inicial.toFixed(2) %></td>
+                          <td>
+                            <a href="/fincas/<%= lote.id_finca %>/lotes/<%= lote.id %>/procesos" class="btn btn-sm btn-info">
+                              <i class="fas fa-eye"></i> Ver
+                            </a>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="alert alert-info">No hay lotes en proceso de lavado.</div>
+              <% } %>
+            </div>
+            
+            <!-- Secado -->
+            <div class="tab-pane fade" id="secado" role="tabpanel">
+              <% if (lotesEnProceso.secado && lotesEnProceso.secado.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Código</th>
+                        <th>Finca</th>
+                        <th>Fecha Inicio</th>
+                        <th>Peso Inicial (kg)</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% lotesEnProceso.secado.forEach(lote => { %>
+                        <tr>
+                          <td><%= lote.codigo %></td>
+                          <td><%= lote.finca %></td>
+                          <td><%= new Date(lote.fecha_inicio).toLocaleDateString() %></td>
+                          <td class="format-number"><%= lote.peso_inicial.toFixed(2) %></td>
+                          <td>
+                            <a href="/fincas/<%= lote.id_finca %>/lotes/<%= lote.id %>/procesos" class="btn btn-sm btn-info">
+                              <i class="fas fa-eye"></i> Ver
+                            </a>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="alert alert-info">No hay lotes en proceso de secado.</div>
+              <% } %>
+            </div>
+            
+            <!-- Trilla -->
+            <div class="tab-pane fade" id="trilla" role="tabpanel">
+              <% if (lotesEnProceso.trilla && lotesEnProceso.trilla.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Código</th>
+                        <th>Finca</th>
+                        <th>Fecha Inicio</th>
+                        <th>Peso Inicial (kg)</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% lotesEnProceso.trilla.forEach(lote => { %>
+                        <tr>
+                          <td><%= lote.codigo %></td>
+                          <td><%= lote.finca %></td>
+                          <td><%= new Date(lote.fecha_inicio).toLocaleDateString() %></td>
+                          <td class="format-number"><%= lote.peso_inicial.toFixed(2) %></td>
+                          <td>
+                            <a href="/fincas/<%= lote.id_finca %>/lotes/<%= lote.id %>/procesos" class="btn btn-sm btn-info">
+                              <i class="fas fa-eye"></i> Ver
+                            </a>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="alert alert-info">No hay lotes en proceso de trilla.</div>
+              <% } %>
+            </div>
+            
+            <!-- Tueste -->
+            <div class="tab-pane fade" id="tueste" role="tabpanel">
+              <% if (lotesEnProceso.tueste && lotesEnProceso.tueste.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Código</th>
+                        <th>Finca</th>
+                        <th>Fecha Inicio</th>
+                        <th>Peso Inicial (kg)</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% lotesEnProceso.tueste.forEach(lote => { %>
+                        <tr>
+                          <td><%= lote.codigo %></td>
+                          <td><%= lote.finca %></td>
+                          <td><%= new Date(lote.fecha_inicio).toLocaleDateString() %></td>
+                          <td class="format-number"><%= lote.peso_inicial.toFixed(2) %></td>
+                          <td>
+                            <a href="/fincas/<%= lote.id_finca %>/lotes/<%= lote.id %>/procesos" class="btn btn-sm btn-info">
+                              <i class="fas fa-eye"></i> Ver
+                            </a>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="alert alert-info">No hay lotes en proceso de tueste.</div>
+              <% } %>
+            </div>
+            
+            <!-- Molido -->
+            <div class="tab-pane fade" id="molido" role="tabpanel">
+              <% if (lotesEnProceso.molienda && lotesEnProceso.molienda.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Código</th>
+                        <th>Finca</th>
+                        <th>Fecha Inicio</th>
+                        <th>Peso Inicial (kg)</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% lotesEnProceso.molienda.forEach(lote => { %>
+                        <tr>
+                          <td><%= lote.codigo %></td>
+                          <td><%= lote.finca %></td>
+                          <td><%= new Date(lote.fecha_inicio).toLocaleDateString() %></td>
+                          <td class="format-number"><%= lote.peso_inicial.toFixed(2) %></td>
+                          <td>
+                            <a href="/fincas/<%= lote.id_finca %>/lotes/<%= lote.id %>/procesos" class="btn btn-sm btn-info">
+                              <i class="fas fa-eye"></i> Ver
+                            </a>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="alert alert-info">No hay lotes en proceso de molido.</div>
+              <% } %>
             </div>
           </div>
         </div>
@@ -143,3 +543,33 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="/js/forms/dashboard.js"></script>
+
+<style>
+  .border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+  }
+  .border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+  }
+  .border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+  }
+  .border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+  }
+  .chart-area, .chart-pie, .chart-bar {
+    position: relative;
+    height: 300px;
+    width: 100%;
+  }
+  .nav-tabs .nav-link {
+    color: #4e73df;
+  }
+  .nav-tabs .nav-link.active {
+    color: #4e73df;
+    font-weight: bold;
+  }
+  .format-number, .format-currency {
+    white-space: nowrap;
+  }
+</style>

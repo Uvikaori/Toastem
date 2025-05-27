@@ -24,53 +24,144 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <p class="mb-3"><strong>Peso del lote después de Trilla (Peso inicial para tueste):</strong> <%= peso_trilla_final %> kg</p>
+            <div class="mb-3">
+                <h5>Información de la Trilla</h5>
+                <p><strong>Peso total después de Trilla:</strong> <%= peso_trilla_final %> kg</p>
+                <% if (trilla_info) { %>
+                    <p><strong>Peso Pergamino de Trilla:</strong> <%= trilla_info.peso_pergamino_final %> kg</p>
+                    <p><strong>Peso Pasilla de Trilla:</strong> <%= trilla_info.peso_pasilla_final %> kg</p>
+                <% } %>
+            </div>
             <hr/>
             <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/tueste" method="POST">
                 
                 <div class="mb-3">
-                    <label for="peso_inicial" class="form-label">Peso Inicial (kg): <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" class="form-control" id="peso_inicial" name="peso_inicial" value="<%= peso_inicial %>" placeholder="Ej: 20.50" required>
-                    <small class="form-text text-muted">Campo obligatorio. Peso del café antes del proceso de tueste.</small>
+                    <label for="peso_inicial" class="form-label">Peso Inicial Total (kg):</label>
+                    <input type="number" step="0.01" class="form-control" id="peso_inicial" name="peso_inicial" 
+                           value="<%= peso_inicial || (trilla_info ? trilla_info.peso_final : '') %>" readonly>
+                    <small class="form-text text-muted">Peso total del café antes del proceso de tueste.</small>
+                </div>
+
+                <!-- Sección para Café Pergamino -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Tueste de Café Pergamino</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="peso_pergamino_inicial" class="form-label">Peso Inicial Pergamino (kg):</label>
+                            <input type="number" step="0.01" class="form-control" id="peso_pergamino_inicial" name="peso_pergamino_inicial" 
+                                   value="<%= peso_pergamino_inicial || (trilla_info ? trilla_info.peso_pergamino_final : '') %>" 
+                                   <%= trilla_info && trilla_info.peso_pergamino_final > 0 ? 'required' : '' %>>
+                            <small class="form-text text-muted">Peso del café pergamino antes del tueste.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tipo_calidad_pergamino" class="form-label">Calidad del Café Pergamino:</label>
+                            <select class="form-select" id="tipo_calidad_pergamino" name="tipo_calidad_pergamino"
+                                    <%= trilla_info && trilla_info.peso_pergamino_final > 0 ? 'required' : '' %>>
+                                <option value="" disabled <%= !tipo_calidad_pergamino ? 'selected' : '' %>>Seleccione la calidad...</option>
+                                <option value="Premium" <%= tipo_calidad_pergamino === 'Premium' ? 'selected' : '' %>>Premium</option>
+                                <option value="Normal" <%= tipo_calidad_pergamino === 'Normal' ? 'selected' : '' %>>Normal</option>
+                            </select>
+                            <small class="form-text text-muted">Calidad del café pergamino (Premium o Normal).</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fecha_tueste_pergamino" class="form-label">Fecha de Tueste Pergamino:</label>
+                            <input type="date" class="form-control" id="fecha_tueste_pergamino" name="fecha_tueste_pergamino" 
+                                   value="<%= fecha_tueste_pergamino %>"
+                                   <%= trilla_info && trilla_info.peso_pergamino_final > 0 ? 'required' : '' %>>
+                            <small class="form-text text-muted">Fecha en que se realizó el tueste del café pergamino.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nivel_tueste_pergamino" class="form-label">Nivel de Tueste Pergamino: </label>
+                            <select class="form-select" id="nivel_tueste_pergamino" name="nivel_tueste_pergamino"
+                                    <%= trilla_info && trilla_info.peso_pergamino_final > 0 ? 'required' : '' %>>
+                                <option value="" disabled <%= !nivel_tueste_pergamino ? 'selected' : '' %>>Seleccione el nivel...</option>
+                                <option value="Alto" <%= nivel_tueste_pergamino === 'Alto' ? 'selected' : '' %>>Alto</option>
+                                <option value="Medio" <%= nivel_tueste_pergamino === 'Medio' ? 'selected' : '' %>>Medio</option>
+                                <option value="Bajo" <%= nivel_tueste_pergamino === 'Bajo' ? 'selected' : '' %>>Bajo</option>
+                            </select>
+                            <small class="form-text text-muted">Nivel de tueste aplicado al café pergamino.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="peso_pergamino_final" class="form-label">Peso Final Pergamino (kg): </label>
+                            <input type="number" step="0.01" class="form-control" id="peso_pergamino_final" name="peso_pergamino_final" 
+                                   value="<%= peso_pergamino_final %>"
+                                   <%= trilla_info && trilla_info.peso_pergamino_final > 0 ? 'required' : '' %>>
+                            <small class="form-text text-muted">Peso del café pergamino después del tueste.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección para Café Pasilla -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Tueste de Café Pasilla</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="peso_pasilla_inicial" class="form-label">Peso Inicial Pasilla (kg):</label>
+                            <input type="number" step="0.01" class="form-control" id="peso_pasilla_inicial" name="peso_pasilla_inicial" 
+                                   value="<%= peso_pasilla_inicial || (trilla_info ? trilla_info.peso_pasilla_final : '') %>"
+                                   <%= trilla_info && trilla_info.peso_pasilla_final > 0 ? 'required' : '' %>>
+                            <small class="form-text text-muted">Peso del café pasilla antes del tueste.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tipo_calidad_pasilla" class="form-label">Calidad del Café Pasilla:</label>
+                            <input type="text" class="form-control" value="Baja" readonly>
+                            <input type="hidden" name="tipo_calidad_pasilla" value="Baja">
+                            <small class="form-text text-muted">La calidad de café pasilla siempre es Baja.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fecha_tueste_pasilla" class="form-label">Fecha de Tueste Pasilla:</label>
+                            <input type="date" class="form-control" id="fecha_tueste_pasilla" name="fecha_tueste_pasilla" 
+                                   value="<%= fecha_tueste_pasilla %>"
+                                   <%= trilla_info && trilla_info.peso_pasilla_final > 0 ? 'required' : '' %>>
+                            <small class="form-text text-muted">Fecha en que se realizó el tueste del café pasilla.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nivel_tueste_pasilla" class="form-label">Nivel de Tueste Pasilla: </label>
+                            <input type="text" class="form-control" value="Alto" readonly>
+                            <input type="hidden" name="nivel_tueste_pasilla" value="Alto">
+                            <small class="form-text text-muted">El nivel de tueste para café pasilla siempre es Alto.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="peso_pasilla_final" class="form-label">Peso Final Pasilla (kg): </label>
+                            <input type="number" step="0.01" class="form-control" id="peso_pasilla_final" name="peso_pasilla_final" 
+                                   value="<%= peso_pasilla_final %>"
+                                   <%= trilla_info && trilla_info.peso_pasilla_final > 0 ? 'required' : '' %>>
+                            <small class="form-text text-muted">Peso del café pasilla después del tueste.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección para información general -->
+                <div class="mb-3">
+                    <label for="peso_final" class="form-label">Peso Final Total (kg): </label>
+                    <input type="number" step="0.01" class="form-control" id="peso_final" name="peso_final" 
+                           value="<%= peso_final %>" readonly>
+                    <small class="form-text text-muted">Peso total del café después del proceso de tueste (se calcula automáticamente).</small>
                 </div>
 
                 <div class="mb-3">
-                    <label for="tipo_calidad" class="form-label">Calidad del Café: <span class="text-danger">*</span></label>
-                    <select class="form-select" id="tipo_calidad" name="tipo_calidad" required>
-                        <option value="" disabled <% if (!tipo_calidad) { %>selected<% } %>>Seleccione la calidad...</option>
-                        <option value="Premium" <% if (tipo_calidad === 'Premium') { %>selected<% } %>>Premium</option>
-                        <option value="Normal" <% if (tipo_calidad === 'Normal') { %>selected<% } %>>Normal</option>
-                        <option value="Baja" <% if (tipo_calidad === 'Baja') { %>selected<% } %>>Baja</option>
-                    </select>
-                    <small class="form-text text-muted">Campo obligatorio. Calidad del café a tostar.</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="fecha_tueste" class="form-label">Fecha de Tueste: <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" id="fecha_tueste" name="fecha_tueste" value="<%= fecha_tueste %>" required>
-                    <small class="form-text text-muted">Campo obligatorio. Fecha en que se realizó el tueste.</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="nivel_tueste" class="form-label">Nivel de Tueste: <span class="text-danger">*</span></label>
-                    <select class="form-select" id="nivel_tueste" name="nivel_tueste" required>
-                        <option value="" disabled <% if (!nivel_tueste) { %>selected<% } %>>Seleccione el nivel...</option>
-                        <option value="Alto" <% if (nivel_tueste === 'Alto') { %>selected<% } %>>Alto</option>
-                        <option value="Medio" <% if (nivel_tueste === 'Medio') { %>selected<% } %>>Medio</option>
-                        <option value="Bajo" <% if (nivel_tueste === 'Bajo') { %>selected<% } %>>Bajo</option>
-                    </select>
-                    <small class="form-text text-muted">Campo obligatorio. Nivel de tueste aplicado al café.</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="peso_final" class="form-label">Peso Final (kg): <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" class="form-control" id="peso_final" name="peso_final" value="<%= peso_final %>" placeholder="Ej: 18.50" required>
-                    <small class="form-text text-muted">Campo obligatorio. Peso del café después del proceso de tueste.</small>
+                    <label for="fecha_tueste" class="form-label">Fecha de Registro:</label>
+                    <input type="date" class="form-control" id="fecha_tueste" name="fecha_tueste" 
+                           value="<%= fecha_tueste || new Date().toISOString().split('T')[0] %>" required>
+                    <small class="form-text text-muted">Fecha de registro del proceso completo de tueste.</small>
                 </div>
 
                 <div class="mb-3">
                     <label for="observaciones" class="form-label">Observaciones:</label>
-                    <textarea class="form-control" id="observaciones" name="observaciones" rows="3" placeholder="Anotaciones sobre el proceso de tueste"><%= observaciones %></textarea>
+                    <textarea class="form-control" id="observaciones" name="observaciones" rows="3" 
+                              placeholder="Anotaciones sobre el proceso de tueste"><%= observaciones %></textarea>
                 </div>
                 
                 <div class="d-flex justify-content-end gap-2 mt-4">
@@ -82,6 +173,20 @@
     </div>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Calcular el peso final total automáticamente
+        function calcularPesoFinalTotal() {
+            let pesoPergamino = parseFloat(document.getElementById('peso_pergamino_final').value) || 0;
+            let pesoPasilla = parseFloat(document.getElementById('peso_pasilla_final').value) || 0;
+            document.getElementById('peso_final').value = (pesoPergamino + pesoPasilla).toFixed(2);
+        }
+
+        // Añadir listeners a los inputs de peso final
+        document.getElementById('peso_pergamino_final').addEventListener('input', calcularPesoFinalTotal);
+        document.getElementById('peso_pasilla_final').addEventListener('input', calcularPesoFinalTotal);
+    });
+</script>
 
 <link rel="stylesheet" href="/css/lotes/procesos.css">
 <script src="/js/lotes/procesos.js"></script> 

@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (response.ok && data.success) {
         // Redirigir al usuario
-        window.location.href = data.redirect || '/fincas';
+        window.location.href = data.redirect || '/fincas/gestionar';
       } else {
         // Mostrar errores
         if (data.errores) {

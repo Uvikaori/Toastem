@@ -1,3 +1,103 @@
+USE toastem_db;
+
+-- Crear tabla temporal para almacenar los datos existentes
+CREATE TABLE IF NOT EXISTS `tueste_temp` AS 
+SELECT * FROM `tueste`;
+
+-- Renombrar la tabla actual (en lugar de eliminarla)
+RENAME TABLE `tueste` TO `tueste_old`;
+
+-- Crear la tabla con la estructura correcta que espera el código
+CREATE TABLE `tueste` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_lote` int NOT NULL,
+  `fecha_tueste` date NOT NULL,
+  `peso_inicial` decimal(10,2) DEFAULT NULL,
+  
+  -- Campos para pergamino
+  `peso_pergamino_inicial` decimal(10,2) DEFAULT NULL,
+  `tipo_calidad_pergamino` enum('Premium','Normal') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `nivel_tueste_pergamino` enum('Alto','Medio','Bajo') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `fecha_tueste_pergamino` date DEFAULT NULL,
+  `peso_pergamino_final` decimal(10,2) DEFAULT NULL,
+  
+  -- Campos para pasilla
+  `peso_pasilla_inicial` decimal(10,2) DEFAULT NULL,
+  `tipo_calidad_pasilla` enum('Baja') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'Baja',
+  `nivel_tueste_pasilla` enum('Alto') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'Alto',
+  `fecha_tueste_pasilla` date DEFAULT NULL,
+  `peso_pasilla_final` decimal(10,2) DEFAULT NULL,
+  
+  -- Campos generales
+  `peso_final` decimal(10,2) DEFAULT NULL,
+  `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `id_estado_proceso` int DEFAULT '1',
+  
+  PRIMARY KEY (`id`),
+  KEY `id_lote` (`id_lote`),
+  KEY `id_estado_proceso` (`id_estado_proceso`),
+  CONSTRAINT `tueste_ibfk_1` FOREIGN KEY (`id_lote`) REFERENCES `lotes` (`id`),
+  CONSTRAINT `tueste_ibfk_2` FOREIGN KEY (`id_estado_proceso`) REFERENCES `estados_proceso` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Insertar los datos desde la tabla temporal a la nueva estructura
+INSERT INTO `tueste` (
+  `id`,
+  `id_lote`, 
+  `fecha_tueste`, 
+  `peso_inicial`,
+  `peso_pergamino_inicial`, 
+  `tipo_calidad_pergamino`, 
+  `nivel_tueste_pergamino`, 
+  `fecha_tueste_pergamino`, 
+  `peso_pergamino_final`,
+  `peso_pasilla_inicial`,
+  `tipo_calidad_pasilla`,
+  `nivel_tueste_pasilla`,
+  `fecha_tueste_pasilla`,
+  `peso_pasilla_final`,
+  `peso_final`, 
+  `observaciones`, 
+  `id_estado_proceso`
+)
+SELECT 
+  `id`,
+  `id_lote`, 
+  `fecha_tueste`, 
+  `peso_inicial`,
+  CASE WHEN `tipo_cafe` = 'Pergamino' THEN `peso_pergamino_inicial` ELSE NULL END,
+  CASE WHEN `tipo_cafe` = 'Pergamino' THEN `tipo_calidad` ELSE NULL END,
+  CASE WHEN `tipo_cafe` = 'Pergamino' THEN `nivel_tueste` ELSE NULL END,
+  CASE WHEN `tipo_cafe` = 'Pergamino' THEN `fecha_tueste` ELSE NULL END,
+  CASE WHEN `tipo_cafe` = 'Pergamino' THEN `peso_pergamino_final` ELSE NULL END,
+  CASE WHEN `tipo_cafe` = 'Pasilla' THEN `peso_pasilla_inicial` ELSE NULL END,
+  CASE WHEN `tipo_cafe` = 'Pasilla' THEN 'Baja' ELSE NULL END,
+  CASE WHEN `tipo_cafe` = 'Pasilla' THEN 'Alto' ELSE NULL END,
+  CASE WHEN `tipo_cafe` = 'Pasilla' THEN `fecha_tueste` ELSE NULL END,
+  CASE WHEN `tipo_cafe` = 'Pasilla' THEN `peso_pasilla_final` ELSE NULL END,
+  `peso_final`,
+  `observaciones`,
+  `id_estado_proceso`
+FROM `tueste_temp`;
+
+-- Actualizar las referencias en molienda
+UPDATE `molienda` SET `id_tueste` = (
+  SELECT `id` FROM `tueste` WHERE `id_lote` = (
+    SELECT `id_lote` FROM `tueste_old` WHERE `id` = `molienda`.`id_tueste`
+  )
+);
+
+-- Actualizar las referencias en empacado
+UPDATE `empacado` SET `id_tueste` = (
+  SELECT `id` FROM `tueste` WHERE `id_lote` = (
+    SELECT `id_lote` FROM `tueste_old` WHERE `id` = `empacado`.`id_tueste`
+  )
+) 
+WHERE `id_tueste` IS NOT NULL;
+
+-- Actualizar la vista vista_flujo_lote para que use los nuevos campos
+DROP VIEW IF EXISTS `vista_flujo_lote`; 
+
 CREATE VIEW `vista_flujo_lote` AS
 SELECT
     `l`.`id` AS `lote_id`,
@@ -120,3 +220,11 @@ FROM
     LEFT JOIN `molienda` `m` ON `tu`.`id` = `m`.`id_tueste`
     LEFT JOIN `empacado` `e` ON `l`.`id` = `e`.`id_lote`
     LEFT JOIN `control_calidad` `cc` ON `l`.`id` = `cc`.`id_lote`;
+
+-- Eliminar las tablas temporales
+DROP TABLE IF EXISTS `tueste_temp`;
+-- No eliminamos tueste_old aún como medida de seguridad
+-- DROP TABLE IF EXISTS `tueste_old`;
+
+-- Mensaje de finalización
+SELECT 'La actualización de la tabla tueste se ha completado correctamente. Se ha conservado la tabla original como tueste_old por seguridad.' AS 'Mensaje'; 

@@ -28,10 +28,10 @@ const noAutenticado = (req, res, next) => {
     return next();
   }
   
-  if (!req.session.idUsuario) {
+  if (!req.session.usuario || !req.session.usuario.id) {
     return next();
   }
-  res.redirect('/dashboard');
+  res.redirect('/fincas/gestionar');
 };
 
 /**

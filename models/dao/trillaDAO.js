@@ -9,8 +9,11 @@ class TrillaDAO {
     async createTrilla(trillaData) {
         const {
             id_lote,
-            peso_inicial,
             fecha_trilla,
+            peso_pergamino_inicial,
+            peso_pasilla_inicial,
+            peso_pergamino_final,
+            peso_pasilla_final,
             peso_final,
             observaciones,
             id_estado_proceso = 3 // Por defecto 'Terminado'
@@ -18,8 +21,18 @@ class TrillaDAO {
 
         try {
             const [result] = await db.query(
-                'INSERT INTO trilla (id_lote, peso_inicial, fecha_trilla, peso_final, observaciones, id_estado_proceso) VALUES (?, ?, ?, ?, ?, ?)',
-                [id_lote, peso_inicial, fecha_trilla, peso_final, observaciones, id_estado_proceso]
+                `INSERT INTO trilla (
+                    id_lote, fecha_trilla, 
+                    peso_pergamino_inicial, peso_pasilla_inicial,
+                    peso_pergamino_final, peso_pasilla_final,
+                    peso_final, observaciones, id_estado_proceso
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    id_lote, fecha_trilla,
+                    peso_pergamino_inicial, peso_pasilla_inicial,
+                    peso_pergamino_final, peso_pasilla_final,
+                    peso_final, observaciones, id_estado_proceso
+                ]
             );
             return result.insertId;
         } catch (error) {
@@ -36,7 +49,10 @@ class TrillaDAO {
     async getTrillaByLoteId(id_lote) {
         try {
             const [rows] = await db.query(
-                'SELECT t.*, ep.nombre as estado_nombre FROM trilla t JOIN estados_proceso ep ON t.id_estado_proceso = ep.id WHERE t.id_lote = ?',
+                `SELECT t.*, ep.nombre as estado_nombre 
+                FROM trilla t 
+                JOIN estados_proceso ep ON t.id_estado_proceso = ep.id 
+                WHERE t.id_lote = ?`,
                 [id_lote]
             );
             return rows.length > 0 ? rows[0] : null;
@@ -48,13 +64,11 @@ class TrillaDAO {
 
     /**
      * Reinicia el proceso de trilla para un lote específico.
-     * Esto cambia el estado del proceso a "Por hacer" (id_estado_proceso = 1).
      * @param {number} id_trilla - ID del registro de trilla a reiniciar.
      * @returns {Promise<boolean>} - True si fue exitoso, false en caso contrario.
      */
     async reiniciarTrilla(id_trilla) {
         try {
-            // Obtener información actual de la trilla
             const [trillaActual] = await db.query(
                 'SELECT observaciones FROM trilla WHERE id = ?',
                 [id_trilla]
@@ -67,7 +81,6 @@ class TrillaDAO {
             let observaciones = trillaActual[0].observaciones || '';
             observaciones += '\n[CORRECCIÓN] Proceso reiniciado para corrección de datos: ' + new Date().toLocaleString();
             
-            // Actualizar a estado "Por hacer" (id=1) y añadir indicador de corrección en observaciones
             const [result] = await db.query(
                 'UPDATE trilla SET id_estado_proceso = 1, observaciones = ? WHERE id = ?',
                 [observaciones, id_trilla]

@@ -64,6 +64,17 @@
                 <div class="col-md-3">
                     <p><strong>Destino Final:</strong> <%= flujo.destino_final || 'No definido' %></p>
                 </div>
+                <div class="col-md-3">
+                    <p><strong>Tipo de Café:</strong> <%= flujo.tipo_cafe || 'No especificado' %></p>
+                </div>
+                <div class="col-md-3">
+                    <p><strong>Tipo de Recolección:</strong> <%= flujo.tipo_recoleccion || 'No especificado' %></p>
+                </div>
+                <% if (flujo.lote_observaciones) { %>
+                <div class="col-md-6">
+                    <p><strong>Observaciones:</strong> <%= flujo.lote_observaciones %></p>
+                </div>
+                <% } %>
             </div>
         </div>
     </div>
@@ -137,6 +148,11 @@
                             <div class="col-md-4">
                                 <p><strong>Peso Final:</strong> <%= flujo.despulpado_peso_final %> kg</p>
                             </div>
+                            <% if (flujo.despulpado_observaciones) { %>
+                            <div class="col-md-12 mt-2">
+                                <p><strong>Observaciones:</strong> <%= flujo.despulpado_observaciones %></p>
+                            </div>
+                            <% } %>
                         </div>
                     <% } else { %>
                         <p class="text-muted">No hay datos de despulpado registrados para este lote.</p>
@@ -179,6 +195,11 @@
                             <div class="col-md-4">
                                 <p><strong>Peso Final:</strong> <%= flujo.fermentacion_peso_final %> kg</p>
                             </div>
+                            <% if (flujo.fermentacion_observaciones) { %>
+                            <div class="col-md-12 mt-2">
+                                <p><strong>Observaciones:</strong> <%= flujo.fermentacion_observaciones %></p>
+                            </div>
+                            <% } %>
                         </div>
                     <% } else { %>
                         <p class="text-muted">No hay datos de fermentación y lavado registrados para este lote.</p>
@@ -352,11 +373,19 @@
                                 <p><strong>Fecha Trilla:</strong> <%= flujo.fecha_trilla ? new Date(flujo.fecha_trilla).toLocaleString('es-CO') : 'No registrado' %></p>
                             </div>
                             <div class="col-md-4">
-                                <p><strong>Peso Inicial:</strong> <%= flujo.trilla_peso_inicial %> kg</p>
+                                <p><strong>Peso Pergamino:</strong> <%= flujo.trilla_peso_pergamino || 'No registrado' %> <%= flujo.trilla_peso_pergamino ? 'kg' : '' %></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Peso Pasilla:</strong> <%= flujo.trilla_peso_pasilla || 'No registrado' %> <%= flujo.trilla_peso_pasilla ? 'kg' : '' %></p>
                             </div>
                             <div class="col-md-4">
                                 <p><strong>Peso Final:</strong> <%= flujo.trilla_peso_final %> kg</p>
                             </div>
+                            <% if (flujo.trilla_observaciones) { %>
+                            <div class="col-md-12 mt-2">
+                                <p><strong>Observaciones:</strong> <%= flujo.trilla_observaciones %></p>
+                            </div>
+                            <% } %>
                         </div>
                     <% } else { %>
                         <p class="text-muted">Proceso de trilla en progreso o pendiente.</p>
@@ -496,8 +525,13 @@
                                 <p><strong>Peso Empacado Total:</strong> <%= flujo.empacado_peso_empacado %> kg</p>
                             </div>
                             <div class="col-md-4">
-                                <p><strong>Tipo Producto:</strong> <%= flujo.empacado_id_tipo_producto || 'No especificado' %></p>
+                                <p><strong>Tipo Producto:</strong> <%= flujo.tipo_producto || 'No especificado' %></p>
                             </div>
+                            <% if (flujo.empacado_observaciones) { %>
+                            <div class="col-md-12 mt-2">
+                                <p><strong>Observaciones:</strong> <%= flujo.empacado_observaciones %></p>
+                            </div>
+                            <% } %>
                         </div>
                     <% } else { %>
                         <p class="text-muted">Proceso de empacado en progreso o pendiente.</p>
