@@ -9,6 +9,7 @@ const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUI = require('swagger-ui-express');
 const flash = require('connect-flash');
 const methodOverride = require('method-override');
+const flashFilter = require('./middlewares/flash');
 require('dotenv').config();
 const fincaRoutes = require('./routes/fincaRoutes');
 const helpers = require('./utils/helpers');
@@ -116,6 +117,7 @@ app.use((req, res, next) => {
 
 // Después de la configuración de session
 app.use(flash());
+app.use(flashFilter); // Filtrar mensajes flash vacíos
 
 // Routes
 app.get('/', (req, res) => {

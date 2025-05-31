@@ -31,10 +31,7 @@ const validateLote = [
         .isLength({ max: 1000 }).withMessage('Las observaciones no pueden exceder los 1000 caracteres.')
         .escape(),
     
-    // No validamos id_finca aquí porque vendrá de la URL
-    // No validamos id_usuario porque vendrá de la sesión
-    // No validamos codigo porque se generará automáticamente
-    // No validamos id_estado_proceso porque se asignará por defecto
+    
 ];
 
 module.exports = { validateLote }; 

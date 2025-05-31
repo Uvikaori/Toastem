@@ -57,14 +57,6 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                   <li>
-                    <a class="dropdown-item" href="/perfil">
-                      <i class="fas fa-user-cog me-1"></i>Mi Perfil
-                    </a>
-                  </li>
-                  <li>
-                    <hr class="dropdown-divider">
-                  </li>
-                  <li>
                     <a class="dropdown-item" href="/auth/logout">
                       <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
                     </a>
@@ -127,6 +119,12 @@
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
       <!-- Custom JS -->
       <script src="/js/main.js"></script>
+      <!-- Archivo de validaciones -->
+      <script src="/js/utils/validations.js"></script>
+      <!-- Este script se incluirá solo en la página de login -->
+      <% if (typeof titulo !== 'undefined' && titulo.includes('Iniciar sesión')) { %>
+        <script src="/js/forms/login.js"></script>
+      <% } %>
 </body>
 
 </html>

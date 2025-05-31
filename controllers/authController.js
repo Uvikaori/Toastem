@@ -8,9 +8,19 @@ const { capitalizarPalabras } = require('../utils/helpers');
  * Muestra la página de inicio de sesión
  */
 const mostrarPaginaInicioSesion = (req, res) => {
+  // Consumir mensajes flash solo si existen
+  const errorMessages = req.flash('error') || [];
+  const successMessages = req.flash('mensaje') || [];
+  
+  // Filtrar mensajes vacíos
+  const filteredErrors = errorMessages.filter(msg => msg && msg.toString().trim() !== '');
+  const filteredSuccess = successMessages.filter(msg => msg && msg.toString().trim() !== '');
+
   res.render('auth/login', {
     titulo: 'Iniciar sesión | Toastem',
-    hideNavbar: false
+    hideNavbar: false,
+    error: filteredErrors.length > 0 ? filteredErrors : null,
+    mensaje: filteredSuccess.length > 0 ? filteredSuccess : null
   });
 };
 
@@ -20,7 +30,7 @@ const mostrarPaginaInicioSesion = (req, res) => {
 const iniciarSesion = async (req, res) => {
   try {
     const { correo, contraseña } = req.body;
-    console.log('Datos recibidos:', { correo }); // Log para debug
+    console.log('Datos recibidos:', { correo });
 
     // Validar campos vacíos
     if (!correo || correo.trim() === '') {
@@ -40,7 +50,7 @@ const iniciarSesion = async (req, res) => {
       'SELECT * FROM usuarios WHERE email = ?',
       [correo]
     );
-    console.log('Usuario encontrado:', usuarios[0]?.id); // Log para debug
+    console.log('Usuario encontrado:', usuarios[0]?.id);
 
     if (usuarios.length === 0) {
       return res.status(400).json({
@@ -66,12 +76,28 @@ const iniciarSesion = async (req, res) => {
     req.session.usuario = usuario;
     req.session.idUsuario = usuario.id;
 
-    console.log('Sesión establecida:', req.session); // Log para debug
+    // Limpiar cualquier mensaje flash de error que pudiera haber sido
+    // establecido por el middleware isAuthenticated antes del login.
+    req.flash('error'); // Llamar sin argumentos consume y limpia los mensajes de error.
 
-    // Responder con éxito
-    res.json({
-      success: true,
-      redirect: '/fincas/gestionar'
+    console.log('Sesión establecida y flashes de error limpiados:', req.session);
+
+    // Guardar la sesión explícitamente ANTES de enviar la respuesta JSON
+    // para asegurar que los cambios (incluida la limpieza de flash) persistan
+    req.session.save(err => {
+      if (err) {
+        console.error('Error al guardar sesión después de limpiar flash:', err);
+        // Por ahora responderemos con el error original para no complicar.
+        return res.status(500).json({
+          errores: { general: 'Error al procesar el inicio de sesión al guardar la sesión.' }
+        });
+      }
+
+      // Responder con éxito
+      res.json({
+        success: true,
+        redirect: '/fincas/gestionar'
+      });
     });
 
   } catch (error) {

@@ -1,8 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('loginForm');
-  const errorGeneral = document.getElementById('errorGeneral');
-  const errorGeneralText = document.getElementById('errorGeneralText');
-  const registroExitoso = document.getElementById('registroExitoso');
+  const errorGeneral = document.getElementById('errorGeneralClient');
+  const errorGeneralText = document.getElementById('errorGeneralClientText');
+  const registroExitoso = document.getElementById('registroExitosoClient');
+  const registroExitosoText = document.getElementById('registroExitosoClientText');
   const togglePassword = document.getElementById('togglePassword');
   const contraseñaInput = document.getElementById('contraseña');
   const correoInput = document.getElementById('correo');
@@ -19,14 +20,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Función para mostrar errores generales
   function mostrarError(mensaje) {
-    errorGeneralText.textContent = mensaje;
-    errorGeneral.classList.remove('d-none');
-    registroExitoso.classList.add('d-none');
+    if (errorGeneralText && errorGeneral) {
+      errorGeneralText.textContent = mensaje;
+      errorGeneral.classList.remove('d-none');
+      if (registroExitoso) registroExitoso.classList.add('d-none');
+    }
   }
 
   // Función para ocultar errores generales
   function ocultarErrores() {
-    errorGeneral.classList.add('d-none');
+    if (errorGeneral) errorGeneral.classList.add('d-none');
     document.querySelectorAll('.invalid-feedback').forEach(el => {
       el.textContent = '';
       el.style.display = 'none';
@@ -56,80 +59,88 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Toggle para mostrar/ocultar contraseña
-  togglePassword.addEventListener('click', function() {
-    const tipo = contraseñaInput.type === 'password' ? 'text' : 'password';
-    contraseñaInput.type = tipo;
-    this.querySelector('i').classList.toggle('fa-eye');
-    this.querySelector('i').classList.toggle('fa-eye-slash');
-  });
+  if (togglePassword && contraseñaInput) {
+    togglePassword.addEventListener('click', function() {
+      const tipo = contraseñaInput.type === 'password' ? 'text' : 'password';
+      contraseñaInput.type = tipo;
+      this.querySelector('i').classList.toggle('fa-eye');
+      this.querySelector('i').classList.toggle('fa-eye-slash');
+    });
+  }
 
   // Validar email cuando el campo pierde el foco
-  correoInput.addEventListener('blur', function() {
-    const email = this.value.trim();
-    const validacion = Validaciones.validarEmail(email);
-    
-    if (validacion.valido) {
-      Validaciones.limpiarErrorCampo('correo');
-      this.classList.add('is-valid');
-      this.classList.remove('is-invalid');
-    } else {
-      Validaciones.mostrarErrorCampo('correo', validacion.mensaje);
-      this.classList.remove('is-valid');
-    }
-  });
+  if (correoInput) {
+    correoInput.addEventListener('blur', function() {
+      const email = this.value.trim();
+      const validacion = Validaciones.validarEmail(email);
+      
+      if (validacion.valido) {
+        Validaciones.limpiarErrorCampo('correo');
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+      } else {
+        Validaciones.mostrarErrorCampo('correo', validacion.mensaje);
+        this.classList.remove('is-valid');
+      }
+    });
+  }
 
   // Validar contraseña en tiempo real
-  contraseñaInput.addEventListener('input', function() {
-    const contraseña = this.value;
-    const validacion = Validaciones.validarContraseña(contraseña);
-    
-    if (validacion.valido) {
-      Validaciones.limpiarErrorCampo('contraseña');
-      this.classList.add('is-valid');
-      this.classList.remove('is-invalid');
-    } else {
-      Validaciones.mostrarErrorCampo('contraseña', validacion.mensaje);
-      this.classList.remove('is-valid');
-    }
-  });
+  if (contraseñaInput) {
+    contraseñaInput.addEventListener('input', function() {
+      const contraseña = this.value;
+      const validacion = Validaciones.validarContraseña(contraseña);
+      
+      if (validacion.valido) {
+        Validaciones.limpiarErrorCampo('contraseña');
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+      } else {
+        Validaciones.mostrarErrorCampo('contraseña', validacion.mensaje);
+        this.classList.remove('is-valid');
+      }
+    });
+  }
 
   // Manejar envío del formulario
-  form.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // Limpiar errores previos
-    ocultarErrores();
-    
-    const formData = {
-      correo: correoInput.value.trim(),
-      contraseña: contraseñaInput.value
-    };
-
-    try {
-      const response = await fetch('/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
+  if (form) {
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
       
-      if (response.ok && data.success) {
-        // Redirigir al usuario
-        window.location.href = data.redirect || '/fincas/gestionar';
-      } else {
-        // Mostrar errores
-        if (data.errores) {
-          mostrarErroresCampos(data.errores);
+      // Limpiar errores previos
+      ocultarErrores();
+      
+      const formData = {
+        correo: correoInput.value.trim(),
+        contraseña: contraseñaInput.value
+      };
+  
+      try {
+        const response = await fetch('/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+  
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          // Redirigir al usuario
+          window.location.href = data.redirect || '/fincas/gestionar';
         } else {
-          mostrarError('Error al procesar la solicitud');
+          // Mostrar errores
+          if (data.errores) {
+            mostrarErroresCampos(data.errores);
+          } else {
+            mostrarError('Error al procesar la solicitud');
+          }
         }
+      } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al procesar la solicitud');
       }
-    } catch (error) {
-      console.error('Error:', error);
-      mostrarError('Error al procesar la solicitud');
-    }
-  });
+    });
+  }
 }); 

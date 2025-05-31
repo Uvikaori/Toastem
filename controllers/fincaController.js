@@ -12,6 +12,7 @@ class FincaController {
             // Verificar si el usuario está autenticado
             if (!req.session.usuario || !req.session.usuario.id) {
                 console.log('Usuario no autenticado, redirigiendo...'); 
+                req.flash('error', 'Debes iniciar sesión para acceder a esta página');
                 return res.redirect('/auth/login');
             }
 
@@ -23,20 +24,14 @@ class FincaController {
                 fincas: Array.isArray(fincas) ? fincas : [],
                 municipiosVeredasAll: municipiosVeredasAll, // Pasar a la vista
                 mensaje: req.flash('mensaje'),
-                error: null, // No pasar errores vacíos
+                error: req.flash('error'),
                 // Para el modal de edición de finca, si se usa en esta página
                 departamentos: await fincaDAO.getDepartamentos(), 
             });
         } catch (error) {
             console.error('Error al listar fincas:', error);
-            res.render('gestionar-fincas', {
-                titulo: 'Gestionar Fincas | Toastem',
-                fincas: [],
-                municipiosVeredasAll: [], // Pasar vacío en caso de error
-                mensaje: null,
-                error: 'Error al cargar las fincas',
-                departamentos: [],
-            });
+            req.flash('error', 'Error al cargar las fincas');
+            res.redirect('/');
         }
     }
 

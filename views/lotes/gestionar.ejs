@@ -13,30 +13,33 @@
         </a>
     </div>
 
-    <%# Mostrar mensajes de éxito (flash) %>
-    <% if (typeof mensaje !== 'undefined' && mensaje && mensaje.length > 0) { %>
+    <%# Mostrar mensajes de éxito (flash) - Mejorado %>
+    <% let successMessages = typeof mensaje !== 'undefined' ? mensaje : []; %>
+    <% if (!Array.isArray(successMessages)) { successMessages = [successMessages]; } %>
+    <% const filteredSuccess = successMessages.filter(m => m && m.toString().trim() !== ''); %>
+
+    <% if (filteredSuccess.length > 0) { %>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <%= mensaje %>
+            <% filteredSuccess.forEach(function(msgText, index) { %>
+                <%- msgText %><% if (index < filteredSuccess.length - 1) { %><br><% } %>
+            <% }) %>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <% } %>
-    
-    <%# Mostrar errores (no flash) %>
-    <% if (typeof error !== 'undefined' && error && Array.isArray(error) && error.length > 0) { %>
-        <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
+
+    <%# Mostrar mensajes de error (flash) - Mejorado %>
+    <% let errorMessages = typeof error !== 'undefined' ? error : []; %>
+    <% if (!Array.isArray(errorMessages)) { errorMessages = [errorMessages]; } %>
+    <% const filteredErrors = errorMessages.filter(e => e && e.toString().trim() !== ''); %>
+
+    <% if (filteredErrors.length > 0) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" id="errorAlert">
             <strong>Error:</strong>
             <ul>
-            <% error.forEach(function(err) { %>
-                <% if (err && err.toString().trim() !== '') { %>
-                    <li><%= Array.isArray(err) ? err.join(', ') : err %></li>
-                <% } %>
+            <% filteredErrors.forEach(function(errText) { %>
+                <li><%- errText %></li>
             <% }) %>
             </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <% } else if (typeof error === 'string' && error.trim() !== '') { %>
-        <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
-            <strong>Error:</strong> <%= error %>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <% } %>

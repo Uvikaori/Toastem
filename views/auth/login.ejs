@@ -1,20 +1,46 @@
-
 <div class="row justify-content-center">
   <div class="col-md-6 col-lg-5">
     <div class="card shadow">
       <div class="card-body p-5">
         <h2 class="text-center mb-4">Iniciar Sesión</h2>
         
-        <!-- Mensaje de error general -->
-        <div class="alert alert-danger d-none" role="alert" id="errorGeneral">
+        <%# --- INICIO: Mostrar mensajes flash del servidor --- %>
+        <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+            <% error.forEach(function(errText) { %>
+                <% if (errText && errText.toString().trim() !== '') { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <%- errText %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <% } %>
+            <% }); %>
+        <% } %>
+        
+        <% if (typeof mensaje !== 'undefined' && mensaje && mensaje.length > 0) { %>
+            <% mensaje.forEach(function(msgText) { %>
+                <% if (msgText && msgText.toString().trim() !== '') { %>
+                     <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <%- msgText %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <% } %>
+            <% }); %>
+        <% } %>
+        <%# --- FIN: Mostrar mensajes flash del servidor --- %>
+        
+        <!-- Mensaje de error general (manejado por login.js, puedes conservarlo si es para errores AJAX) -->
+        <div class="alert alert-danger d-none" role="alert" id="errorGeneralClient"> <%# Cambiado ID para evitar colisión %>
           <i class="fas fa-exclamation-circle me-2"></i>
-          <span id="errorGeneralText"></span>
+          <span id="errorGeneralClientText"></span>
         </div>
 
-        <!-- Mensaje de registro exitoso -->
-        <div class="alert alert-success d-none" role="alert" id="registroExitoso">
+        <!-- Mensaje de registro exitoso (manejado por login.js o desde redirección con flash) -->
+        <!-- Si el mensaje de registro exitoso viene como un flash 'mensaje', ya se mostrará arriba -->
+        <div class="alert alert-success d-none" role="alert" id="registroExitosoClient"> <%# Cambiado ID %>
           <i class="fas fa-check-circle me-2"></i>
-          <span>¡Registro exitoso! Ahora puedes iniciar sesión con tus credenciales.</span>
+          <span id="registroExitosoClientText">¡Registro exitoso! Ahora puedes iniciar sesión con tus credenciales.</span>
         </div>
 
         <form id="loginForm" action="/auth/login" method="POST" novalidate>
@@ -56,5 +82,5 @@
 </div>
 
 <!-- Script para el formulario de login -->
-<script src="/js/forms/login.js"></script>
+<!-- El script login.js ya se incluye en main.ejs -->
 
