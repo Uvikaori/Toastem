@@ -1,21 +1,21 @@
 const express = require('express');
-const router = express.Router({ mergeParams: true }); // mergeParams para acceder a :id_finca de la ruta padre
+const router = express.Router({ mergeParams: true }); 
 const loteController = require('../controllers/loteController');
-const { isAuthenticated, isLoteOwner } = require('../middlewares/auth'); // Importamos isLoteOwner
+const { isAuthenticated, isLoteOwner } = require('../middlewares/auth'); // Importamos isLoteOwner para verificar que es el dueño del lote
 const { validateLote } = require('../validators/loteValidator');
-const { validateDespulpado } = require('../validators/despulpadoValidator'); // Validador para despulpado
-const { validateFermentacionLavado } = require('../validators/fermentacionLavadoValidator'); // Nuevo validador
-const { validateZarandeo } = require('../validators/zarandeoValidator'); // Nuevo validador
-const { validateInicioSecado, validateFinSecado } = require('../validators/secadoValidator'); // Validadores de secado
-const { validateClasificacion } = require('../validators/clasificacionAtributosValidator'); // Nuevo validador
-const { validateTrilla } = require('../validators/trillaValidator'); // Nuevo validador
-const { validateTueste } = require('../validators/tuesteValidator'); // Nuevo validador para tueste
-const { validateMolienda } = require('../validators/moliendaValidator'); // Nuevo validador para molienda
-const { validateEmpacado } = require('../validators/empacadoValidator'); // Nuevo validador para empacado
-const { validateControlCalidad } = require('../validators/controlCalidadValidator'); // Nuevo validador para control de calidad
+const { validateDespulpado } = require('../validators/despulpadoValidator'); 
+const { validateFermentacionLavado } = require('../validators/fermentacionLavadoValidator');
+const { validateZarandeo } = require('../validators/zarandeoValidator'); 
+const { validateInicioSecado, validateFinSecado } = require('../validators/secadoValidator'); 
+const { validateClasificacion } = require('../validators/clasificacionAtributosValidator'); 
+const { validateTrilla } = require('../validators/trillaValidator'); 
+const { validateTueste } = require('../validators/tuesteValidator'); 
+const { validateMolienda } = require('../validators/moliendaValidator'); 
+const { validateEmpacado } = require('../validators/empacadoValidator'); 
+const { validateControlCalidad } = require('../validators/controlCalidadValidator'); 
+const despulpadoController = require('../controllers/despulpadoController');
+const fermentacionLavadoController = require('../controllers/fermentacionLavadoController');
 
-// No necesitamos aplicar isAuthenticated aquí porque ya se aplicó en las rutas de fincas
-// que incluyen estas rutas de lotes
 
 // Mostrar formulario para crear un nuevo lote para una finca
 router.get('/crear', loteController.mostrarFormularioCrearLote);
@@ -33,12 +33,14 @@ router.get('/:id_lote/procesos', isLoteOwner, loteController.mostrarVistaProceso
 router.get('/:id_lote/flujo', isLoteOwner, loteController.mostrarFlujoLote);
 
 // Rutas para el proceso de DESPULPADO
-router.get('/:id_lote/despulpado/registrar', isLoteOwner, loteController.mostrarFormularioDespulpado);
-router.post('/:id_lote/despulpado', isLoteOwner, validateDespulpado, loteController.registrarDespulpado);
+router.get('/:id_lote/despulpado/registrar', despulpadoController.mostrarFormularioDespulpado);
+router.post('/:id_lote/despulpado/registrar', despulpadoController.registrarDespulpado);
+router.post('/:id_lote/despulpado/:id_despulpado/reiniciar', despulpadoController.reiniciarProcesoDespulpado);
 
 // Rutas para el proceso de FERMENTACIÓN Y LAVADO
-router.get('/:id_lote/fermentacion-lavado/registrar', isLoteOwner, loteController.mostrarFormularioFermentacionLavado);
-router.post('/:id_lote/fermentacion-lavado', isLoteOwner, validateFermentacionLavado, loteController.registrarFermentacionLavado);
+router.get('/:id_lote/fermentacion-lavado/registrar', fermentacionLavadoController.mostrarFormularioFermentacionLavado);
+router.post('/:id_lote/fermentacion-lavado/registrar', validateFermentacionLavado, fermentacionLavadoController.registrarFermentacionLavado);
+router.post('/:id_lote/fermentacion-lavado/:id_fermentacion/reiniciar', fermentacionLavadoController.reiniciarProcesoFermentacionLavado);
 
 // Rutas para el proceso de ZARANDEO
 router.get('/:id_lote/zarandeo/registrar', isLoteOwner, loteController.mostrarFormularioZarandeo);
@@ -81,8 +83,7 @@ router.get('/:id_lote/cancelar', isLoteOwner, loteController.mostrarFormularioCa
 router.post('/:id_lote/cancelar', isLoteOwner, loteController.cancelarLote);
 router.get('/:id_lote/duplicar', isLoteOwner, loteController.mostrarFormularioDuplicarLote);
 router.post('/:id_lote/duplicar', isLoteOwner, loteController.duplicarLote);
-router.post('/:id_lote/despulpado/:id_despulpado/reiniciar', isLoteOwner, loteController.reiniciarProcesoDespulpado);
-router.post('/:id_lote/fermentacion-lavado/:id_fermentacion/reiniciar', isLoteOwner, loteController.reiniciarProcesoFermentacionLavado);
+// router.post('/:id_lote/fermentacion-lavado/:id_fermentacion/reiniciar', isLoteOwner, loteController.reiniciarProcesoFermentacionLavado);
 router.post('/:id_lote/recoleccion/corregir', isLoteOwner, loteController.corregirProcesoRecoleccion);
 router.post('/:id_lote/zarandeo/:id_zarandeo/reiniciar', isLoteOwner, loteController.reiniciarProcesoZarandeo);
 router.post('/:id_lote/secado/:id_secado/reiniciar', isLoteOwner, loteController.reiniciarProcesoSecado);
