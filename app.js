@@ -14,6 +14,7 @@ require('dotenv').config();
 const fincaRoutes = require('./routes/fincaRoutes');
 const helpers = require('./utils/helpers');
 const loteRoutes = require('./routes/loteRoutes');
+const apiRoutes = require('./routes/apiRoutes');
 
 // Configuración de Swagger
 const swaggerOptions = {
@@ -128,6 +129,7 @@ app.use('/auth', authRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/fincas', fincaRoutes);
 app.use('/fincas/:id_finca/lotes', loteRoutes);
+app.use('/api', apiRoutes);
 
 // 404
 app.use((req, res) => {

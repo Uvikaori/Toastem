@@ -69,8 +69,9 @@ class TrillaDAO {
      */
     async reiniciarTrilla(id_trilla) {
         try {
+            // Obtener el registro completo para preservar todos los valores actuales
             const [trillaActual] = await db.query(
-                'SELECT observaciones FROM trilla WHERE id = ?',
+                'SELECT * FROM trilla WHERE id = ?',
                 [id_trilla]
             );
             
@@ -78,16 +79,56 @@ class TrillaDAO {
                 throw new Error('No se encontró el registro de trilla');
             }
             
+            // Actualizar las observaciones
             let observaciones = trillaActual[0].observaciones || '';
             observaciones += '\n[CORRECCIÓN] Proceso reiniciado para corrección de datos: ' + new Date().toLocaleString();
             
+            console.log('Reiniciando trilla, preservando fecha actual:', trillaActual[0].fecha_trilla);
+            
+            // Solo actualizar el estado y las observaciones, preservando todos los demás valores
             const [result] = await db.query(
-                'UPDATE trilla SET id_estado_proceso = 1, observaciones = ? WHERE id = ?',
+                'UPDATE trilla SET id_estado_proceso = 2, observaciones = ? WHERE id = ?',
                 [observaciones, id_trilla]
             );
             return result.affectedRows > 0;
         } catch (error) {
             console.error('Error al reiniciar trilla:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualiza un registro de trilla existente.
+     * @param {number} id_trilla - ID del registro a actualizar.
+     * @param {object} datosActualizacion - Datos a actualizar.
+     * @returns {Promise<boolean>} - True si fue exitoso, false en caso contrario.
+     */
+    async updateTrilla(id_trilla, datosActualizacion) {
+        try {
+            // Construir la consulta dinámicamente basada en los campos proporcionados
+            let queryParts = [];
+            let queryParams = [];
+            
+            for (const [key, value] of Object.entries(datosActualizacion)) {
+                if (value !== undefined) {
+                    queryParts.push(`${key} = ?`);
+                    queryParams.push(value);
+                }
+            }
+            
+            if (queryParts.length === 0) {
+                return false; // No hay nada que actualizar
+            }
+            
+            // Añadir el ID al final de los parámetros
+            queryParams.push(id_trilla);
+            
+            const query = `UPDATE trilla SET ${queryParts.join(', ')} WHERE id = ?`;
+            
+            const [result] = await db.query(query, queryParams);
+            return result.affectedRows > 0;
+        } catch (error) {
+            console.error('Error al actualizar trilla:', error);
             throw error;
         }
     }

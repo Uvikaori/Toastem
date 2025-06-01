@@ -404,7 +404,7 @@
                             <% } %>
 
                             <%# Historial de Seguimiento %>
-                            <% if (proceso.datosEtapa.seguimientos && proceso.datosEtapa.seguimientos.length > 0) { %>
+                            <% if (proceso.nombre.toLowerCase() === 'secado' && proceso.datosEtapa && typeof seguimientosSecado !== 'undefined' && seguimientosSecado.length > 0) { %>
                                 <hr>
                                 <h6 class="mb-2"><i class="fas fa-history me-1"></i> Historial de Seguimiento</h6>
                                 <div class="table-responsive">
@@ -418,14 +418,14 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <% proceso.datosEtapa.seguimientos.forEach(seguimiento => { %>
+                                            <% seguimientosSecado.forEach(seguimiento => { %>
                                                 <tr>
                                                     <td><%= new Date(seguimiento.fecha).toLocaleString("es-CO") %></td>
-                                                    <td><%= seguimiento.temperatura %></td>
-                                                    <td><%= seguimiento.humedad %></td>
+                                                    <td><%= seguimiento.temperatura || '-' %></td>
+                                                    <td><%= seguimiento.humedad || '-' %></td>
                                                     <td><%= seguimiento.observaciones || "-" %></td>
                                                 </tr>
-                                            <% }) %>
+                                            <% }); %>
                                         </tbody>
                                     </table>
                                 </div>
@@ -438,37 +438,9 @@
 
                         <%# Modal de Seguimiento de Secado %>
                         <% if (proceso.nombre.toLowerCase() === 'secado' && proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2) { %>
-                            <div class="modal fade" id="seguimientoSecadoModal" tabindex="-1" aria-labelledby="seguimientoSecadoModalLabel" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="seguimientoSecadoModalLabel">Agregar Seguimiento de Secado</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <form id="seguimientoSecadoForm">
-                                                <input type="hidden" name="id_secado" value="<%= proceso.datosEtapa.id %>">
-                                                <div class="mb-3">
-                                                    <label for="temperatura" class="form-label">Temperatura (°C):</label>
-                                                    <input type="number" step="0.1" class="form-control" id="temperatura" name="temperatura" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="humedad" class="form-label">Humedad (%):</label>
-                                                    <input type="number" step="0.1" class="form-control" id="humedad" name="humedad" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="observaciones" class="form-label">Observaciones:</label>
-                                                    <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
-                                                </div>
-                                            </form>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                            <button type="button" class="btn btn-primary" id="guardarSeguimiento">Guardar</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/secado/seguimiento" class="btn btn-info btn-sm">
+                                <i class="fas fa-thermometer-half me-1"></i> Agregar Seguimiento
+                            </a>
                         <% } %>
                         <%# Detalles específicos del proceso si existen %>
                         <% if (proceso.nombre.toLowerCase() === 'clasificación' && proceso.datosEtapa) { %>
@@ -769,24 +741,25 @@
                         <% } %>
                         <%# --- FIN Detalles Control de Calidad --- %>
 
-                    </div>
+                  
+                  </div>
                     <div class="card-footer bg-transparent">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <% if (urlFormulario !== '#' && (!proceso.datosEtapa || proceso.datosEtapa.id_estado_proceso === 1)) { %>
+                                <% if (urlFormulario !== '#' && (!proceso.datosEtapa || proceso.datosEtapa.id_estado_proceso === 1) && !(proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2)) { %>
                                     <a href="<%= urlFormulario %>" class="btn btn-primary btn-sm">
                                         <i class="fas fa-plus-circle me-1"></i> Registrar
+                                    </a>
+                                <% } %>
+                                <% if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2 && proceso.nombre.toLowerCase() === 'trilla') { %>
+                                    <a href="<%= urlFormulario %>" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit me-1"></i> Editar
                                     </a>
                                 <% } %>
                                 <% if (urlAccionAdicional) { %>
                                     <a href="<%= urlAccionAdicional %>" class="btn btn-warning btn-sm">
                                         <i class="fas fa-flag-checkered me-1"></i> <%= textoAccionAdicional %>
                                     </a>
-                                <% } %>
-                                <% if (proceso.nombre.toLowerCase() === 'secado' && proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2) { %>
-                                    <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#seguimientoSecadoModal">
-                                        <i class="fas fa-thermometer-half me-1"></i> Agregar Seguimiento
-                                    </button>
                                 <% } %>
                             </div>
                             
@@ -806,7 +779,7 @@
                                                 </form>
                                             </li>
                                         <% } %>
-                                        <% if (proceso.nombre.toLowerCase() === 'trilla' && proceso.datosEtapa && (proceso.datosEtapa.id_estado_proceso === 3 || proceso.datosEtapa.id_estado_proceso === 1)) { %>
+                                        <% if (proceso.nombre.toLowerCase() === 'trilla' && proceso.datosEtapa && (proceso.datosEtapa.id_estado_proceso === 3 || proceso.datosEtapa.id_estado_proceso === 1 || proceso.datosEtapa.id_estado_proceso === 2)) { %>
                                             <li>
                                                 <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/trilla/<%= proceso.datosEtapa.id %>/reiniciar" method="POST">
                                                     <button type="submit" class="dropdown-item text-warning">
@@ -816,6 +789,26 @@
                                             </li>
                                         <% } %>
                                         <!-- Aquí puedes agregar más acciones si lo deseas -->
+                                    </ul>
+                                </div>
+                            <% } %>
+                            
+                            <!-- Menú específico para procesos en estado 2 (En progreso) -->
+                            <% if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2 && proceso.nombre.toLowerCase() !== 'secado') { %>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuProgreso<%= proceso.id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuProgreso<%= proceso.id %>">
+                                        <% if (proceso.nombre.toLowerCase() === 'trilla') { %>
+                                            <li>
+                                                <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/trilla/<%= proceso.datosEtapa.id %>/reiniciar" method="POST">
+                                                    <button type="submit" class="dropdown-item text-warning">
+                                                        <i class="fas fa-redo-alt me-1"></i> Reiniciar Proceso
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        <% } %>
                                     </ul>
                                 </div>
                             <% } %>

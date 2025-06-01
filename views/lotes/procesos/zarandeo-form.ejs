@@ -26,7 +26,7 @@
         <div class="card-body">
             <p class="mb-3"><strong>Peso del lote después de Fermentación/Lavado (Peso inicial para zarandeo):</strong> <%= peso_fermentacion_final %> kg</p>
             <hr/>
-            <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/zarandeo" method="POST">
+            <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/zarandeo/registrar" method="POST">
                 
                 <div class="mb-3">
                     <label for="fecha_zarandeo" class="form-label">Fecha y Hora de Zarandeo:</label>
@@ -46,7 +46,7 @@
                 
                 <div class="d-flex justify-content-end gap-2 mt-4">
                     <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">Registrar Zarandeo</button>
+                    <button type="submit" class="btn btn-primary"><%= zarandeo ? 'Actualizar Zarandeo' : 'Registrar Zarandeo' %></button>
                 </div>
             </form>
         </div>

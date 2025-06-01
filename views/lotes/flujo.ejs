@@ -102,7 +102,7 @@
                     %>
                     <div class="progress-bar <%= completado ? 'bg-success' : 'bg-secondary' %>" 
                          role="progressbar" 
-                         style="width: <%= 100/procesos.length %>%;"
+                         style="width: <%= 100/procesos.length %>%"
                          aria-valuenow="<%= 100/procesos.length %>" 
                          aria-valuemin="0" 
                          aria-valuemax="100">
@@ -117,20 +117,26 @@
         <!-- DESPULPADO -->
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingDespulpado">
-                <button class="accordion-button <%= flujo.despulpado_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                <button class="accordion-button <%= (flujo.despulpado_id_estado_proceso === 3) ? '' : 'collapsed' %>" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#collapseDespulpado" 
-                        aria-expanded="<%= flujo.despulpado_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-expanded="<%= (flujo.despulpado_id_estado_proceso === 3) ? 'true' : 'false' %>" 
                         aria-controls="collapseDespulpado">
-                    <span class="badge <%= flujo.despulpado_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
-                        <%= flujo.despulpado_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    <span class="badge <%= 
+                        (flujo.despulpado_id_estado_proceso === 3) ? 'bg-success' : 
+                        (flujo.despulpado_id_estado_proceso) ? 'bg-warning text-dark' : 
+                        'bg-secondary' 
+                    %> me-2">
+                        <% if (flujo.despulpado_id_estado_proceso === 3) { %>Completado<% 
+                        } else if (flujo.despulpado_id_estado_proceso) { %>En Progreso<% 
+                        } else { %>Pendiente<% } %>
                     </span>
                     Despulpado
                 </button>
             </h2>
             <div id="collapseDespulpado" 
-                class="accordion-collapse collapse <%= flujo.despulpado_id_estado_proceso === 3 ? 'show' : '' %>" 
+                class="accordion-collapse collapse <%= (flujo.despulpado_id_estado_proceso === 3) ? 'show' : '' %>" 
                 aria-labelledby="headingDespulpado" 
                 data-bs-parent="#flujoLoteAccordion">
                 <div class="accordion-body">
@@ -164,20 +170,26 @@
         <!-- FERMENTACIÓN Y LAVADO -->
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingFermentacion">
-                <button class="accordion-button <%= flujo.fermentacion_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                <button class="accordion-button <%= (flujo.fermentacion_id_estado_proceso === 3) ? '' : 'collapsed' %>" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#collapseFermentacion" 
-                        aria-expanded="<%= flujo.fermentacion_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-expanded="<%= (flujo.fermentacion_id_estado_proceso === 3) ? 'true' : 'false' %>" 
                         aria-controls="collapseFermentacion">
-                    <span class="badge <%= flujo.fermentacion_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
-                        <%= flujo.fermentacion_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    <span class="badge <%= 
+                        (flujo.fermentacion_id_estado_proceso === 3) ? 'bg-success' : 
+                        (flujo.fermentacion_id_estado_proceso) ? 'bg-warning text-dark' : 
+                        'bg-secondary' 
+                    %> me-2">
+                        <% if (flujo.fermentacion_id_estado_proceso === 3) { %>Completado<% 
+                        } else if (flujo.fermentacion_id_estado_proceso) { %>En Progreso<% 
+                        } else { %>Pendiente<% } %>
                     </span>
                     Fermentación y Lavado
                 </button>
             </h2>
             <div id="collapseFermentacion" 
-                class="accordion-collapse collapse <%= flujo.fermentacion_id_estado_proceso === 3 ? 'show' : '' %>" 
+                class="accordion-collapse collapse <%= (flujo.fermentacion_id_estado_proceso === 3) ? 'show' : '' %>" 
                 aria-labelledby="headingFermentacion" 
                 data-bs-parent="#flujoLoteAccordion">
                 <div class="accordion-body">
@@ -209,23 +221,28 @@
         </div>
 
         <!-- ZARANDEO -->
-        <% if (flujo.zarandeo_id_estado_proceso) { %>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingZarandeo">
-                <button class="accordion-button <%= flujo.zarandeo_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                <button class="accordion-button <%= (flujo.zarandeo_id_estado_proceso === 3) ? '' : 'collapsed' %>" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#collapseZarandeo" 
-                        aria-expanded="<%= flujo.zarandeo_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-expanded="<%= (flujo.zarandeo_id_estado_proceso === 3) ? 'true' : 'false' %>" 
                         aria-controls="collapseZarandeo">
-                    <span class="badge <%= flujo.zarandeo_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
-                        <%= flujo.zarandeo_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    <span class="badge <%= 
+                        (flujo.zarandeo_id_estado_proceso === 3) ? 'bg-success' : 
+                        (flujo.zarandeo_id_estado_proceso) ? 'bg-warning text-dark' : 
+                        'bg-secondary' 
+                    %> me-2">
+                        <% if (flujo.zarandeo_id_estado_proceso === 3) { %>Completado<% 
+                        } else if (flujo.zarandeo_id_estado_proceso) { %>En Progreso<% 
+                        } else { %>Pendiente<% } %>
                     </span>
                     Zarandeo
                 </button>
             </h2>
             <div id="collapseZarandeo" 
-                class="accordion-collapse collapse <%= flujo.zarandeo_id_estado_proceso === 3 ? 'show' : '' %>" 
+                class="accordion-collapse collapse <%= (flujo.zarandeo_id_estado_proceso === 3) ? 'show' : '' %>" 
                 aria-labelledby="headingZarandeo" 
                 data-bs-parent="#flujoLoteAccordion">
                 <div class="accordion-body">
@@ -247,26 +264,30 @@
                 </div>
             </div>
         </div>
-        <% } %>
 
         <!-- SECADO -->
-        <% if (flujo.secado_id_estado_proceso) { %>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingSecado">
-                <button class="accordion-button <%= flujo.secado_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                <button class="accordion-button <%= (flujo.secado_id_estado_proceso === 3) ? '' : 'collapsed' %>" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#collapseSecado" 
-                        aria-expanded="<%= flujo.secado_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-expanded="<%= (flujo.secado_id_estado_proceso === 3) ? 'true' : 'false' %>" 
                         aria-controls="collapseSecado">
-                    <span class="badge <%= flujo.secado_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
-                        <%= flujo.secado_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    <span class="badge <%= 
+                        (flujo.secado_id_estado_proceso === 3) ? 'bg-success' : 
+                        (flujo.secado_id_estado_proceso) ? 'bg-warning text-dark' : 
+                        'bg-secondary' 
+                    %> me-2">
+                        <% if (flujo.secado_id_estado_proceso === 3) { %>Completado<% 
+                        } else if (flujo.secado_id_estado_proceso) { %>En Progreso<% 
+                        } else { %>Pendiente<% } %>
                     </span>
                     Secado
                 </button>
             </h2>
             <div id="collapseSecado" 
-                class="accordion-collapse collapse <%= flujo.secado_id_estado_proceso === 3 ? 'show' : '' %>" 
+                class="accordion-collapse collapse <%= (flujo.secado_id_estado_proceso === 3) ? 'show' : '' %>" 
                 aria-labelledby="headingSecado" 
                 data-bs-parent="#flujoLoteAccordion">
                 <div class="accordion-body">
@@ -289,31 +310,35 @@
                             </div>
                         </div>
                     <% } else { %>
-                        <p class="text-muted">Proceso de secado en progreso o pendiente.</p>
+                        <p class="text-muted">Proceso de secado no iniciado o pendiente.</p>
                     <% } %>
                 </div>
             </div>
         </div>
-        <% } %>
 
         <!-- CLASIFICACIÓN -->
-        <% if (flujo.clasificacion_id_estado_proceso) { %>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingClasificacion">
-                <button class="accordion-button <%= flujo.clasificacion_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                <button class="accordion-button <%= (flujo.clasificacion_id_estado_proceso === 3) ? '' : 'collapsed' %>" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#collapseClasificacion" 
-                        aria-expanded="<%= flujo.clasificacion_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-expanded="<%= (flujo.clasificacion_id_estado_proceso === 3) ? 'true' : 'false' %>" 
                         aria-controls="collapseClasificacion">
-                    <span class="badge <%= flujo.clasificacion_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
-                        <%= flujo.clasificacion_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    <span class="badge <%= 
+                        (flujo.clasificacion_id_estado_proceso === 3) ? 'bg-success' : 
+                        (flujo.clasificacion_id_estado_proceso) ? 'bg-warning text-dark' : 
+                        'bg-secondary' 
+                    %> me-2">
+                        <% if (flujo.clasificacion_id_estado_proceso === 3) { %>Completado<% 
+                        } else if (flujo.clasificacion_id_estado_proceso) { %>En Progreso<% 
+                        } else { %>Pendiente<% } %>
                     </span>
                     Clasificación
                 </button>
             </h2>
             <div id="collapseClasificacion" 
-                class="accordion-collapse collapse <%= flujo.clasificacion_id_estado_proceso === 3 ? 'show' : '' %>" 
+                class="accordion-collapse collapse <%= (flujo.clasificacion_id_estado_proceso === 3) ? 'show' : '' %>" 
                 aria-labelledby="headingClasificacion" 
                 data-bs-parent="#flujoLoteAccordion">
                 <div class="accordion-body">
@@ -344,26 +369,30 @@
                 </div>
             </div>
         </div>
-        <% } %>
 
         <!-- TRILLA -->
-        <% if (flujo.trilla_id_estado_proceso) { %>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingTrilla">
-                <button class="accordion-button <%= flujo.trilla_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                <button class="accordion-button <%= (flujo.trilla_id_estado_proceso === 3) ? '' : 'collapsed' %>" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#collapseTrilla" 
-                        aria-expanded="<%= flujo.trilla_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-expanded="<%= (flujo.trilla_id_estado_proceso === 3) ? 'true' : 'false' %>" 
                         aria-controls="collapseTrilla">
-                    <span class="badge <%= flujo.trilla_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
-                        <%= flujo.trilla_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    <span class="badge <%= 
+                        (flujo.trilla_id_estado_proceso === 3) ? 'bg-success' : 
+                        (flujo.trilla_id_estado_proceso) ? 'bg-warning text-dark' : 
+                        'bg-secondary' 
+                    %> me-2">
+                        <% if (flujo.trilla_id_estado_proceso === 3) { %>Completado<% 
+                        } else if (flujo.trilla_id_estado_proceso) { %>En Progreso<% 
+                        } else { %>Pendiente<% } %>
                     </span>
                     Trilla
                 </button>
             </h2>
             <div id="collapseTrilla" 
-                class="accordion-collapse collapse <%= flujo.trilla_id_estado_proceso === 3 ? 'show' : '' %>" 
+                class="accordion-collapse collapse <%= (flujo.trilla_id_estado_proceso === 3) ? 'show' : '' %>" 
                 aria-labelledby="headingTrilla" 
                 data-bs-parent="#flujoLoteAccordion">
                 <div class="accordion-body">
@@ -393,26 +422,30 @@
                 </div>
             </div>
         </div>
-        <% } %>
 
         <!-- TUESTE -->
-        <% if (flujo.tueste_id_estado_proceso) { %>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingTueste">
-                <button class="accordion-button <%= flujo.tueste_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                <button class="accordion-button <%= (flujo.tueste_id_estado_proceso === 3) ? '' : 'collapsed' %>" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#collapseTueste" 
-                        aria-expanded="<%= flujo.tueste_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-expanded="<%= (flujo.tueste_id_estado_proceso === 3) ? 'true' : 'false' %>" 
                         aria-controls="collapseTueste">
-                    <span class="badge <%= flujo.tueste_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
-                        <%= flujo.tueste_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    <span class="badge <%= 
+                        (flujo.tueste_id_estado_proceso === 3) ? 'bg-success' : 
+                        (flujo.tueste_id_estado_proceso) ? 'bg-warning text-dark' : 
+                        'bg-secondary' 
+                    %> me-2">
+                        <% if (flujo.tueste_id_estado_proceso === 3) { %>Completado<% 
+                        } else if (flujo.tueste_id_estado_proceso) { %>En Progreso<% 
+                        } else { %>Pendiente<% } %>
                     </span>
                     Tueste
                 </button>
             </h2>
             <div id="collapseTueste" 
-                class="accordion-collapse collapse <%= flujo.tueste_id_estado_proceso === 3 ? 'show' : '' %>" 
+                class="accordion-collapse collapse <%= (flujo.tueste_id_estado_proceso === 3) ? 'show' : '' %>" 
                 aria-labelledby="headingTueste" 
                 data-bs-parent="#flujoLoteAccordion">
                 <div class="accordion-body">
@@ -440,26 +473,30 @@
                 </div>
             </div>
         </div>
-        <% } %>
 
         <!-- MOLIENDA -->
-        <% if (flujo.molienda_id_estado_proceso) { %>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingMolienda">
-                <button class="accordion-button <%= flujo.molienda_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                <button class="accordion-button <%= (flujo.molienda_id_estado_proceso === 3) ? '' : 'collapsed' %>" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#collapseMolienda" 
-                        aria-expanded="<%= flujo.molienda_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-expanded="<%= (flujo.molienda_id_estado_proceso === 3) ? 'true' : 'false' %>" 
                         aria-controls="collapseMolienda">
-                    <span class="badge <%= flujo.molienda_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
-                        <%= flujo.molienda_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    <span class="badge <%= 
+                        (flujo.molienda_id_estado_proceso === 3) ? 'bg-success' : 
+                        (flujo.molienda_id_estado_proceso) ? 'bg-warning text-dark' : 
+                        'bg-secondary' 
+                    %> me-2">
+                        <% if (flujo.molienda_id_estado_proceso === 3) { %>Completado<% 
+                        } else if (flujo.molienda_id_estado_proceso) { %>En Progreso<% 
+                        } else { %>Pendiente<% } %>
                     </span>
                     Molienda
                 </button>
             </h2>
             <div id="collapseMolienda" 
-                class="accordion-collapse collapse <%= flujo.molienda_id_estado_proceso === 3 ? 'show' : '' %>" 
+                class="accordion-collapse collapse <%= (flujo.molienda_id_estado_proceso === 3) ? 'show' : '' %>" 
                 aria-labelledby="headingMolienda" 
                 data-bs-parent="#flujoLoteAccordion">
                 <div class="accordion-body">
@@ -487,26 +524,30 @@
                 </div>
             </div>
         </div>
-        <% } %>
 
         <!-- EMPACADO -->
-        <% if (flujo.empacado_id_estado_proceso) { %>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingEmpacado">
-                <button class="accordion-button <%= flujo.empacado_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                <button class="accordion-button <%= (flujo.empacado_id_estado_proceso === 3) ? '' : 'collapsed' %>" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#collapseEmpacado" 
-                        aria-expanded="<%= flujo.empacado_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-expanded="<%= (flujo.empacado_id_estado_proceso === 3) ? 'true' : 'false' %>" 
                         aria-controls="collapseEmpacado">
-                    <span class="badge <%= flujo.empacado_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
-                        <%= flujo.empacado_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    <span class="badge <%= 
+                        (flujo.empacado_id_estado_proceso === 3) ? 'bg-success' : 
+                        (flujo.empacado_id_estado_proceso) ? 'bg-warning text-dark' : 
+                        'bg-secondary' 
+                    %> me-2">
+                        <% if (flujo.empacado_id_estado_proceso === 3) { %>Completado<% 
+                        } else if (flujo.empacado_id_estado_proceso) { %>En Progreso<% 
+                        } else { %>Pendiente<% } %>
                     </span>
                     Empacado
                 </button>
             </h2>
             <div id="collapseEmpacado" 
-                class="accordion-collapse collapse <%= flujo.empacado_id_estado_proceso === 3 ? 'show' : '' %>" 
+                class="accordion-collapse collapse <%= (flujo.empacado_id_estado_proceso === 3) ? 'show' : '' %>" 
                 aria-labelledby="headingEmpacado" 
                 data-bs-parent="#flujoLoteAccordion">
                 <div class="accordion-body">
@@ -539,26 +580,30 @@
                 </div>
             </div>
         </div>
-        <% } %>
 
         <!-- CONTROL DE CALIDAD -->
-        <% if (flujo.control_calidad_id_estado_proceso) { %>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingControlCalidad">
-                <button class="accordion-button <%= flujo.control_calidad_id_estado_proceso === 3 ? '' : 'collapsed' %>" 
+                <button class="accordion-button <%= (flujo.control_calidad_id_estado_proceso === 3) ? '' : 'collapsed' %>" 
                         type="button" 
                         data-bs-toggle="collapse" 
                         data-bs-target="#collapseControlCalidad" 
-                        aria-expanded="<%= flujo.control_calidad_id_estado_proceso === 3 ? 'true' : 'false' %>" 
+                        aria-expanded="<%= (flujo.control_calidad_id_estado_proceso === 3) ? 'true' : 'false' %>" 
                         aria-controls="collapseControlCalidad">
-                    <span class="badge <%= flujo.control_calidad_id_estado_proceso === 3 ? 'bg-success' : 'bg-secondary' %> me-2">
-                        <%= flujo.control_calidad_id_estado_proceso === 3 ? 'Completado' : 'Pendiente' %>
+                    <span class="badge <%= 
+                        (flujo.control_calidad_id_estado_proceso === 3) ? 'bg-success' : 
+                        (flujo.control_calidad_id_estado_proceso) ? 'bg-warning text-dark' : 
+                        'bg-secondary' 
+                    %> me-2">
+                        <% if (flujo.control_calidad_id_estado_proceso === 3) { %>Completado<% 
+                        } else if (flujo.control_calidad_id_estado_proceso) { %>En Progreso<% 
+                        } else { %>Pendiente<% } %>
                     </span>
                     Control de Calidad
                 </button>
             </h2>
             <div id="collapseControlCalidad" 
-                class="accordion-collapse collapse <%= flujo.control_calidad_id_estado_proceso === 3 ? 'show' : '' %>" 
+                class="accordion-collapse collapse <%= (flujo.control_calidad_id_estado_proceso === 3) ? 'show' : '' %>" 
                 aria-labelledby="headingControlCalidad" 
                 data-bs-parent="#flujoLoteAccordion">
                 <div class="accordion-body">
@@ -592,8 +637,6 @@
                 </div>
             </div>
         </div>
-        <% } %>
-
     </div>
 
     <div class="mt-4 d-flex justify-content-between">

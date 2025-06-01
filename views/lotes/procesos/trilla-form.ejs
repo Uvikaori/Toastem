@@ -39,22 +39,30 @@
             <hr/>
             <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/trilla" method="POST">
                 
+                <% if (typeof es_edicion !== 'undefined' && es_edicion) { %>
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-edit me-2"></i> Estás editando un registro de trilla que fue reiniciado para su corrección. Los cambios que realices se guardarán como una actualización.
+                    </div>
+                <% } %>
+                
                 <div class="mb-3">
                     <label for="fecha_trilla" class="form-label">Fecha y Hora de Trilla: <span class="text-danger">*</span></label>
-                    <input type="datetime-local" class="form-control" id="fecha_trilla" name="fecha_trilla" value="<%= fecha_trilla %>" required>
+                    <input type="datetime-local" class="form-control" id="fecha_trilla" name="fecha_trilla" 
+                           value="<%= typeof fecha_trilla === 'string' && fecha_trilla.includes('T') ? fecha_trilla : (new Date(fecha_trilla).toISOString().slice(0, 16)) %>" 
+                           required>
                     <small class="form-text text-muted">Campo obligatorio. Fecha y hora en que se realizó la trilla.</small>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="peso_pergamino_final" class="form-label">Peso Final Pergamino (kg): <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" class="form-control" id="peso_pergamino_final" name="peso_pergamino_final" value="<%= peso_pergamino_final %>" placeholder="Ej: 15.50" required>
-                        <small class="form-text text-muted">Peso del pergamino después de la trilla.</small>
+                        <input type="number" step="0.01" min="0" class="form-control" id="peso_pergamino_final" name="peso_pergamino_final" value="<%= peso_pergamino_final %>" placeholder="Ej: 15.50" required>
+                        <small class="form-text text-muted">Peso del pergamino después de la trilla. Puede usar números enteros o decimales (con punto como separador).</small>
                     </div>
                     <div class="col-md-6">
                         <label for="peso_pasilla_final" class="form-label">Peso Final Pasilla (kg): <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" class="form-control" id="peso_pasilla_final" name="peso_pasilla_final" value="<%= peso_pasilla_final %>" placeholder="Ej: 5.00" required>
-                        <small class="form-text text-muted">Peso de la pasilla después de la trilla.</small>
+                        <input type="number" step="0.01" min="0" class="form-control" id="peso_pasilla_final" name="peso_pasilla_final" value="<%= peso_pasilla_final %>" placeholder="Ej: 5.00" required>
+                        <small class="form-text text-muted">Peso de la pasilla después de la trilla. Puede usar números enteros o decimales (con punto como separador).</small>
                     </div>
                 </div>
 
@@ -65,7 +73,13 @@
                 
                 <div class="d-flex justify-content-end gap-2 mt-4">
                     <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">Registrar Trilla</button>
+                    <button type="submit" class="btn btn-primary">
+                        <% if (typeof es_edicion !== 'undefined' && es_edicion) { %>
+                            Actualizar Trilla
+                        <% } else { %>
+                            Registrar Trilla
+                        <% } %>
+                    </button>
                 </div>
             </form>
         </div>
@@ -73,4 +87,25 @@
 </div>
 
 <link rel="stylesheet" href="/css/lotes/procesos.css">
-<script src="/js/lotes/procesos.js"></script> 
+<script src="/js/lotes/procesos.js"></script>
+
+<script>
+// Script para formatear los números correctamente
+document.addEventListener('DOMContentLoaded', function() {
+    // Función para formatear el valor al perder el foco
+    function formatNumberInput(input) {
+        const value = parseFloat(input.value);
+        if (!isNaN(value)) {
+            input.value = value.toString(); // Asegura que se use punto como separador decimal
+        }
+    }
+
+    // Aplicar a los campos de peso
+    const pesoInputs = document.querySelectorAll('input[type="number"]');
+    pesoInputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            formatNumberInput(this);
+        });
+    });
+});
+</script> 

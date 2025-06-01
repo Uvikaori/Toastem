@@ -24,31 +24,56 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
+            <div class="alert alert-info mb-4">
+                <h5 class="mb-2"><i class="fas fa-info-circle me-2"></i>Información importante:</h5>
+                <p class="mb-2">La clasificación separa el café en dos categorías:</p>
+                <ul>
+                    <li><strong>Café Pergamino:</strong> Granos de mayor calidad.</li>
+                    <li><strong>Café Pasilla:</strong> Granos de menor calidad o defectuosos.</li>
+                </ul>
+                <p class="mb-0"><strong>Validaciones:</strong></p>
+                <ul class="mb-0">
+                    <li>El peso total debe ser igual a la suma del peso pergamino y peso pasilla.</li>
+                    <li>El peso total no puede exceder el peso final del secado (máx. <%= (peso_secado_final * 1.01).toFixed(2) %> kg con 1% de tolerancia).</li>
+                </ul>
+            </div>
+
             <p class="mb-3"><strong>Peso del lote después del Secado (Peso inicial para clasificación):</strong> <%= peso_secado_final %> kg</p>
             <hr/>
-            <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/clasificacion" method="POST">
+            <form id="clasificacionForm" action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/clasificacion" method="POST">
                 
                 <div class="mb-3">
                     <label for="fecha_clasificacion" class="form-label">Fecha y Hora de Clasificación:</label>
                     <input type="datetime-local" class="form-control" id="fecha_clasificacion" name="fecha_clasificacion" value="<%= fecha_clasificacion %>" required>
                 </div>
 
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="peso_pergamino" class="form-label">Peso Pergamino (kg):</label>
+                            <input type="number" step="0.01" min="0" class="form-control peso-input" id="peso_pergamino" name="peso_pergamino" value="<%= peso_pergamino %>" placeholder="Peso del café pergamino" required>
+                            <small class="form-text text-muted">Peso del café pergamino tras la clasificación.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="peso_pasilla" class="form-label">Peso Pasilla (kg):</label>
+                            <input type="number" step="0.01" min="0" class="form-control peso-input" id="peso_pasilla" name="peso_pasilla" value="<%= peso_pasilla %>" placeholder="Peso de la pasilla" required>
+                            <small class="form-text text-muted">Peso de la pasilla después de la clasificación.</small>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mb-3">
                     <label for="peso_total" class="form-label">Peso Total (kg):</label>
-                    <input type="number" step="0.01" class="form-control" id="peso_total" name="peso_total" value="<%= peso_total %>" placeholder="Peso total después de la clasificación">
-                    <small class="form-text text-muted">Peso total del café después de la clasificación.</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="peso_pergamino" class="form-label">Peso Pergamino (kg):</label>
-                    <input type="number" step="0.01" class="form-control" id="peso_pergamino" name="peso_pergamino" value="<%= peso_pergamino %>" placeholder="Peso del café pergamino">
-                    <small class="form-text text-muted">Peso del café pergamino tras la clasificación.</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="peso_pasilla" class="form-label">Peso Pasilla (kg):</label>
-                    <input type="number" step="0.01" class="form-control" id="peso_pasilla" name="peso_pasilla" value="<%= peso_pasilla %>" placeholder="Peso de la pasilla">
-                    <small class="form-text text-muted">Peso de la pasilla después de la clasificación.</small>
+                    <div class="input-group">
+                        <input type="number" step="0.01" class="form-control" id="peso_total" name="peso_total" value="<%= peso_total %>" placeholder="Peso total después de la clasificación" required>
+                        <span class="input-group-text" id="calculoSuma"></span>
+                    </div>
+                    <small class="form-text text-muted">
+                        Peso total del café después de la clasificación. Debe ser igual a la suma de pergamino y pasilla.
+                    </small>
+                    <div id="pesoTotalFeedback" class="invalid-feedback"></div>
                 </div>
 
                 <div class="mb-3">
@@ -58,12 +83,70 @@
                 
                 <div class="d-flex justify-content-end gap-2 mt-4">
                     <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">Registrar Clasificación</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">Registrar Clasificación</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const pesoPergaminoInput = document.getElementById('peso_pergamino');
+    const pesoPasillaInput = document.getElementById('peso_pasilla');
+    const pesoTotalInput = document.getElementById('peso_total');
+    const calculoSuma = document.getElementById('calculoSuma');
+    const pesoTotalFeedback = document.getElementById('pesoTotalFeedback');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const pesoSecadoFinal = <%= peso_secado_final %>;
+    const toleranciaMax = pesoSecadoFinal * 1.01;
+
+    // Función para actualizar la suma
+    function actualizarSuma() {
+        const pesoPergamino = parseFloat(pesoPergaminoInput.value) || 0;
+        const pesoPasilla = parseFloat(pesoPasillaInput.value) || 0;
+        const pesoTotal = parseFloat(pesoTotalInput.value) || 0;
+        const suma = pesoPergamino + pesoPasilla;
+        
+        calculoSuma.textContent = `Suma: ${suma.toFixed(2)} kg`;
+        
+        // Validar que la suma sea igual al peso total
+        const tolerancia = 0.1;
+        if (Math.abs(suma - pesoTotal) > tolerancia) {
+            pesoTotalInput.classList.add('is-invalid');
+            pesoTotalFeedback.textContent = `El peso total debe ser igual a la suma del pergamino y pasilla (${suma.toFixed(2)} kg)`;
+            btnSubmit.disabled = true;
+        } else if (pesoTotal > toleranciaMax) {
+            pesoTotalInput.classList.add('is-invalid');
+            pesoTotalFeedback.textContent = `El peso total no puede superar ${toleranciaMax.toFixed(2)} kg (peso final del secado + 1%)`;
+            btnSubmit.disabled = true;
+        } else {
+            pesoTotalInput.classList.remove('is-invalid');
+            btnSubmit.disabled = false;
+        }
+    }
+
+    // Eventos para actualizar la suma cuando cambien los valores
+    pesoPergaminoInput.addEventListener('input', actualizarSuma);
+    pesoPasillaInput.addEventListener('input', actualizarSuma);
+    pesoTotalInput.addEventListener('input', actualizarSuma);
+
+    // Sugerir el peso total como la suma automáticamente
+    document.querySelectorAll('.peso-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const pesoPergamino = parseFloat(pesoPergaminoInput.value) || 0;
+            const pesoPasilla = parseFloat(pesoPasillaInput.value) || 0;
+            const suma = pesoPergamino + pesoPasilla;
+            
+            pesoTotalInput.value = suma.toFixed(2);
+            actualizarSuma();
+        });
+    });
+
+    // Inicializar suma al cargar la página
+    actualizarSuma();
+});
+</script>
 
 
 <link rel="stylesheet" href="/css/lotes/procesos.css">

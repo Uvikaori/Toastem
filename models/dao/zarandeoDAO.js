@@ -78,6 +78,53 @@ class ZarandeoDAO {
             throw error;
         }
     }
+
+    /**
+     * Actualiza el estado de un proceso de zarandeo
+     * @param {number} id_zarandeo - ID del registro a actualizar
+     * @param {number} id_estado_proceso - Nuevo estado del proceso
+     * @returns {Promise<boolean>} - True si fue exitoso
+     */
+    async updateEstadoZarandeo(id_zarandeo, id_estado_proceso) {
+        try {
+            const [result] = await db.query(
+                'UPDATE zarandeo SET id_estado_proceso = ? WHERE id = ?',
+                [id_estado_proceso, id_zarandeo]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            console.error('Error al actualizar estado de zarandeo:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualiza un registro de zarandeo existente.
+     * @param {object} zarandeoData - Datos actualizados del proceso.
+     * @returns {Promise<boolean>} - True si la actualización fue exitosa.
+     */
+    async updateZarandeo(zarandeoData) {
+        const {
+            id,
+            id_lote,
+            peso_inicial,
+            fecha_zarandeo,
+            peso_final,
+            observaciones,
+            id_estado_proceso = 3 // Por defecto 'Terminado'
+        } = zarandeoData;
+
+        try {
+            const [result] = await db.query(
+                'UPDATE zarandeo SET id_lote = ?, peso_inicial = ?, fecha_zarandeo = ?, peso_final = ?, observaciones = ?, id_estado_proceso = ? WHERE id = ?',
+                [id_lote, peso_inicial, fecha_zarandeo, peso_final, observaciones, id_estado_proceso, id]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            console.error('Error al actualizar zarandeo:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new ZarandeoDAO(); 

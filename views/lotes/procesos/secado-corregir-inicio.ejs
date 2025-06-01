@@ -1,0 +1,80 @@
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/fincas/gestionar">Mis Fincas</a></li>
+            <li class="breadcrumb-item"><a href="/fincas/<%= finca.id %>/lotes">Lotes de: <%= finca.nombre %></a></li>
+            <li class="breadcrumb-item"><a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos">Procesos Lote: <%= lote.codigo %></a></li>
+            <li class="breadcrumb-item active" aria-current="page"><%= titulo %></li>
+        </ol>
+    </nav>
+
+    <h1 class="text-toastem-primary mb-4"><%= titulo %></h1>
+
+    <% if (mensaje && mensaje.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert"><%= mensaje %><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+    <% } %>
+    <% if (error && error.length > 0) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong>
+            <ul><% error.forEach(function(err){ %><li><%= Array.isArray(err) ? err.join(', ') : err %></li><% }) %></ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> 
+                <strong>Atención:</strong> Está corrigiendo los datos de inicio del secado. Esta acción quedará registrada en el historial de cambios.
+            </div>
+
+            <p class="mb-3"><strong>Peso del lote después del Zarandeo (Peso inicial para secado):</strong> <%= peso_zarandeo_final || secado.peso_inicial || 0 %> kg</p>
+            <hr/>
+            <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/secado/corregir-inicio" method="POST">
+                <!-- Campo oculto para enviar el peso inicial -->
+                <input type="hidden" name="peso_inicial_secado" value="<%= secado.peso_inicial || peso_zarandeo_final || 0 %>">
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="fecha_inicio_secado" class="form-label">Fecha y Hora Inicio Secado:</label>
+                        <input type="datetime-local" class="form-control" id="fecha_inicio_secado" name="fecha_inicio_secado" 
+                            value="<%= fecha_inicio_secado || new Date(secado.fecha_inicio).toISOString().slice(0, 16) %>" required>
+                        <small class="form-text text-muted">Campo obligatorio. Fecha y hora en que inicia el proceso de secado.</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="metodo_secado" class="form-label">Método de Secado:</label>
+                        <select class="form-select" id="metodo_secado" name="metodo_secado" required>
+                            <option value="" disabled>Seleccione un método...</option>
+                            <option value="Secado al sol" <%= (metodo_secado === 'Secado al sol' || secado.metodo_secado === 'Secado al sol') ? 'selected' : '' %>>Secado al sol</option>
+                            <option value="Secado mecánico" <%= (metodo_secado === 'Secado mecánico' || secado.metodo_secado === 'Secado mecánico') ? 'selected' : '' %>>Secado mecánico</option>
+                            <option value="Secado por vía húmeda (con cereza)" <%= (metodo_secado === 'Secado por vía húmeda (con cereza)' || secado.metodo_secado === 'Secado por vía húmeda (con cereza)') ? 'selected' : '' %>>Secado por vía húmeda (con cereza)</option>
+                        </select>
+                        <small class="form-text text-muted">Campo obligatorio. Seleccione el método de secado utilizado.</small>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="humedad_inicial_secado" class="form-label">Humedad Inicial (%):</label>
+                    <input type="number" step="0.1" class="form-control" id="humedad_inicial_secado" name="humedad_inicial_secado" 
+                        value="<%= humedad_inicial_secado || secado.humedad_inicial || '' %>" placeholder="Ej: 75.5">
+                    <small class="form-text text-muted">Opcional. Humedad del grano al iniciar el secado.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="observaciones_secado" class="form-label">Observaciones Adicionales:</label>
+                    <textarea class="form-control" id="observaciones_secado" name="observaciones_secado" rows="3" 
+                        placeholder="Indique los motivos de la corrección"><%= observaciones_secado || '' %></textarea>
+                    <small class="form-text text-muted">Explique brevemente por qué está realizando esta corrección.</small>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-warning">Guardar Corrección</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="/css/lotes/procesos.css">
+<script src="/js/lotes/procesos.js"></script> 

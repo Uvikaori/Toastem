@@ -117,6 +117,24 @@ class SecadoDAO {
             throw error;
         }
     }
+
+    /**
+     * Obtiene un registro de secado por su ID
+     * @param {number} id_secado - ID del registro a obtener
+     * @returns {Promise<Object|null>}
+     */
+    async getSecadoById(id_secado) {
+        try {
+            const [rows] = await db.query(
+                'SELECT s.*, ep.nombre as estado_nombre FROM secado s JOIN estados_proceso ep ON s.id_estado_proceso = ep.id WHERE s.id = ?',
+                [id_secado]
+            );
+            return rows.length > 0 ? rows[0] : null;
+        } catch (error) {
+            console.error('Error al obtener secado por ID:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new SecadoDAO(); 

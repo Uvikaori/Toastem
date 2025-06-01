@@ -1,11 +1,27 @@
 const { body, validationResult } = require('express-validator');
+const trillaDAO = require('../models/dao/trillaDAO');
 
 // Array de validaciones para el proceso de tueste
 const validateTueste = [
     // Fecha general de registro
     body('fecha_tueste')
         .notEmpty().withMessage('La fecha de registro es obligatoria')
-        .isDate().withMessage('La fecha de registro debe ser una fecha válida'),
+        .isDate().withMessage('La fecha de registro debe ser una fecha válida')
+        .custom(async (value, { req }) => {
+            // Verificar que la fecha de tueste sea posterior a la fecha de trilla
+            const id_lote = parseInt(req.params.id_lote);
+            if (id_lote) {
+                const trillaInfo = await trillaDAO.getTrillaByLoteId(id_lote);
+                if (trillaInfo && trillaInfo.fecha_trilla) {
+                    const fechaTrilla = new Date(trillaInfo.fecha_trilla);
+                    const fechaTueste = new Date(value);
+                    if (fechaTueste < fechaTrilla) {
+                        throw new Error(`La fecha de tueste debe ser posterior a la fecha de trilla (${fechaTrilla.toLocaleString()})`);
+                    }
+                }
+            }
+            return true;
+        }),
     
     // Peso inicial total (viene de la trilla)
     body('peso_inicial')
@@ -49,10 +65,25 @@ const validateTueste = [
     
     body('fecha_tueste_pergamino')
         .optional()
-        .custom((value, { req }) => {
+        .custom(async (value, { req }) => {
             // Solo validar si hay peso de pergamino
-            if (req.body.peso_pergamino_inicial && parseFloat(req.body.peso_pergamino_inicial) > 0 && !value) {
-                throw new Error('La fecha de tueste para café pergamino es obligatoria');
+            if (req.body.peso_pergamino_inicial && parseFloat(req.body.peso_pergamino_inicial) > 0) {
+                if (!value) {
+                    throw new Error('La fecha de tueste para café pergamino es obligatoria');
+                }
+                
+                // Verificar que la fecha sea posterior a la trilla
+                const id_lote = parseInt(req.params.id_lote);
+                if (id_lote) {
+                    const trillaInfo = await trillaDAO.getTrillaByLoteId(id_lote);
+                    if (trillaInfo && trillaInfo.fecha_trilla) {
+                        const fechaTrilla = new Date(trillaInfo.fecha_trilla);
+                        const fechaTueste = new Date(value);
+                        if (fechaTueste < fechaTrilla) {
+                            throw new Error(`La fecha de tueste para pergamino debe ser posterior a la fecha de trilla (${fechaTrilla.toLocaleString()})`);
+                        }
+                    }
+                }
             }
             return true;
         }),
@@ -103,10 +134,25 @@ const validateTueste = [
     
     body('fecha_tueste_pasilla')
         .optional()
-        .custom((value, { req }) => {
+        .custom(async (value, { req }) => {
             // Solo validar si hay peso de pasilla
-            if (req.body.peso_pasilla_inicial && parseFloat(req.body.peso_pasilla_inicial) > 0 && !value) {
-                throw new Error('La fecha de tueste para café pasilla es obligatoria');
+            if (req.body.peso_pasilla_inicial && parseFloat(req.body.peso_pasilla_inicial) > 0) {
+                if (!value) {
+                    throw new Error('La fecha de tueste para café pasilla es obligatoria');
+                }
+                
+                // Verificar que la fecha sea posterior a la trilla
+                const id_lote = parseInt(req.params.id_lote);
+                if (id_lote) {
+                    const trillaInfo = await trillaDAO.getTrillaByLoteId(id_lote);
+                    if (trillaInfo && trillaInfo.fecha_trilla) {
+                        const fechaTrilla = new Date(trillaInfo.fecha_trilla);
+                        const fechaTueste = new Date(value);
+                        if (fechaTueste < fechaTrilla) {
+                            throw new Error(`La fecha de tueste para pasilla debe ser posterior a la fecha de trilla (${fechaTrilla.toLocaleString()})`);
+                        }
+                    }
+                }
             }
             return true;
         }),

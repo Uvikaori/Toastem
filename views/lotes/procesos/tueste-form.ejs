@@ -71,8 +71,9 @@
                             <label for="fecha_tueste_pergamino" class="form-label">Fecha de Tueste Pergamino:</label>
                             <input type="date" class="form-control" id="fecha_tueste_pergamino" name="fecha_tueste_pergamino" 
                                    value="<%= fecha_tueste_pergamino %>"
+                                   min="<%= fecha_trilla.split('T')[0] %>"
                                    <%= trilla_info && trilla_info.peso_pergamino_final > 0 ? 'required' : '' %>>
-                            <small class="form-text text-muted">Fecha en que se realizó el tueste del café pergamino.</small>
+                            <small class="form-text text-muted">Fecha en que se realizó el tueste del café pergamino. Debe ser posterior a la fecha de trilla.</small>
                         </div>
 
                         <div class="mb-3">
@@ -122,8 +123,9 @@
                             <label for="fecha_tueste_pasilla" class="form-label">Fecha de Tueste Pasilla:</label>
                             <input type="date" class="form-control" id="fecha_tueste_pasilla" name="fecha_tueste_pasilla" 
                                    value="<%= fecha_tueste_pasilla %>"
+                                   min="<%= fecha_trilla.split('T')[0] %>"
                                    <%= trilla_info && trilla_info.peso_pasilla_final > 0 ? 'required' : '' %>>
-                            <small class="form-text text-muted">Fecha en que se realizó el tueste del café pasilla.</small>
+                            <small class="form-text text-muted">Fecha en que se realizó el tueste del café pasilla. Debe ser posterior a la fecha de trilla.</small>
                         </div>
 
                         <div class="mb-3">
@@ -154,8 +156,10 @@
                 <div class="mb-3">
                     <label for="fecha_tueste" class="form-label">Fecha de Registro:</label>
                     <input type="date" class="form-control" id="fecha_tueste" name="fecha_tueste" 
-                           value="<%= fecha_tueste || new Date().toISOString().split('T')[0] %>" required>
-                    <small class="form-text text-muted">Fecha de registro del proceso completo de tueste.</small>
+                           value="<%= fecha_tueste || new Date().toISOString().split('T')[0] %>"
+                           min="<%= fecha_trilla.split('T')[0] %>"
+                           required>
+                    <small class="form-text text-muted">Fecha de registro del proceso completo de tueste. Debe ser posterior a la fecha de trilla.</small>
                 </div>
 
                 <div class="mb-3">

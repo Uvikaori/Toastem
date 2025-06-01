@@ -20,37 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Inicializar manejadores de eventos para cálculos de clasificación
     inicializarCalculosClasificacion();
-
-    // Manejo del seguimiento de secado
-    const guardarSeguimientoBtn = document.getElementById('guardarSeguimiento');
-    if (guardarSeguimientoBtn) {
-        guardarSeguimientoBtn.addEventListener('click', function() {
-            const form = document.getElementById('seguimientoSecadoForm');
-            const formData = new FormData(form);
-            
-            fetch('/api/seguimiento-secado', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Cerrar el modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('seguimientoSecadoModal'));
-                    modal.hide();
-                    
-                    // Recargar la página para mostrar el nuevo seguimiento
-                    window.location.reload();
-                } else {
-                    alert('Error al guardar el seguimiento: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al guardar el seguimiento');
-            });
-        });
-    }
 });
 
 /**
