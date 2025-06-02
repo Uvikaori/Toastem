@@ -110,22 +110,44 @@
                     <div class="card-header bg-toastem-primary text-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0"><%= proceso.nombre %></h5>
                         <span class="badge 
-                            <% if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 3) { %> bg-success
-                            <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2) { %> bg-warning text-dark
-                            <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 1) { %> bg-info
-                            <% } else if (lote.id_proceso_actual === proceso.id && lote.id_estado_proceso === 2) { %> bg-warning text-dark
-                            <% } else { %> bg-light text-dark <% } %>
-                        ">
-                            <% if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 3) { %>
-                                Terminado
-                            <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2) { %>
-                                En Progreso
-                            <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 1) { %>
-                                Registrado
-                            <% } else if (lote.id_proceso_actual === proceso.id && lote.id_estado_proceso === 2) { %>
-                                En Curso
+                            <% if (proceso.nombre.toLowerCase() === 'molienda' && Array.isArray(proceso.datosEtapa)) { %>
+                                <% if (proceso.datosEtapa.some(m => m.id_estado_proceso === 3)) { %> bg-success
+                                <% } else if (proceso.datosEtapa.some(m => m.id_estado_proceso === 2)) { %> bg-warning text-dark
+                                <% } else if (proceso.datosEtapa.some(m => m.id_estado_proceso === 1)) { %> bg-info
+                                <% } else if (lote.id_proceso_actual === proceso.id && lote.id_estado_proceso === 2) { %> bg-warning text-dark
+                                <% } else { %> bg-light text-dark <% } %>
                             <% } else { %>
-                                Pendiente
+                                <% if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 3) { %> bg-success
+                                <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2) { %> bg-warning text-dark
+                                <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 1) { %> bg-info
+                                <% } else if (lote.id_proceso_actual === proceso.id && lote.id_estado_proceso === 2) { %> bg-warning text-dark
+                                <% } else { %> bg-light text-dark <% } %>
+                            <% } %>
+                        ">
+                            <% if (proceso.nombre.toLowerCase() === 'molienda' && Array.isArray(proceso.datosEtapa)) { %>
+                                <% if (proceso.datosEtapa.some(m => m.id_estado_proceso === 3)) { %>
+                                    Terminado
+                                <% } else if (proceso.datosEtapa.some(m => m.id_estado_proceso === 2)) { %>
+                                    En Progreso
+                                <% } else if (proceso.datosEtapa.some(m => m.id_estado_proceso === 1)) { %>
+                                    Reiniciado
+                                <% } else if (lote.id_proceso_actual === proceso.id && lote.id_estado_proceso === 2) { %>
+                                    En Curso
+                                <% } else { %>
+                                    Pendiente
+                                <% } %>
+                            <% } else { %>
+                                <% if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 3) { %>
+                                    Terminado
+                                <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2) { %>
+                                    En Progreso
+                                <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 1) { %>
+                                    Registrado
+                                <% } else if (lote.id_proceso_actual === proceso.id && lote.id_estado_proceso === 2) { %>
+                                    En Curso
+                                <% } else { %>
+                                    Pendiente
+                                <% } %>
                             <% } %>
                         </span>
                     </div>
@@ -493,7 +515,7 @@
                         <%# --- FIN Detalles Clasificación --- %>
 
                         <%# Detalles específicos del proceso si existen %>
-                        <% if (proceso.nombre.toLowerCase() === 'trilla' && proceso.datosEtapa && (proceso.datosEtapa.id_estado_proceso === 3 || proceso.datosEtapa.id_estado_proceso === 1)) { %>
+                        <% if (proceso.nombre.toLowerCase() === 'trilla' && proceso.datosEtapa && (proceso.datosEtapa.id_estado_proceso === 3 || proceso.datosEtapa.id_estado_proceso === 1 || proceso.datosEtapa.id_estado_proceso === 2)) { %>
                             <hr>
                             <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha:</strong> <%= new Date(proceso.datosEtapa.fecha_trilla).toLocaleString("es-CO") %></p>
                             <div class="row">
@@ -612,41 +634,69 @@
                         <%# Detalles específicos del proceso si existen %>
                         <% if (proceso.nombre.toLowerCase() === 'molienda' && proceso.datosEtapa) { %>
                             <hr>
-                            <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Molienda:</strong> <%= new Date(proceso.datosEtapa.fecha_molienda).toLocaleString("es-CO") %></p>
-                            <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial (Tostado):</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
-                            <p class="mb-1"><strong><i class="fas fa-seedling text-secondary me-1"></i> Tipo de Molienda:</strong> <%= proceso.datosEtapa.tipo_molienda %></p>
-                            <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final (Molido):</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
-                            <% if (proceso.datosEtapa.observaciones) { %>
-                                <% 
-                                    // Filtrar observaciones para ocultar textos de corrección automática
-                                    let observacionesFiltradas = proceso.datosEtapa.observaciones;
-                                    let procesoCorregido = false;
-                                    
-                                    if (observacionesFiltradas) {
-                                        // Verificar si hay correcciones
-                                        procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
-                                        
-                                        // Dividir por líneas y filtrar las que contienen texto de corrección
-                                        const lineas = observacionesFiltradas.split('\n');
-                                        const lineasFiltradas = lineas.filter(linea => 
-                                            !linea.includes('[CORRECCIÓN COMPLETADA]') && 
-                                            linea.trim() !== ''
-                                        );
-                                        observacionesFiltradas = lineasFiltradas.join('\n').trim();
-                                    }
-                                %>
+                            <% if (Array.isArray(proceso.datosEtapa) && proceso.datosEtapa.length > 0) { %>
+                                <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Molienda General:</strong> <%= new Date(proceso.datosEtapa[0].fecha_molienda).toLocaleString("es-CO") %></p>
                                 
-                                <!-- Mostrar indicador de corrección si aplica -->
-                                <% if (procesoCorregido) { %>
-                                    <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
-                                        <i class="fas fa-edit me-1"></i>
-                                        <strong>Proceso corregido:</strong> Este proceso ha sido modificado para corregir inconsistencias en los datos.
+                                <% const moliendasPergamino = proceso.datosEtapa.filter(m => m.tipo_cafe === 'Pergamino' && m.id_estado_proceso === 3); %>
+                                <% const moliendasPasilla = proceso.datosEtapa.filter(m => m.tipo_cafe === 'Pasilla' && m.id_estado_proceso === 3); %>
+
+                                <% if (moliendasPergamino.length > 0) { %>
+                                    <div class="mt-3 mb-2 border-start border-3 border-info ps-2">
+                                        <h6 class="mb-2"><i class="fas fa-coffee text-info"></i> Café Pergamino</h6>
+                                        <% moliendasPergamino.forEach(mP => { %>
+                                            <% if (mP.es_grano) { %>
+                                                <p class="mb-1 ms-2"><strong><i class="fas fa-seedling text-success me-1"></i>Mantenido en Grano:</strong> <%= mP.peso_final %> kg</p>
+                                            <% } else { %>
+                                                <p class="mb-1 ms-2"><strong><i class="fas fa-mortar-pestle text-primary me-1"></i>Molido (<%= mP.tipo_molienda %>):</strong> <%= mP.peso_final %> kg (Inicial: <%= mP.peso_inicial %> kg)</p>
+                                            <% } %>
+                                        <% }); %>
                                     </div>
                                 <% } %>
                                 
-                                <!-- Mostrar observaciones del usuario -->
-                                <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
-                                    <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
+                                <% if (moliendasPasilla.length > 0) { %>
+                                    <div class="mt-3 mb-2 border-start border-3 border-warning ps-2">
+                                        <h6 class="mb-2"><i class="fas fa-coffee text-warning"></i> Café Pasilla</h6>
+                                        <% moliendasPasilla.forEach(mPa => { %>
+                                            <% if (mPa.es_grano) { %>
+                                                <p class="mb-1 ms-2"><strong><i class="fas fa-seedling text-success me-1"></i>Mantenido en Grano:</strong> <%= mPa.peso_final %> kg</p>
+                                            <% } else { %>
+                                                <p class="mb-1 ms-2"><strong><i class="fas fa-mortar-pestle text-primary me-1"></i>Molido (<%= mPa.tipo_molienda %>):</strong> <%= mPa.peso_final %> kg (Inicial: <%= mPa.peso_inicial %> kg)</p>
+                                            <% } %>
+                                        <% }); %>
+                                    </div>
+                                <% } %>
+
+                                <% 
+                                let pesoTotalFinalMolienda = 0;
+                                proceso.datosEtapa.forEach(m => {
+                                    if (m.id_estado_proceso === 3 && m.peso_final) {
+                                        pesoTotalFinalMolienda += parseFloat(m.peso_final);
+                                    }
+                                });
+                                if (pesoTotalFinalMolienda > 0) { %>
+                                    <p class="mb-1 mt-2"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final Total (Grano + Molido):</strong> <%= pesoTotalFinalMolienda.toFixed(2) %> kg</p>
+                                <% } %>
+                                
+                                <% 
+                                const primerRegistroConObs = proceso.datosEtapa.find(m => m.observaciones && m.id_estado_proceso === 3);
+                                if (primerRegistroConObs && primerRegistroConObs.observaciones) { 
+                                    let observacionesComunes = primerRegistroConObs.observaciones.split(' [')[0]; // Tomar solo la parte general antes de los detalles tipo [Pergamino Molido Fino]
+                                %>
+                                    <% if (observacionesComunes.trim()) { %>
+                                        <p class="mb-1 mt-2 fst-italic"><small><strong>Obs. Generales:</strong> <%= observacionesComunes %></small></p>
+                                    <% } %>
+                                <% } %>
+                            <% } else if (proceso.datosEtapa) { // Caso de una sola molienda (objeto) - podría ser obsoleto pero se mantiene por si acaso %>
+                                <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Molienda:</strong> <%= new Date(proceso.datosEtapa.fecha_molienda).toLocaleString("es-CO") %></p>
+                                <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial:</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
+                                <% if (proceso.datosEtapa.es_grano) { %>
+                                    <p class="mb-1"><strong><i class="fas fa-seedling text-success me-1"></i>Tipo:</strong> Mantenido en Grano</p>
+                                <% } else { %>
+                                    <p class="mb-1"><strong><i class="fas fa-mortar-pestle text-primary me-1"></i> Tipo de Molienda:</strong> <%= proceso.datosEtapa.tipo_molienda %></p>
+                                <% } %>
+                                <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final:</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
+                                <% if (proceso.datosEtapa.observaciones) { %>
+                                    <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= proceso.datosEtapa.observaciones %></small></p>
                                 <% } %>
                             <% } %>
                         <% } %>
@@ -655,42 +705,119 @@
                         <%# Detalles específicos del proceso si existen %>
                         <% if (proceso.nombre.toLowerCase() === 'empacado' && proceso.datosEtapa) { %>
                             <hr>
-                            <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Empacado:</strong> <%= new Date(proceso.datosEtapa.fecha_empacado).toLocaleString("es-CO") %></p>
-                            <p class="mb-1"><strong><i class="fas fa-box-open text-secondary me-1"></i> Tipo de Empaque:</strong> <%= proceso.datosEtapa.tipo_empaque %></p>
-                            <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial (Antes Emp.):</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
-                            <p class="mb-1"><strong><i class="fas fa-boxes text-secondary me-1"></i> Unidades Empacadas:</strong> <%= proceso.datosEtapa.unidades_empacadas %></p>
-                            <p class="mb-1"><strong><i class="fas fa-weight-hanging text-secondary me-1"></i> Peso por Unidad:</strong> <%= proceso.datosEtapa.peso_por_unidad %> kg</p>
-                            <% if (proceso.datosEtapa.observaciones) { %>
-                                <% 
-                                    // Filtrar observaciones para ocultar textos de corrección automática
-                                    let observacionesFiltradas = proceso.datosEtapa.observaciones;
-                                    let procesoCorregido = false;
-                                    
-                                    if (observacionesFiltradas) {
-                                        // Verificar si hay correcciones
-                                        procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
-                                        
-                                        // Dividir por líneas y filtrar las que contienen texto de corrección
-                                        const lineas = observacionesFiltradas.split('\n');
-                                        const lineasFiltradas = lineas.filter(linea => 
-                                            !linea.includes('[CORRECCIÓN COMPLETADA]') && 
-                                            linea.trim() !== ''
-                                        );
-                                        observacionesFiltradas = lineasFiltradas.join('\n').trim();
-                                    }
-                                %>
+                            <% if (proceso.datosEtapa.empacados && Array.isArray(proceso.datosEtapa.empacados)) { %>
+                                <!-- Mostrar información agrupada de empacados -->
+                                <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha de último empacado:</strong> <%= new Date(proceso.datosEtapa.fecha_empacado).toLocaleString("es-CO") %></p>
                                 
-                                <!-- Mostrar indicador de corrección si aplica -->
-                                <% if (procesoCorregido) { %>
-                                    <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
-                                        <i class="fas fa-edit me-1"></i>
-                                        <strong>Proceso corregido:</strong> Este proceso ha sido modificado para corregir inconsistencias en los datos.
-                                    </div>
+                                <% if (proceso.datosEtapa.tipo_producto_empacado && proceso.datosEtapa.tipo_producto_empacado.includes(',')) { %>
+                                    <p class="mb-1"><strong><i class="fas fa-tags text-secondary me-1"></i> Tipos de productos empacados:</strong> <%= proceso.datosEtapa.tipo_producto_empacado %></p>
                                 <% } %>
                                 
-                                <!-- Mostrar observaciones del usuario -->
-                                <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
-                                    <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
+                                <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Total Inicial:</strong> <%= proceso.datosEtapa.peso_inicial ? proceso.datosEtapa.peso_inicial.toFixed(2) : '0.00' %> kg</p>
+                                <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Total Empacado:</strong> <%= proceso.datosEtapa.peso_empacado ? proceso.datosEtapa.peso_empacado.toFixed(2) : '0.00' %> kg</p>
+                                <p class="mb-1"><strong><i class="fas fa-boxes text-secondary me-1"></i> Total Unidades Empacadas:</strong> <%= proceso.datosEtapa.total_empaques || 0 %></p>
+                                
+                                <!-- Detalle por tipo de café -->
+                                <% 
+                                const empacadosGrano = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Grano');
+                                const empacadosMolido = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Molido');
+                                const empacadosPasilla = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Pasilla Molido');
+                                %>
+                                
+                                <div class="mt-3">
+                                    <h6 class="border-bottom pb-2 mb-3">Detalle por tipo de producto</h6>
+                                    
+                                    <div class="row">
+                                        <% if (empacadosGrano.length > 0) { %>
+                                            <div class="col-md-4 mb-3">
+                                                <div class="card border-success h-100">
+                                                    <div class="card-header bg-success text-white py-1">
+                                                        <h6 class="mb-0"><i class="fas fa-seedling me-1"></i> Pergamino en Grano</h6>
+                                                    </div>
+                                                    <div class="card-body py-2">
+                                                        <p class="mb-1 small"><strong>Empacado:</strong> <%= empacadosGrano.reduce((sum, e) => sum + parseFloat(e.peso_empacado), 0).toFixed(2) %> kg</p>
+                                                        <p class="mb-1 small"><strong>Empaques:</strong> <%= empacadosGrano.reduce((sum, e) => sum + parseInt(e.total_empaques), 0) %> unidades</p>
+                                                        <p class="mb-0 small"><strong>Fecha:</strong> <%= new Date(Math.max(...empacadosGrano.map(e => new Date(e.fecha_empacado)))).toLocaleDateString("es-CO") %></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% } %>
+                                        
+                                        <% if (empacadosMolido.length > 0) { %>
+                                            <div class="col-md-4 mb-3">
+                                                <div class="card border-primary h-100">
+                                                    <div class="card-header bg-primary text-white py-1">
+                                                        <h6 class="mb-0"><i class="fas fa-mortar-pestle me-1"></i> Pergamino Molido</h6>
+                                                    </div>
+                                                    <div class="card-body py-2">
+                                                        <p class="mb-1 small"><strong>Empacado:</strong> <%= empacadosMolido.reduce((sum, e) => sum + parseFloat(e.peso_empacado), 0).toFixed(2) %> kg</p>
+                                                        <p class="mb-1 small"><strong>Empaques:</strong> <%= empacadosMolido.reduce((sum, e) => sum + parseInt(e.total_empaques), 0) %> unidades</p>
+                                                        <p class="mb-0 small"><strong>Fecha:</strong> <%= new Date(Math.max(...empacadosMolido.map(e => new Date(e.fecha_empacado)))).toLocaleDateString("es-CO") %></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% } %>
+                                        
+                                        <% if (empacadosPasilla.length > 0) { %>
+                                            <div class="col-md-4 mb-3">
+                                                <div class="card border-warning h-100">
+                                                    <div class="card-header bg-warning text-dark py-1">
+                                                        <h6 class="mb-0"><i class="fas fa-mortar-pestle me-1"></i> Pasilla Molido</h6>
+                                                    </div>
+                                                    <div class="card-body py-2">
+                                                        <p class="mb-1 small"><strong>Empacado:</strong> <%= empacadosPasilla.reduce((sum, e) => sum + parseFloat(e.peso_empacado), 0).toFixed(2) %> kg</p>
+                                                        <p class="mb-1 small"><strong>Empaques:</strong> <%= empacadosPasilla.reduce((sum, e) => sum + parseInt(e.total_empaques), 0) %> unidades</p>
+                                                        <p class="mb-0 small"><strong>Fecha:</strong> <%= new Date(Math.max(...empacadosPasilla.map(e => new Date(e.fecha_empacado)))).toLocaleDateString("es-CO") %></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                </div>
+                                
+                                <% if (proceso.datosEtapa.observaciones) { %>
+                                    <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= proceso.datosEtapa.observaciones %></small></p>
+                                <% } %>
+                            <% } else { %>
+                                <!-- Vista clásica para mantener compatibilidad con la estructura anterior -->
+                                <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Empacado:</strong> <%= new Date(proceso.datosEtapa.fecha_empacado).toLocaleString("es-CO") %></p>
+                                <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial:</strong> <%= typeof proceso.datosEtapa.peso_inicial !== 'undefined' ? proceso.datosEtapa.peso_inicial : '0.00' %> kg</p>
+                                <p class="mb-1"><strong><i class="fas fa-boxes text-secondary me-1"></i> Unidades Empacadas:</strong> <%= typeof proceso.datosEtapa.total_empaques !== 'undefined' ? proceso.datosEtapa.total_empaques : '0' %></p>
+                                <p class="mb-1"><strong><i class="fas fa-weight-hanging text-secondary me-1"></i> Peso Empacado:</strong> <%= typeof proceso.datosEtapa.peso_empacado !== 'undefined' ? proceso.datosEtapa.peso_empacado : '0.00' %> kg</p>
+                                <p class="mb-1"><strong><i class="fas fa-tag text-secondary me-1"></i> Tipo de Producto:</strong> <%= proceso.datosEtapa.tipo_producto_empacado || 'No especificado' %></p>
+                                
+                                <% if (proceso.datosEtapa.observaciones) { %>
+                                    <% 
+                                        // Filtrar observaciones para ocultar textos de corrección automática
+                                        let observacionesFiltradas = proceso.datosEtapa.observaciones;
+                                        let procesoCorregido = false;
+                                        
+                                        if (observacionesFiltradas) {
+                                            // Verificar si hay correcciones
+                                            procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
+                                            
+                                            // Dividir por líneas y filtrar las que contienen texto de corrección
+                                            const lineas = observacionesFiltradas.split('\n');
+                                            const lineasFiltradas = lineas.filter(linea => 
+                                                !linea.includes('[CORRECCIÓN COMPLETADA]') && 
+                                                linea.trim() !== ''
+                                            );
+                                            observacionesFiltradas = lineasFiltradas.join('\n').trim();
+                                        }
+                                    %>
+                                    
+                                    <!-- Mostrar indicador de corrección si aplica -->
+                                    <% if (procesoCorregido) { %>
+                                        <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
+                                            <i class="fas fa-edit me-1"></i>
+                                            <strong>Proceso corregido:</strong> Este proceso ha sido modificado para corregir inconsistencias en los datos.
+                                        </div>
+                                    <% } %>
+                                    
+                                    <!-- Mostrar observaciones del usuario -->
+                                    <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
+                                        <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
+                                    <% } %>
                                 <% } %>
                             <% } %>
                         <% } %>
@@ -746,7 +873,28 @@
                     <div class="card-footer bg-transparent">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <% if (urlFormulario !== '#' && (!proceso.datosEtapa || proceso.datosEtapa.id_estado_proceso === 1) && !(proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2)) { %>
+                                <% 
+                                let mostrarRegistrar = false;
+                                if (proceso.nombre.toLowerCase() === 'molienda') {
+                                    // Para molienda, `proceso.datosEtapa` será un array.
+                                    // Mostrar "Registrar" si:
+                                    // 1. No hay datos de molienda O
+                                    // 2. Hay moliendas pero todas están en estado "reiniciado" (id_estado_proceso = 1) 
+                                    if (!proceso.datosEtapa || proceso.datosEtapa.length === 0) {
+                                        mostrarRegistrar = true;
+                                    } else if (proceso.datosEtapa.length > 0 && proceso.datosEtapa.every(m => m.id_estado_proceso === 1)) {
+                                        mostrarRegistrar = true;
+                                    }
+                                } else {
+                                    // Lógica original para otros procesos
+                                    if (urlFormulario !== '#' && 
+                                        (!proceso.datosEtapa || proceso.datosEtapa.id_estado_proceso === 1) && 
+                                        !(proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2)) {
+                                        mostrarRegistrar = true;
+                                    }
+                                }
+                                %>
+                                <% if (mostrarRegistrar) { %>
                                     <a href="<%= urlFormulario %>" class="btn btn-primary btn-sm">
                                         <i class="fas fa-plus-circle me-1"></i> Registrar
                                     </a>
@@ -763,7 +911,23 @@
                                 <% } %>
                             </div>
                             
-                            <% if (proceso.datosEtapa && (proceso.datosEtapa.id_estado_proceso === 3 || proceso.datosEtapa.id_estado_proceso === 1) && proceso.nombre.toLowerCase() !== 'secado') { %>
+                            <% 
+                            let mostrarDropdownGeneral = false;
+                            if (proceso.nombre.toLowerCase() === 'molienda') {
+                                // Para molienda, el dropdown se muestra si hay al menos una molienda terminada (estado 3)
+                                if (proceso.datosEtapa && proceso.datosEtapa.some(m => m.id_estado_proceso === 3)) {
+                                    mostrarDropdownGeneral = true;
+                                }
+                            } else {
+                                // Lógica original para otros procesos
+                                if (proceso.datosEtapa && 
+                                    (proceso.datosEtapa.id_estado_proceso === 3 || proceso.datosEtapa.id_estado_proceso === 1) && 
+                                    proceso.nombre.toLowerCase() !== 'secado') {
+                                    mostrarDropdownGeneral = true;
+                                }
+                            }
+                            %>
+                            <% if (mostrarDropdownGeneral) { %>
                                 <!-- Menú de acciones para procesos terminados o reiniciados (excepto secado que tiene su propio menú) -->
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton<%= proceso.id %>" data-bs-toggle="dropdown" aria-expanded="false">
@@ -787,6 +951,81 @@
                                                     </button>
                                                 </form>
                                             </li>
+                                        <% } %>
+                                        <% if (proceso.nombre.toLowerCase() === 'molienda') { %>
+                                            <% if (proceso.datosEtapa && Array.isArray(proceso.datosEtapa)) { %>
+                                                <% // Si hay al menos una molienda completada, mostrar opción de reiniciar el proceso completo
+                                                const hayMoliendaCompletada = proceso.datosEtapa.some(m => m.id_estado_proceso === 3);
+                                                if (hayMoliendaCompletada) { %>
+                                                <li>
+                                                    <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/molienda/reiniciar" method="POST">
+                                                        <button type="submit" class="dropdown-item text-warning">
+                                                            <i class="fas fa-redo-alt me-1"></i> Reiniciar Proceso de Molienda
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <% } %>
+                                            <% } %>
+                                        <% } %>
+                                        <% if (proceso.nombre.toLowerCase() === 'empacado' && proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 3) { %>
+                                            <% if (proceso.datosEtapa.empacados && Array.isArray(proceso.datosEtapa.empacados)) { %>
+                                                <!-- Si hay múltiples empacados, mostrar opciones de reinicio para cada tipo -->
+                                                <% 
+                                                const empacadosGrano = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Grano' && e.id_estado_proceso === 3);
+                                                const empacadosMolido = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Molido' && e.id_estado_proceso === 3);
+                                                const empacadosPasilla = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Pasilla Molido' && e.id_estado_proceso === 3);
+                                                %>
+                                                
+                                                <% if (empacadosGrano.length > 0) { %>
+                                                    <li>
+                                                        <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/empacado/<%= empacadosGrano[0].id %>/reiniciar" method="POST">
+                                                            <button type="submit" class="dropdown-item text-success">
+                                                                <i class="fas fa-redo-alt me-1"></i> Reiniciar Empacado de Grano
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                <% } %>
+                                                
+                                                <% if (empacadosMolido.length > 0) { %>
+                                                    <li>
+                                                        <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/empacado/<%= empacadosMolido[0].id %>/reiniciar" method="POST">
+                                                            <button type="submit" class="dropdown-item text-primary">
+                                                                <i class="fas fa-redo-alt me-1"></i> Reiniciar Empacado de Molido
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                <% } %>
+                                                
+                                                <% if (empacadosPasilla.length > 0) { %>
+                                                    <li>
+                                                        <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/empacado/<%= empacadosPasilla[0].id %>/reiniciar" method="POST">
+                                                            <button type="submit" class="dropdown-item text-warning">
+                                                                <i class="fas fa-redo-alt me-1"></i> Reiniciar Empacado de Pasilla
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                <% } %>
+                                                
+                                                <% if ((empacadosGrano.length + empacadosMolido.length + empacadosPasilla.length) > 1) { %>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/empacado/reiniciar-todos" method="POST">
+                                                            <button type="submit" class="dropdown-item text-danger">
+                                                                <i class="fas fa-redo-alt me-1"></i> Reiniciar Todos los Empacados
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                <% } %>
+                                            <% } else { %>
+                                                <!-- Opción para estructura antigua -->
+                                                <li>
+                                                    <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/empacado/<%= proceso.datosEtapa.id %>/reiniciar" method="POST">
+                                                        <button type="submit" class="dropdown-item text-warning">
+                                                            <i class="fas fa-redo-alt me-1"></i> Reiniciar Proceso de Empacado
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            <% } %>
                                         <% } %>
                                         <!-- Aquí puedes agregar más acciones si lo deseas -->
                                     </ul>

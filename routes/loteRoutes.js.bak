@@ -89,7 +89,7 @@ router.post('/:id_lote/molienda/:id_molienda/reiniciar', isLoteOwner, moliendaCo
 
 // Rutas para el proceso de EMPACADO
 router.get('/:id_lote/empacado/registrar', isLoteOwner, empacadoController.mostrarFormularioEmpacado);
-router.post('/:id_lote/empacado', isLoteOwner, empacadoController.registrarEmpacado);
+router.post('/:id_lote/empacado', isLoteOwner, validateEmpacado, empacadoController.registrarEmpacado);
 router.post('/:id_lote/empacado/:id_empacado/reiniciar', isLoteOwner, empacadoController.reiniciarProcesoEmpacado);
 router.post('/:id_lote/empacado/reiniciar-todos', isLoteOwner, empacadoController.reiniciarTodosEmpacados);
 

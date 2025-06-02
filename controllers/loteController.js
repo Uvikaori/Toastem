@@ -220,13 +220,59 @@ class LoteController {
             const trillaInfo = await trillaDAO.getTrillaByLoteId(id_lote);
             const tuesteInfo = await tuesteDAO.getTuesteByLoteId(id_lote);
             const moliendaInfo = await moliendaDAO.getMoliendaByLoteId(id_lote);
-            const empacadoInfo = await empacadoDAO.getEmpacadoByLoteId(id_lote);
             const controlCalidadInfo = await controlCalidadDAO.getControlCalidadByLoteId(id_lote);
 
             // Obtener seguimientos de secado si existe el proceso
             let seguimientosSecado = [];
             if (secadoInfo && secadoInfo.id) {
                 seguimientosSecado = await seguimientoSecadoDAO.getSeguimientosBySecadoId(secadoInfo.id);
+            }
+
+            // Obtener todos los empacados del lote
+            let empacadoInfo = null;
+            try {
+                const todosEmpacados = await empacadoDAO.getAllEmpacadosByLoteId(id_lote);
+                if (todosEmpacados && todosEmpacados.length > 0) {
+                    // Si hay varios empacados, crear un objeto compuesto con la información relevante
+                    const empacadosCompletados = todosEmpacados.filter(e => e.id_estado_proceso === 3);
+                    const empacadosReiniciados = todosEmpacados.filter(e => e.id_estado_proceso === 1);
+                    
+                    if (empacadosCompletados.length > 0) {
+                        // Si hay empacados completados, mostrar esa información
+                        const fechaMasReciente = new Date(Math.max(...empacadosCompletados.map(e => new Date(e.fecha_empacado))));
+                        
+                        const pesoInicialTotal = empacadosCompletados.reduce((sum, e) => sum + parseFloat(e.peso_inicial), 0);
+                        const pesoEmpacadoTotal = empacadosCompletados.reduce((sum, e) => sum + parseFloat(e.peso_empacado), 0);
+                        const totalEmpaques = empacadosCompletados.reduce((sum, e) => sum + parseInt(e.total_empaques), 0);
+                        
+                        // Crear un resumen de tipos de productos empacados
+                        const tiposProductos = [...new Set(empacadosCompletados.map(e => e.tipo_producto_empacado))];
+                        
+                        empacadoInfo = {
+                            id: empacadosCompletados[0].id, // Usamos el ID del primer empacado para operaciones generales
+                            id_lote: id_lote,
+                            fecha_empacado: fechaMasReciente,
+                            peso_inicial: pesoInicialTotal,
+                            peso_empacado: pesoEmpacadoTotal,
+                            total_empaques: totalEmpaques,
+                            tipo_producto_empacado: tiposProductos.join(', '),
+                            id_estado_proceso: 3, // Marcamos como completado si hay al menos un empacado
+                            observaciones: empacadosCompletados.map(e => `${e.tipo_producto_empacado}: ${e.observaciones || 'N/A'}`).filter(obs => !obs.endsWith(': N/A')).join(' | '),
+                            empacados: empacadosCompletados // Incluimos los empacados individuales por si se necesitan
+                        };
+                    } else if (empacadosReiniciados.length > 0) {
+                        // Si solo hay empacados reiniciados, mostrar estado como reiniciado
+                        empacadoInfo = {
+                            id: empacadosReiniciados[0].id,
+                            id_lote: id_lote,
+                            id_estado_proceso: 1,
+                            empacados: empacadosReiniciados
+                        };
+                    }
+                }
+            } catch (error) {
+                console.error('Error al obtener datos de empacado:', error);
+                empacadoInfo = null;
             }
 
             const procesosConEstado = todosLosProcesosDefinidos.map(procesoDef => {
@@ -294,222 +340,53 @@ class LoteController {
             res.redirect(`/fincas/${req.params.id_finca}/lotes`);
         }
     }
-        
-    
-
-   
-
-   
-    
 
     /**
-     * Muestra el formulario para registrar el proceso de molienda.
+     * Muestra la vista de flujo completo de un lote usando la vista_flujo_lote.
      */
-    async mostrarFormularioMolienda(req, res) {
+    async mostrarFlujoLote(req, res) {
         try {
+            const id_finca = parseInt(req.params.id_finca);
             const id_lote = parseInt(req.params.id_lote);
-            const lote = req.lote;
-
-            // Verificar si ya existe un registro de molienda
-            const moliendaExistente = await moliendaDAO.getMoliendaByLoteId(id_lote);
-            if (moliendaExistente) {
-                req.flash('error', 'Ya existe un registro de molienda para este lote.');
-                return res.redirect(`/fincas/${req.params.id_finca}/lotes/${id_lote}/procesos`);
+            
+            // Verificar que la finca pertenezca al usuario y que el lote exista
+            const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
+            if (!finca) {
+                req.flash('error', 'No tienes permisos para acceder a esta finca.');
+                return res.redirect('/fincas/gestionar');
             }
-
-            res.render('lotes/molienda', {
-                titulo: 'Registrar Molienda',
+            
+            const lote = await loteDAO.getLoteById(id_lote);
+            if (!lote || lote.id_finca !== id_finca) {
+                req.flash('error', 'El lote no existe o no pertenece a esta finca.');
+                return res.redirect(`/fincas/${id_finca}/lotes`);
+            }
+            
+            // Obtener datos del flujo del lote desde la vista SQL
+            const [flujoLote] = await db.query(
+                'SELECT * FROM vista_flujo_lote WHERE lote_id = ?',
+                [id_lote]
+            );
+            
+            if (!flujoLote || flujoLote.length === 0) {
+                req.flash('error', 'No se encontraron datos de flujo para este lote.');
+                return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
+            }
+            
+            // Enviar los datos a la vista
+            res.render('lotes/flujo', {
+                titulo: `Flujo Completo del Lote: ${lote.codigo}`,
+                finca: finca,
                 lote: lote,
-                finca: req.finca,
-                fecha_molienda: req.flash('fecha_molienda')[0] || '',
-                peso_inicial: req.flash('peso_inicial')[0] || '',
-                tipo_molienda: req.flash('tipo_molienda')[0] || '',
-                peso_final: req.flash('peso_final')[0] || '',
-                observaciones: req.flash('observaciones')[0] || '',
+                flujo: flujoLote[0], // Tomamos el primer registro (debería ser único por lote)
+                mensaje: req.flash('mensaje'),
                 error: req.flash('error')
             });
-
+            
         } catch (error) {
-            console.error('Error al mostrar formulario de molienda:', error);
-            req.flash('error', 'Error al cargar el formulario de molienda.');
+            console.error('Error al mostrar vista de flujo de lote:', error);
+            req.flash('error', 'Error al cargar los datos del flujo de lote.');
             res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/procesos`);
-        }
-    }
-
-    /**
-     * Procesa el registro de molienda.
-     */
-    async registrarMolienda(req, res) {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            req.flash('error', errors.array().map(e => e.msg));
-            req.flash('fecha_molienda', req.body.fecha_molienda);
-            req.flash('peso_inicial', req.body.peso_inicial);
-            req.flash('tipo_molienda', req.body.tipo_molienda);
-            req.flash('peso_final', req.body.peso_final);
-            req.flash('observaciones', req.body.observaciones);
-            return res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/molienda/registrar`);
-        }
-
-        try {
-            const id_lote = parseInt(req.params.id_lote);
-            
-            // Primero, obtener el id_tueste para este lote
-            const tuesteInfo = await tuesteDAO.getTuesteByLoteId(id_lote);
-            if (!tuesteInfo) {
-                req.flash('error', 'No se encontró registro de tueste para este lote. Debe registrar el tueste primero.');
-                return res.redirect(`/fincas/${req.params.id_finca}/lotes/${id_lote}/procesos`);
-            }
-            
-            const {
-                fecha_molienda,
-                peso_inicial,
-                tipo_molienda,
-                peso_final,
-                es_grano,
-                observaciones
-            } = req.body;
-
-            const molienda = new Molienda(
-                null,
-                tuesteInfo.id, // id_tueste en lugar de id_lote
-                fecha_molienda,
-                peso_inicial,
-                tipo_molienda,
-                peso_final,
-                es_grano === 'on' || es_grano === true, // Convertir checkbox en booleano
-                null, // cantidad (puede ser calculada o dejada en null)
-                observaciones,
-                3 // Terminado
-            );
-
-            await moliendaDAO.createMolienda(molienda);
-            
-            // Actualizar estado general y proceso actual del LOTE
-            const todosLosProcesos = await procesosDAO.getAllProcesosOrdenados();
-            const procesoMoliendaDef = todosLosProcesos.find(p => p.nombre.toLowerCase() === 'molienda');
-
-            if (!procesoMoliendaDef) {
-                req.flash('error', "Error de configuración: Proceso 'Molienda' no encontrado.");
-                return res.redirect(`/fincas/${req.params.id_finca}/lotes/${id_lote}/procesos`);
-            }
-            
-            const siguienteProcesoDef = todosLosProcesos.find(p => p.orden === (procesoMoliendaDef.orden + 1));
-            const idNuevoProcesoActualParaLote = siguienteProcesoDef ? siguienteProcesoDef.id : procesoMoliendaDef.id;
-
-            await loteDAO.updateLoteProcesoYEstado(id_lote, idNuevoProcesoActualParaLote, 2); // 2 = 'En progreso'
-            
-            req.flash('mensaje', 'Proceso de molienda registrado exitosamente.');
-            res.redirect(`/fincas/${req.params.id_finca}/lotes/${id_lote}/procesos`);
-
-        } catch (error) {
-            console.error('Error al registrar molienda:', error);
-            req.flash('error', 'Error al registrar el proceso de molienda.');
-            res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/molienda/registrar`);
-        }
-    }
-
-    /**
-     * Muestra el formulario para registrar el proceso de empacado.
-     */
-    async mostrarFormularioEmpacado(req, res) {
-        try {
-            const id_lote = parseInt(req.params.id_lote);
-            const lote = req.lote;
-
-            // Verificar si ya existe un registro de empacado
-            const empacadoExistente = await empacadoDAO.getEmpacadoByLoteId(id_lote);
-            if (empacadoExistente) {
-                req.flash('error', 'Ya existe un registro de empacado para este lote.');
-                return res.redirect(`/fincas/${req.params.id_finca}/lotes/${id_lote}/procesos`);
-            }
-
-            res.render('lotes/empacado', {
-                titulo: 'Registrar Empacado',
-                lote: lote,
-                finca: req.finca,
-                fecha_empacado: req.flash('fecha_empacado')[0] || '',
-                tipo_empaque: req.flash('tipo_empaque')[0] || '',
-                peso_inicial: req.flash('peso_inicial')[0] || '',
-                unidades_empacadas: req.flash('unidades_empacadas')[0] || '',
-                peso_por_unidad: req.flash('peso_por_unidad')[0] || '',
-                observaciones: req.flash('observaciones')[0] || '',
-                error: req.flash('error')
-            });
-
-        } catch (error) {
-            console.error('Error al mostrar formulario de empacado:', error);
-            req.flash('error', 'Error al cargar el formulario de empacado.');
-            res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/procesos`);
-        }
-    }
-
-    /**
-     * Procesa el registro de empacado.
-     */
-    async registrarEmpacado(req, res) {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            req.flash('error', errors.array().map(e => e.msg));
-            req.flash('fecha_empacado', req.body.fecha_empacado);
-            req.flash('tipo_empaque', req.body.tipo_empaque);
-            req.flash('peso_inicial', req.body.peso_inicial);
-            req.flash('peso_empacado', req.body.peso_empacado);
-            req.flash('id_tipo_producto', req.body.id_tipo_producto);
-            req.flash('observaciones', req.body.observaciones);
-            return res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/empacado/registrar`);
-        }
-
-        try {
-            const id_lote = parseInt(req.params.id_lote);
-            const {
-                fecha_empacado,
-                tipo_empaque,
-                peso_inicial,
-                peso_empacado,
-                id_tipo_producto,
-                observaciones
-            } = req.body;
-
-            // Calcular peso_final, puede ser el mismo que peso_empacado o cero si no hay valor
-            const peso_final = peso_empacado || 0;
-
-            const empacado = new Empacado(
-                null,
-                id_lote,
-                fecha_empacado,
-                tipo_empaque,
-                peso_inicial,
-                peso_final,
-                peso_empacado,
-                id_tipo_producto || 1, // Por defecto, tipo 1
-                observaciones,
-                3 // Estado 'Terminado'
-            );
-
-            await empacadoDAO.createEmpacado(empacado);
-            
-            // Actualizar estado general y proceso actual del LOTE
-            const todosLosProcesos = await procesosDAO.getAllProcesosOrdenados();
-            const procesoEmpacadoDef = todosLosProcesos.find(p => p.nombre.toLowerCase() === 'empacado');
-
-            if (!procesoEmpacadoDef) {
-                req.flash('error', "Error de configuración: Proceso 'Empacado' no encontrado.");
-                return res.redirect(`/fincas/${req.params.id_finca}/lotes/${id_lote}/procesos`);
-            }
-            
-            const siguienteProcesoDef = todosLosProcesos.find(p => p.orden === (procesoEmpacadoDef.orden + 1));
-            const idNuevoProcesoActualParaLote = siguienteProcesoDef ? siguienteProcesoDef.id : procesoEmpacadoDef.id;
-
-            await loteDAO.updateLoteProcesoYEstado(id_lote, idNuevoProcesoActualParaLote, 2); // 2 = 'En progreso'
-            
-            req.flash('mensaje', 'Proceso de empacado registrado exitosamente.');
-            res.redirect(`/fincas/${req.params.id_finca}/lotes/${id_lote}/procesos`);
-
-        } catch (error) {
-            console.error('Error al registrar empacado:', error);
-            req.flash('error', 'Error al registrar el proceso de empacado.');
-            res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/empacado/registrar`);
         }
     }
 
@@ -593,59 +470,8 @@ class LoteController {
         }
     }
 
-    /**
-     * Muestra la vista de flujo completo de un lote usando la vista_flujo_lote.
-     */
-    async mostrarFlujoLote(req, res) {
-        try {
-            const id_finca = parseInt(req.params.id_finca);
-            const id_lote = parseInt(req.params.id_lote);
-            
-            // Verificar que la finca pertenezca al usuario y que el lote exista
-            const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
-            if (!finca) {
-                req.flash('error', 'No tienes permisos para acceder a esta finca.');
-                return res.redirect('/fincas/gestionar');
-            }
-            
-            const lote = await loteDAO.getLoteById(id_lote);
-            if (!lote || lote.id_finca !== id_finca) {
-                req.flash('error', 'El lote no existe o no pertenece a esta finca.');
-                return res.redirect(`/fincas/${id_finca}/lotes`);
-            }
-            
-            // Obtener datos del flujo del lote desde la vista SQL
-            const [flujoLote] = await db.query(
-                'SELECT * FROM vista_flujo_lote WHERE lote_id = ?',
-                [id_lote]
-            );
-            
-            if (!flujoLote || flujoLote.length === 0) {
-                req.flash('error', 'No se encontraron datos de flujo para este lote.');
-                return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
-            }
-            
-            // Enviar los datos a la vista
-            res.render('lotes/flujo', {
-                titulo: `Flujo Completo del Lote: ${lote.codigo}`,
-                finca: finca,
-                lote: lote,
-                flujo: flujoLote[0], // Tomamos el primer registro (debería ser único por lote)
-                mensaje: req.flash('mensaje'),
-                error: req.flash('error')
-            });
-            
-        } catch (error) {
-            console.error('Error al mostrar vista de flujo de lote:', error);
-            req.flash('error', 'Error al cargar los datos del flujo de lote.');
-            res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/procesos`);
-        }
-    }
-
     // --- Controladores para GESTIÓN DE CORRECCIONES Y CANCELACIONES ---
     
-   
-
     /**
      * Muestra el formulario para cancelar un lote.
      */
@@ -804,8 +630,6 @@ class LoteController {
             res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/duplicar`);
         }
     }
-
-   
 
     /**
      * Permite corregir el proceso de recolección solo bajo condiciones específicas.
