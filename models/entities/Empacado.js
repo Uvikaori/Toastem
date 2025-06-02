@@ -15,6 +15,7 @@ class Empacado {
      * @param {number} id_estado_proceso - ID del estado del proceso (1=Reiniciado, 2=En progreso, 3=Terminado)
      * @param {number|null} id_tueste - ID del tueste relacionado (opcional)
      * @param {number|null} id_molienda - ID de la molienda relacionada (opcional)
+     * @param {boolean} es_historico - Indica si el proceso es histórico
      */
     constructor(
         id,
@@ -27,7 +28,8 @@ class Empacado {
         observaciones,
         id_estado_proceso,
         id_tueste = null,
-        id_molienda = null
+        id_molienda = null,
+        es_historico = false
     ) {
         this.id = id;
         this.id_lote = id_lote;
@@ -40,6 +42,7 @@ class Empacado {
         this.id_estado_proceso = id_estado_proceso;
         this.id_tueste = id_tueste;
         this.id_molienda = id_molienda;
+        this.es_historico = es_historico;
     }
 }
 

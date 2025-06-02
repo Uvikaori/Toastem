@@ -90,10 +90,21 @@
           </div>
           <% } %>
 
-            <% if (typeof error !=='undefined' && error) { %>
+            <% if (typeof error !=='undefined' && (typeof hayError === 'function' ? hayError(error) : error)) { %>
               <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <%= error %>
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <strong><i class="fas fa-exclamation-triangle me-1"></i> Error:</strong>
+                <% if (Array.isArray(error)) { %>
+                    <ul class="mb-0 ps-3">
+                    <% error.forEach(function(err) { %>
+                        <% if (err && err.toString().trim() !== '') { %>
+                            <li><%= Array.isArray(err) ? err.join(', ') : err %></li>
+                        <% } %>
+                    <% }) %>
+                    </ul>
+                <% } else { %>
+                    <%= error %>
+                <% } %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
               </div>
               <% } %>
 

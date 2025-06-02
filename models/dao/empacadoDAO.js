@@ -9,12 +9,27 @@ class EmpacadoDAO {
      */
     async createEmpacado(empacado) {
         try {
+            console.log('Datos a insertar en empacado:', {
+                id_lote: empacado.id_lote,
+                fecha_empacado: empacado.fecha_empacado,
+                peso_inicial: empacado.peso_inicial,
+                peso_empacado: empacado.peso_empacado,
+                total_empaques: empacado.total_empaques,
+                tipo_producto_empacado: empacado.tipo_producto_empacado,
+                observaciones: empacado.observaciones,
+                id_estado_proceso: empacado.id_estado_proceso,
+                id_tueste: empacado.id_tueste,
+                id_molienda: empacado.id_molienda,
+                es_historico: empacado.es_historico
+            });
+            
+            // Usamos consulta parametrizada con valores específicos
             const [result] = await db.query(
                 `INSERT INTO empacado 
                 (id_lote, fecha_empacado, peso_inicial, peso_empacado, 
                  total_empaques, tipo_producto_empacado, observaciones, id_estado_proceso,
-                 id_tueste, id_molienda) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                 id_tueste, id_molienda, es_historico) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     empacado.id_lote, 
                     empacado.fecha_empacado, 
@@ -22,10 +37,11 @@ class EmpacadoDAO {
                     empacado.peso_empacado,
                     empacado.total_empaques,
                     empacado.tipo_producto_empacado,
-                    empacado.observaciones,
+                    empacado.observaciones || '',
                     empacado.id_estado_proceso,
                     empacado.id_tueste,
-                    empacado.id_molienda
+                    empacado.id_molienda,
+                    empacado.es_historico === true ? 1 : 0
                 ]
             );
             return result.insertId;
@@ -62,7 +78,8 @@ class EmpacadoDAO {
                 rows[0].observaciones,
                 rows[0].id_estado_proceso,
                 rows[0].id_tueste,
-                rows[0].id_molienda
+                rows[0].id_molienda,
+                rows[0].es_historico
             );
         } catch (error) {
             console.error('Error en empacadoDAO.getEmpacadoById:', error);
@@ -78,7 +95,7 @@ class EmpacadoDAO {
     async getEmpacadoByLoteId(idLote) {
         try {
             const [rows] = await db.query(
-                'SELECT * FROM empacado WHERE id_lote = ?',
+                'SELECT * FROM empacado WHERE id_lote = ? AND es_historico = FALSE',
                 [idLote]
             );
             
@@ -97,7 +114,8 @@ class EmpacadoDAO {
                 rows[0].observaciones,
                 rows[0].id_estado_proceso,
                 rows[0].id_tueste,
-                rows[0].id_molienda
+                rows[0].id_molienda,
+                rows[0].es_historico
             );
         } catch (error) {
             console.error('Error en empacadoDAO.getEmpacadoByLoteId:', error);
@@ -113,7 +131,7 @@ class EmpacadoDAO {
     async getAllEmpacadosByLoteId(idLote) {
         try {
             const [rows] = await db.query(
-                'SELECT * FROM empacado WHERE id_lote = ? ORDER BY tipo_producto_empacado, fecha_empacado',
+                'SELECT * FROM empacado WHERE id_lote = ? AND es_historico = FALSE ORDER BY tipo_producto_empacado, fecha_empacado',
                 [idLote]
             );
             
@@ -128,7 +146,8 @@ class EmpacadoDAO {
                 row.observaciones,
                 row.id_estado_proceso,
                 row.id_tueste,
-                row.id_molienda
+                row.id_molienda,
+                row.es_historico
             ));
         } catch (error) {
             console.error('Error en empacadoDAO.getAllEmpacadosByLoteId:', error);
@@ -145,7 +164,7 @@ class EmpacadoDAO {
     async getEmpacadosByTipoProducto(idLote, tipoProducto) {
         try {
             const [rows] = await db.query(
-                'SELECT * FROM empacado WHERE id_lote = ? AND tipo_producto_empacado = ?',
+                'SELECT * FROM empacado WHERE id_lote = ? AND tipo_producto_empacado = ? AND es_historico = FALSE',
                 [idLote, tipoProducto]
             );
             
@@ -160,7 +179,8 @@ class EmpacadoDAO {
                 row.observaciones,
                 row.id_estado_proceso,
                 row.id_tueste,
-                row.id_molienda
+                row.id_molienda,
+                row.es_historico
             ));
         } catch (error) {
             console.error('Error en empacadoDAO.getEmpacadosByTipoProducto:', error);
@@ -175,12 +195,98 @@ class EmpacadoDAO {
      */
     async reiniciarEmpacado(idEmpacado) {
         try {
+            // Primero marcamos el registro actual como histórico
             await db.query(
-                'UPDATE empacado SET id_estado_proceso = 1 WHERE id = ?',
+                'UPDATE empacado SET es_historico = TRUE WHERE id = ?',
                 [idEmpacado]
             );
+
+            // Obtenemos los datos del empacado actual
+            const empacadoActual = await this.getEmpacadoById(idEmpacado);
+            
+            if (!empacadoActual) {
+                throw new Error('No se encontró el registro de empacado a reiniciar');
+            }
+
+            // Creamos un nuevo registro con estado reiniciado
+            const nuevoEmpacado = new Empacado(
+                null,
+                empacadoActual.id_lote,
+                empacadoActual.fecha_empacado,
+                empacadoActual.peso_inicial,
+                empacadoActual.peso_empacado,
+                empacadoActual.total_empaques,
+                empacadoActual.tipo_producto_empacado,
+                empacadoActual.observaciones,
+                1, // Estado reiniciado
+                empacadoActual.id_tueste,
+                empacadoActual.id_molienda,
+                false // No es histórico
+            );
+
+            return await this.createEmpacado(nuevoEmpacado);
         } catch (error) {
             console.error('Error en empacadoDAO.reiniciarEmpacado:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualiza las observaciones de un empacado específico.
+     * @param {number} idEmpacado - ID del registro de empacado
+     * @param {string} observaciones - Nuevas observaciones a guardar
+     * @returns {Promise<void>}
+     */
+    async updateEmpacadoObservaciones(idEmpacado, observaciones) {
+        try {
+            await db.query(
+                'UPDATE empacado SET observaciones = ? WHERE id = ?',
+                [observaciones, idEmpacado]
+            );
+        } catch (error) {
+            console.error('Error en empacadoDAO.updateEmpacadoObservaciones:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualiza un registro de empacado con nuevos datos.
+     * @param {number} idEmpacado - ID del empacado a actualizar
+     * @param {Object} datos - Objeto con los campos a actualizar
+     * @returns {Promise<void>}
+     */
+    async updateEmpacado(idEmpacado, datos) {
+        try {
+            const { 
+                fecha_empacado, 
+                peso_inicial, 
+                peso_empacado, 
+                total_empaques, 
+                observaciones, 
+                id_estado_proceso 
+            } = datos;
+            
+            await db.query(
+                `UPDATE empacado 
+                SET fecha_empacado = ?, 
+                    peso_inicial = ?, 
+                    peso_empacado = ?,
+                    total_empaques = ?, 
+                    observaciones = ?, 
+                    id_estado_proceso = ?
+                WHERE id = ? AND es_historico = FALSE`,
+                [
+                    fecha_empacado,
+                    peso_inicial,
+                    peso_empacado,
+                    total_empaques,
+                    observaciones,
+                    id_estado_proceso,
+                    idEmpacado
+                ]
+            );
+        } catch (error) {
+            console.error('Error en empacadoDAO.updateEmpacado:', error);
             throw error;
         }
     }

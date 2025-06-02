@@ -127,4 +127,47 @@
 .dropdown-item.text-warning:hover {
     background-color: #fff3cd;
     color: #856404 !important;
+}
+
+/* Estilos para botones de reinicio */
+.btn-group .btn-warning {
+    border-color: #ffc107;
+}
+
+.btn-group .btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+    transform: translateY(-1px);
+    transition: all 0.2s ease-in-out;
+}
+
+/* Espaciado para botones en contenedor flex */
+.d-flex.gap-1 {
+    gap: 0.25rem !important;
+}
+
+/* Estilo para formularios inline en botones */
+.card-footer form {
+    margin: 0;
+}
+
+/* Confirmación de reinicio */
+.btn-warning[title] {
+    position: relative;
+}
+
+.btn-warning[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #212529;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 0.25rem;
 } 

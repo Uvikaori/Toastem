@@ -8,26 +8,15 @@ class DashboardDAO {
    */
   async obtenerEstadisticasLotes(userId) {
     try {
-      // Usamos la caché del dashboard en lugar de múltiples consultas complejas
+      // Primero actualizamos la caché
+      await this.actualizarDashboardCompleto(userId);
+      
+      // Obtenemos las estadísticas de la caché
       const [stats] = await db.query(`
         SELECT * FROM dashboard_cache 
         WHERE id_usuario = ? 
         AND tipo_dato IN ('lotes_total', 'lotes_activos', 'lotes_finalizados', 'lotes_cancelados')
       `, [userId]);
-
-      if (!stats || stats.length === 0) {
-        // Si no hay datos en caché, forzamos la actualización
-        await db.query('CALL actualizar_estadisticas_lotes(?)', [userId]);
-        
-        // Y volvemos a consultar
-        const [updatedStats] = await db.query(`
-          SELECT * FROM dashboard_cache 
-          WHERE id_usuario = ? 
-          AND tipo_dato IN ('lotes_total', 'lotes_activos', 'lotes_finalizados', 'lotes_cancelados')
-        `, [userId]);
-        
-        stats = updatedStats;
-      }
 
       // Convertir el resultado a un objeto más simple
       const statsObj = {
@@ -37,12 +26,15 @@ class DashboardDAO {
         lotesCancelados: 0
       };
       
-      stats.forEach(item => {
-        if (item.tipo_dato === 'lotes_total') statsObj.totalLotes = Number(item.valor_numerico);
-        if (item.tipo_dato === 'lotes_activos') statsObj.lotesActivos = Number(item.valor_numerico);
-        if (item.tipo_dato === 'lotes_finalizados') statsObj.lotesFinalizados = Number(item.valor_numerico);
-        if (item.tipo_dato === 'lotes_cancelados') statsObj.lotesCancelados = Number(item.valor_numerico);
-      });
+      if (stats && stats.length > 0) {
+        stats.forEach(item => {
+          const valor = Number(item.valor_numerico) || 0;
+          if (item.tipo_dato === 'lotes_total') statsObj.totalLotes = valor;
+          if (item.tipo_dato === 'lotes_activos') statsObj.lotesActivos = valor;
+          if (item.tipo_dato === 'lotes_finalizados') statsObj.lotesFinalizados = valor;
+          if (item.tipo_dato === 'lotes_cancelados') statsObj.lotesCancelados = valor;
+        });
+      }
 
       // Obtener los últimos 5 lotes
       const [ultimosLotes] = await db.query(`
@@ -55,12 +47,10 @@ class DashboardDAO {
         LIMIT 5
       `, [userId]);
 
-      statsObj.ultimosLotes = ultimosLotes;
-
+      statsObj.ultimosLotes = ultimosLotes || [];
       return statsObj;
     } catch (error) {
       console.error('Error al obtener estadísticas de lotes:', error);
-      // Si hay error, devolvemos un objeto vacío con la estructura esperada
       return {
         totalLotes: 0,
         lotesActivos: 0,
@@ -84,26 +74,9 @@ class DashboardDAO {
         FROM dashboard_cache 
         WHERE id_usuario = ? 
         AND tipo_dato = 'lotes_por_mes'
-        ORDER BY clave ASC
+        ORDER BY clave DESC
         LIMIT 12
       `, [userId]);
-
-      if (!procesosPorMes || procesosPorMes.length === 0) {
-        // Si no hay datos en caché, forzamos la actualización
-        await db.query('CALL actualizar_lotes_por_mes(?)', [userId]);
-        
-        // Y volvemos a consultar
-        const [updatedProcesosPorMes] = await db.query(`
-          SELECT clave as mes, valor_numerico as cantidad
-          FROM dashboard_cache 
-          WHERE id_usuario = ? 
-          AND tipo_dato = 'lotes_por_mes'
-          ORDER BY clave ASC
-          LIMIT 12
-        `, [userId]);
-        
-        procesosPorMes = updatedProcesosPorMes;
-      }
 
       // Obtener estado de procesos de la caché
       const [estadoProcesos] = await db.query(`
@@ -114,25 +87,9 @@ class DashboardDAO {
         ORDER BY valor_numerico DESC
       `, [userId]);
 
-      if (!estadoProcesos || estadoProcesos.length === 0) {
-        // Si no hay datos en caché, forzamos la actualización
-        await db.query('CALL actualizar_lotes_por_estado(?)', [userId]);
-        
-        // Y volvemos a consultar
-        const [updatedEstadoProcesos] = await db.query(`
-          SELECT valor_texto as estado, valor_numerico as cantidad
-          FROM dashboard_cache 
-          WHERE id_usuario = ? 
-          AND tipo_dato = 'lotes_por_estado'
-          ORDER BY valor_numerico DESC
-        `, [userId]);
-        
-        estadoProcesos = updatedEstadoProcesos;
-      }
-
       return {
-        procesosPorMes,
-        estadoProcesos
+        procesosPorMes: procesosPorMes || [],
+        estadoProcesos: estadoProcesos || []
       };
     } catch (error) {
       console.error('Error al obtener estadísticas de procesos:', error);
@@ -155,23 +112,8 @@ class DashboardDAO {
         SELECT clave as tipo, json_data
         FROM dashboard_cache 
         WHERE id_usuario = ? 
-        AND tipo_dato = 'lotes_terminados_tipo'
+        AND tipo_dato = 'lotes_terminados_tipo_disponible'
       `, [userId]);
-
-      if (!tipoLotes || tipoLotes.length === 0) {
-        // Si no hay datos en caché, forzamos la actualización
-        await db.query('CALL actualizar_lotes_terminados_tipo(?)', [userId]);
-        
-        // Y volvemos a consultar
-        const [updatedTipoLotes] = await db.query(`
-          SELECT clave as tipo, json_data
-          FROM dashboard_cache 
-          WHERE id_usuario = ? 
-          AND tipo_dato = 'lotes_terminados_tipo'
-        `, [userId]);
-        
-        tipoLotes = updatedTipoLotes;
-      }
 
       // Convertir a objeto
       const result = {
@@ -180,28 +122,36 @@ class DashboardDAO {
         tostadoMolido: { cantidad: 0, total_kg: 0 }
       };
 
-      tipoLotes.forEach(item => {
-        const data = JSON.parse(item.json_data);
-        
-        if (item.tipo === 'Pergamino') {
-          result.pergamino = { 
-            cantidad: data.cantidad, 
-            total_kg: data.total_kg 
-          };
-        } 
-        else if (item.tipo === 'TostadoGrano') {
-          result.tostadoGrano = { 
-            cantidad: data.cantidad, 
-            total_kg: data.total_kg 
-          };
-        }
-        else if (item.tipo === 'TostadoMolido') {
-          result.tostadoMolido = { 
-            cantidad: data.cantidad, 
-            total_kg: data.total_kg 
-          };
-        }
-      });
+      if (tipoLotes && tipoLotes.length > 0) {
+        tipoLotes.forEach(item => {
+          let parsed_data = null;
+          
+          if (item.json_data) {
+            try {
+              if (typeof item.json_data === 'object') {
+                parsed_data = item.json_data;
+              } else if (typeof item.json_data === 'string') {
+                parsed_data = JSON.parse(item.json_data);
+              }
+            } catch (e) {
+              console.error('Error al parsear JSON:', e);
+            }
+          }
+
+          if (parsed_data) {
+            const cantidad = Number(parsed_data.cantidad_lotes) || 0;
+            const total_kg = Number(parsed_data.total_kg_disponible) || 0;
+            
+            if (item.tipo === 'Pergamino') {
+              result.pergamino = { cantidad, total_kg };
+            } else if (item.tipo === 'TostadoGrano') {
+              result.tostadoGrano = { cantidad, total_kg };
+            } else if (item.tipo === 'TostadoMolido') {
+              result.tostadoMolido = { cantidad, total_kg };
+            }
+          }
+        });
+      }
 
       return result;
     } catch (error) {
@@ -226,27 +176,11 @@ class DashboardDAO {
         SELECT json_data
         FROM dashboard_cache 
         WHERE id_usuario = ? 
-        AND tipo_dato = 'conteos_procesos'
+        AND tipo_dato = 'conteos_procesos_activos'
         LIMIT 1
       `, [userId]);
 
-      if (!conteos || conteos.length === 0) {
-        // Si no hay datos en caché, forzamos la actualización
-        await db.query('CALL actualizar_conteos_procesos(?)', [userId]);
-        
-        // Y volvemos a consultar
-        const [updatedConteos] = await db.query(`
-          SELECT json_data
-          FROM dashboard_cache 
-          WHERE id_usuario = ? 
-          AND tipo_dato = 'conteos_procesos'
-          LIMIT 1
-        `, [userId]);
-        
-        conteos = updatedConteos;
-      }
-
-      // Obtener lotes en proceso de despulpado
+      // Obtener lotes específicos en proceso para cada tipo
       const [despulpado] = await db.query(`
         SELECT l.id, l.codigo, f.id as id_finca, f.nombre as finca, d.fecha_remojo as fecha_inicio, d.peso_inicial
         FROM lotes l
@@ -259,7 +193,6 @@ class DashboardDAO {
         LIMIT 5
       `, [userId]);
 
-      // Obtener lotes en proceso de lavado
       const [lavado] = await db.query(`
         SELECT l.id, l.codigo, f.id as id_finca, f.nombre as finca, lav.fecha_inicio_fermentacion as fecha_inicio, lav.peso_inicial
         FROM lotes l
@@ -272,7 +205,6 @@ class DashboardDAO {
         LIMIT 5
       `, [userId]);
 
-      // Obtener lotes en proceso de secado
       const [secado] = await db.query(`
         SELECT l.id, l.codigo, f.id as id_finca, f.nombre as finca, s.fecha_inicio, s.peso_inicial
         FROM lotes l
@@ -285,7 +217,18 @@ class DashboardDAO {
         LIMIT 5
       `, [userId]);
 
-      // Obtener lotes en proceso de trilla
+      const [clasificacion] = await db.query(`
+        SELECT l.id, l.codigo, f.id as id_finca, f.nombre as finca, cla.fecha_clasificacion as fecha_inicio, cla.peso_inicial
+        FROM lotes l
+        JOIN fincas f ON l.id_finca = f.id
+        JOIN clasificacion cla ON l.id = cla.id_lote
+        WHERE f.id_usuario = ? 
+        AND l.id_estado_proceso = 2 
+        AND cla.id_estado_proceso = 2
+        ORDER BY cla.fecha_clasificacion DESC
+        LIMIT 5
+      `, [userId]);
+
       const [trilla] = await db.query(`
         SELECT l.id, l.codigo, f.id as id_finca, f.nombre as finca, tr.fecha_trilla as fecha_inicio, tr.peso_pergamino_inicial as peso_inicial
         FROM lotes l
@@ -298,7 +241,6 @@ class DashboardDAO {
         LIMIT 5
       `, [userId]);
 
-      // Obtener lotes en proceso de tueste
       const [tueste] = await db.query(`
         SELECT l.id, l.codigo, f.id as id_finca, f.nombre as finca, t.fecha_tueste as fecha_inicio, t.peso_inicial
         FROM lotes l
@@ -311,7 +253,6 @@ class DashboardDAO {
         LIMIT 5
       `, [userId]);
 
-      // Obtener lotes en proceso de molienda
       const [molienda] = await db.query(`
         SELECT l.id, l.codigo, f.id as id_finca, f.nombre as finca, m.fecha_molienda as fecha_inicio, m.peso_inicial
         FROM lotes l
@@ -325,28 +266,83 @@ class DashboardDAO {
         LIMIT 5
       `, [userId]);
 
+      const [empacado] = await db.query(`
+        SELECT l.id, l.codigo, f.id as id_finca, f.nombre as finca, e.fecha_empacado as fecha_inicio, e.peso_inicial
+        FROM lotes l
+        JOIN fincas f ON l.id_finca = f.id
+        JOIN empacado e ON l.id = e.id_lote
+        WHERE f.id_usuario = ? 
+        AND l.id_estado_proceso = 2 
+        AND e.id_estado_proceso = 2
+        AND e.es_historico = 0
+        ORDER BY e.fecha_empacado DESC
+        LIMIT 5
+      `, [userId]);
+
       // Convertir los conteos de JSON a objeto
-      const conteosObj = conteos.length > 0 ? JSON.parse(conteos[0].json_data) : {
+      let conteosObj = {
         despulpado_count: 0,
-        lavado_count: 0,
+        fermentacion_lavado_count: 0,
         secado_count: 0,
+        clasificacion_count: 0,
         trilla_count: 0,
         tueste_count: 0,
-        molienda_count: 0
+        molienda_count: 0,
+        empacado_count: 0
       };
+
+      if (conteos && conteos.length > 0 && conteos[0].json_data) {
+        try {
+          const raw_json_data = conteos[0].json_data;
+          let parsed_conteos_data = null;
+          
+          if (typeof raw_json_data === 'object') {
+            parsed_conteos_data = raw_json_data;
+          } else if (typeof raw_json_data === 'string') {
+            parsed_conteos_data = JSON.parse(raw_json_data);
+          }
+          
+          if (parsed_conteos_data) {
+            conteosObj = { ...conteosObj, ...parsed_conteos_data };
+          }
+        } catch (e) {
+          console.error('Error al parsear conteos:', e);
+        }
+      }
 
       return {
         despulpado: despulpado || [],
         lavado: lavado || [],
         secado: secado || [],
+        clasificacion: clasificacion || [],
         trilla: trilla || [],
         tueste: tueste || [],
         molienda: molienda || [],
+        empacado: empacado || [],
         conteos: conteosObj
       };
     } catch (error) {
       console.error('Error al obtener lotes en proceso:', error);
-      throw error;
+      return {
+        despulpado: [],
+        lavado: [],
+        secado: [],
+        clasificacion: [],
+        trilla: [],
+        tueste: [],
+        molienda: [],
+        empacado: [],
+        conteos: {
+          despulpado_count: 0,
+          fermentacion_lavado_count: 0,
+          secado_count: 0,
+          clasificacion_count: 0,
+          trilla_count: 0,
+          tueste_count: 0,
+          molienda_count: 0,
+          empacado_count: 0
+        }
+      };
     }
   }
 
@@ -357,13 +353,71 @@ class DashboardDAO {
    */
   async obtenerResumenVentas(userId) {
     try {
-      // Simular datos de ventas (completar cuando exista la tabla de ventas)
-      return {
+      // Obtener datos de la caché
+      const [resumen] = await db.query(`
+        SELECT json_data
+        FROM dashboard_cache 
+        WHERE id_usuario = ? 
+        AND tipo_dato = 'resumen_ventas'
+        LIMIT 1
+      `, [userId]);
+
+      // Valores por defecto
+      let resultado = {
         pasilla: { kg: 0, total: 0 },
         pergamino: { kg: 0, total: 0 },
         tostadoGrano: { kg: 0, total: 0 },
         tostadoMolido: { kg: 0, total: 0 }
       };
+
+      // Procesar el JSON si existe
+      if (resumen && resumen.length > 0 && resumen[0].json_data) {
+        try {
+          const raw_json_data = resumen[0].json_data;
+          let parsed_data = null;
+          
+          if (typeof raw_json_data === 'object') {
+            parsed_data = raw_json_data;
+          } else if (typeof raw_json_data === 'string') {
+            parsed_data = JSON.parse(raw_json_data);
+          }
+          
+          if (parsed_data) {
+            // Extraer datos de cada tipo de producto
+            if (parsed_data.pergamino) {
+              resultado.pergamino = {
+                kg: Number(parsed_data.pergamino.kg) || 0,
+                total: Number(parsed_data.pergamino.total) || 0
+              };
+            }
+            
+            if (parsed_data.tostadoGrano) {
+              resultado.tostadoGrano = {
+                kg: Number(parsed_data.tostadoGrano.kg) || 0,
+                total: Number(parsed_data.tostadoGrano.total) || 0
+              };
+            }
+            
+            if (parsed_data.tostadoMolido) {
+              resultado.tostadoMolido = {
+                kg: Number(parsed_data.tostadoMolido.kg) || 0,
+                total: Number(parsed_data.tostadoMolido.total) || 0
+              };
+            }
+            
+            if (parsed_data.pasillaMolido) {
+              resultado.pasilla = {
+                kg: Number(parsed_data.pasillaMolido.kg) || 0,
+                total: Number(parsed_data.pasillaMolido.total) || 0
+              };
+            }
+          }
+        } catch (e) {
+          console.error('Error al parsear resumen de ventas:', e);
+        }
+      }
+
+      return resultado;
     } catch (error) {
       console.error('Error al obtener resumen de ventas:', error);
       return {
@@ -371,6 +425,72 @@ class DashboardDAO {
         pergamino: { kg: 0, total: 0 },
         tostadoGrano: { kg: 0, total: 0 },
         tostadoMolido: { kg: 0, total: 0 }
+      };
+    }
+  }
+
+  /**
+   * Obtiene información sobre los productos empacados disponibles
+   * @param {number} userId - ID del usuario
+   * @returns {Promise<Object>} - Información de productos empacados
+   */
+  async obtenerEmpacadoDisponible(userId) {
+    try {
+      // Obtener datos de la caché
+      const [empacadoData] = await db.query(`
+        SELECT clave as tipo_producto, valor_numerico, json_data
+        FROM dashboard_cache 
+        WHERE id_usuario = ? 
+        AND tipo_dato = 'empacado_disponible'
+      `, [userId]);
+
+      // Estructura para almacenar resultados
+      const resultado = {
+        grano: { cantidad_empaques: 0, peso_total: 0, lotes_count: 0 },
+        molido: { cantidad_empaques: 0, peso_total: 0, lotes_count: 0 },
+        pasillaMolido: { cantidad_empaques: 0, peso_total: 0, lotes_count: 0 }
+      };
+
+      // Procesar cada registro
+      if (empacadoData && empacadoData.length > 0) {
+        empacadoData.forEach(item => {
+          let parsed_data = null;
+          
+          if (item.json_data) {
+            try {
+              if (typeof item.json_data === 'object') {
+                parsed_data = item.json_data;
+              } else if (typeof item.json_data === 'string') {
+                parsed_data = JSON.parse(item.json_data);
+              }
+            } catch (e) {
+              console.error('Error al parsear JSON de empacado:', e);
+            }
+          }
+
+          if (parsed_data) {
+            const cantidad_empaques = Number(parsed_data.cantidad_empaques) || 0;
+            const peso_total = Number(parsed_data.peso_total) || 0;
+            const lotes_count = Number(parsed_data.lotes_count) || 0;
+            
+            if (item.tipo_producto === 'Grano') {
+              resultado.grano = { cantidad_empaques, peso_total, lotes_count };
+            } else if (item.tipo_producto === 'Molido') {
+              resultado.molido = { cantidad_empaques, peso_total, lotes_count };
+            } else if (item.tipo_producto === 'Pasilla Molido') {
+              resultado.pasillaMolido = { cantidad_empaques, peso_total, lotes_count };
+            }
+          }
+        });
+      }
+
+      return resultado;
+    } catch (error) {
+      console.error('Error al obtener información de empacado disponible:', error);
+      return {
+        grano: { cantidad_empaques: 0, peso_total: 0, lotes_count: 0 },
+        molido: { cantidad_empaques: 0, peso_total: 0, lotes_count: 0 },
+        pasillaMolido: { cantidad_empaques: 0, peso_total: 0, lotes_count: 0 }
       };
     }
   }

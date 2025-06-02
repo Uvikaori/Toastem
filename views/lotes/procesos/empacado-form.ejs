@@ -113,7 +113,7 @@
                 <div class="mb-3">
                     <label for="fecha_empacado" class="form-label">Fecha de Empacado:</label>
                     <input type="date" class="form-control" id="fecha_empacado" name="fecha_empacado" 
-                        value="<%= new Date().toISOString().split('T')[0] %>" required>
+                        value="<%= new Date().toISOString().split('T')[0] %>">
                 </div>
 
                 <!-- Tipos de café a empacar -->
@@ -137,23 +137,22 @@
                             
                             <div class="mb-3">
                                 <label for="peso_inicial_grano" class="form-label">Peso Inicial (kg):</label>
-                                <input type="number" step="0.01" class="form-control" id="peso_inicial_grano" 
-                                    name="peso_inicial_grano" value="<%= peso_pergamino_grano.toFixed(2) %>" 
-                                    max="<%= peso_pergamino_grano.toFixed(2) %>">
+                                <input type="number" step="any" class="form-control" id="peso_inicial_grano" 
+                                    name="peso_inicial_grano" value="<%= peso_pergamino_grano.toFixed(2) %>">
                                 <small class="form-text text-muted">Peso disponible de Pergamino en Grano</small>
                             </div>
 
                             <div class="mb-3">
                                 <label for="total_empaques_grano" class="form-label">Número Total de Empaques:</label>
                                 <input type="number" class="form-control" id="total_empaques_grano" 
-                                    name="total_empaques_grano" value="1" min="1">
+                                    name="total_empaques_grano" value="1">
                             </div>
 
                             <div class="mb-3">
                                 <label for="peso_empacado_grano" class="form-label">Peso Total Empacado (kg):</label>
-                                <input type="number" step="0.01" class="form-control" id="peso_empacado_grano" 
+                                <input type="number" step="any" class="form-control" id="peso_empacado_grano" 
                                     name="peso_empacado_grano" value="<%= peso_pergamino_grano.toFixed(2) %>">
-                                <small class="form-text text-muted">Debe ser menor o igual al peso inicial</small>
+                                <small class="form-text text-muted">Puede ser igual o menor al peso inicial</small>
                             </div>
 
                             <div class="mb-3">
@@ -182,23 +181,22 @@
                             
                             <div class="mb-3">
                                 <label for="peso_inicial_molido" class="form-label">Peso Inicial (kg):</label>
-                                <input type="number" step="0.01" class="form-control" id="peso_inicial_molido" 
-                                    name="peso_inicial_molido" value="<%= peso_pergamino_molido.toFixed(2) %>" 
-                                    max="<%= peso_pergamino_molido.toFixed(2) %>">
+                                <input type="number" step="any" class="form-control" id="peso_inicial_molido" 
+                                    name="peso_inicial_molido" value="<%= peso_pergamino_molido.toFixed(2) %>">
                                 <small class="form-text text-muted">Peso disponible de Pergamino Molido</small>
                             </div>
 
                             <div class="mb-3">
                                 <label for="total_empaques_molido" class="form-label">Número Total de Empaques:</label>
                                 <input type="number" class="form-control" id="total_empaques_molido" 
-                                    name="total_empaques_molido" value="1" min="1">
+                                    name="total_empaques_molido" value="1">
                             </div>
 
                             <div class="mb-3">
                                 <label for="peso_empacado_molido" class="form-label">Peso Total Empacado (kg):</label>
-                                <input type="number" step="0.01" class="form-control" id="peso_empacado_molido" 
+                                <input type="number" step="any" class="form-control" id="peso_empacado_molido" 
                                     name="peso_empacado_molido" value="<%= peso_pergamino_molido.toFixed(2) %>">
-                                <small class="form-text text-muted">Debe ser menor o igual al peso inicial</small>
+                                <small class="form-text text-muted">Puede ser igual o menor al peso inicial</small>
                             </div>
 
                             <div class="mb-3">
@@ -227,23 +225,22 @@
                             
                             <div class="mb-3">
                                 <label for="peso_inicial_pasilla" class="form-label">Peso Inicial (kg):</label>
-                                <input type="number" step="0.01" class="form-control" id="peso_inicial_pasilla" 
-                                    name="peso_inicial_pasilla" value="<%= peso_pasilla_molido.toFixed(2) %>" 
-                                    max="<%= peso_pasilla_molido.toFixed(2) %>">
+                                <input type="number" step="any" class="form-control" id="peso_inicial_pasilla" 
+                                    name="peso_inicial_pasilla" value="<%= peso_pasilla_molido.toFixed(2) %>">
                                 <small class="form-text text-muted">Peso disponible de Pasilla Molido</small>
                             </div>
 
                             <div class="mb-3">
                                 <label for="total_empaques_pasilla" class="form-label">Número Total de Empaques:</label>
                                 <input type="number" class="form-control" id="total_empaques_pasilla" 
-                                    name="total_empaques_pasilla" value="1" min="1">
+                                    name="total_empaques_pasilla" value="1">
                             </div>
 
                             <div class="mb-3">
                                 <label for="peso_empacado_pasilla" class="form-label">Peso Total Empacado (kg):</label>
-                                <input type="number" step="0.01" class="form-control" id="peso_empacado_pasilla" 
+                                <input type="number" step="any" class="form-control" id="peso_empacado_pasilla" 
                                     name="peso_empacado_pasilla" value="<%= peso_pasilla_molido.toFixed(2) %>">
-                                <small class="form-text text-muted">Debe ser menor o igual al peso inicial</small>
+                                <small class="form-text text-muted">Puede ser igual o menor al peso inicial</small>
                             </div>
 
                             <div class="mb-3">
@@ -283,9 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formGrano = document.getElementById('form_grano');
         if (empacarGrano && formGrano) {
             formGrano.querySelectorAll('input, textarea').forEach(input => {
-                if (!input.id.includes('observaciones')) {
-                    input.required = empacarGrano.checked;
-                }
+                input.required = false;
             });
             formGrano.style.display = empacarGrano.checked ? 'block' : 'none';
         }
@@ -294,9 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formMolido = document.getElementById('form_molido');
         if (empacarMolido && formMolido) {
             formMolido.querySelectorAll('input, textarea').forEach(input => {
-                if (input.type !== 'hidden' && !input.id.includes('observaciones')) {
-                    input.required = empacarMolido.checked;
-                }
+                input.required = false;
             });
             formMolido.style.display = empacarMolido.checked ? 'block' : 'none';
         }
@@ -305,22 +298,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const formPasilla = document.getElementById('form_pasilla');
         if (empacarPasilla && formPasilla) {
             formPasilla.querySelectorAll('input, textarea').forEach(input => {
-                if (input.type !== 'hidden' && !input.id.includes('observaciones')) {
-                    input.required = empacarPasilla.checked;
-                }
+                input.required = false;
             });
             formPasilla.style.display = empacarPasilla.checked ? 'block' : 'none';
         }
 
-        // Verificar si al menos un checkbox está marcado
         const btnRegistrar = document.getElementById('btnRegistrarEmpacado');
         if (btnRegistrar) {
-            const alMenosUnoSeleccionado = 
-                (empacarGrano && empacarGrano.checked) || 
-                (empacarMolido && empacarMolido.checked) || 
-                (empacarPasilla && empacarPasilla.checked);
-            
-            btnRegistrar.disabled = !alMenosUnoSeleccionado;
+            btnRegistrar.disabled = false;
         }
     };
 
@@ -333,69 +318,39 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar formularios
     toggleForms();
 
-    // Validación para Pergamino en Grano
+    // Validación para Pergamino en Grano - ahora más permisiva
     const pesoInicialGrano = document.getElementById('peso_inicial_grano');
     const pesoEmpacadoGrano = document.getElementById('peso_empacado_grano');
     
     if (pesoInicialGrano && pesoEmpacadoGrano) {
         pesoEmpacadoGrano.addEventListener('input', function() {
-            const pesoInicial = parseFloat(pesoInicialGrano.value) || 0;
-            const pesoEmpacado = parseFloat(this.value) || 0;
-            
-            if (pesoEmpacado > pesoInicial) {
-                alert(`¡Atención! El peso empacado (${pesoEmpacado.toFixed(2)} kg) excede el peso disponible de Pergamino en Grano (${pesoInicial.toFixed(2)} kg).`);
-                this.value = pesoInicial.toFixed(2);
-            }
+            // No hacemos ninguna validación, para hacerlo más permisivo
         });
     }
     
-    // Validación para Pergamino Molido
+    // Validación para Pergamino Molido - ahora más permisiva
     const pesoInicialMolido = document.getElementById('peso_inicial_molido');
     const pesoEmpacadoMolido = document.getElementById('peso_empacado_molido');
     
     if (pesoInicialMolido && pesoEmpacadoMolido) {
         pesoEmpacadoMolido.addEventListener('input', function() {
-            const pesoInicial = parseFloat(pesoInicialMolido.value) || 0;
-            const pesoEmpacado = parseFloat(this.value) || 0;
-            
-            if (pesoEmpacado > pesoInicial) {
-                alert(`¡Atención! El peso empacado (${pesoEmpacado.toFixed(2)} kg) excede el peso disponible de Pergamino Molido (${pesoInicial.toFixed(2)} kg).`);
-                this.value = pesoInicial.toFixed(2);
-            }
+            // No hacemos ninguna validación, para hacerlo más permisivo
         });
     }
     
-    // Validación para Pasilla Molido
+    // Validación para Pasilla Molido - ahora más permisiva
     const pesoInicialPasilla = document.getElementById('peso_inicial_pasilla');
     const pesoEmpacadoPasilla = document.getElementById('peso_empacado_pasilla');
     
     if (pesoInicialPasilla && pesoEmpacadoPasilla) {
         pesoEmpacadoPasilla.addEventListener('input', function() {
-            const pesoInicial = parseFloat(pesoInicialPasilla.value) || 0;
-            const pesoEmpacado = parseFloat(this.value) || 0;
-            
-            if (pesoEmpacado > pesoInicial) {
-                alert(`¡Atención! El peso empacado (${pesoEmpacado.toFixed(2)} kg) excede el peso disponible de Pasilla Molido (${pesoInicial.toFixed(2)} kg).`);
-                this.value = pesoInicial.toFixed(2);
-            }
+            // No hacemos ninguna validación, para hacerlo más permisivo
         });
     }
 
-    // Validación del formulario antes de enviar
+    // Validación del formulario antes de enviar - ahora más permisiva
     document.getElementById('formEmpacadoUnificado').addEventListener('submit', function(event) {
-        const empacarGrano = document.getElementById('empacar_grano');
-        const empacarMolido = document.getElementById('empacar_molido');
-        const empacarPasilla = document.getElementById('empacar_pasilla');
-        
-        const algunoSeleccionado = 
-            (empacarGrano && empacarGrano.checked) || 
-            (empacarMolido && empacarMolido.checked) || 
-            (empacarPasilla && empacarPasilla.checked);
-            
-        if (!algunoSeleccionado) {
-            event.preventDefault();
-            alert('Debes seleccionar al menos un tipo de café para empacar.');
-        }
+        // No bloqueamos el envío del formulario, para hacerlo más permisivo
     });
 });
 </script> 

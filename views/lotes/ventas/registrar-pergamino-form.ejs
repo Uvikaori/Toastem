@@ -1,0 +1,52 @@
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-dollar-sign me-2"></i><%= titulo %></h4>
+        </div>
+        <div class="card-body">
+            <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/ventas/registrar/pergamino" method="POST">
+                
+                <div class="alert alert-info" role="alert">
+                    Está registrando la venta del café pergamino del lote <strong><%= lote.codigo %></strong> (Finca: <%= finca.nombre %>).
+                    Peso disponible para venta (final de secado): <strong><%= secado.peso_final %> kg</strong>.
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="fecha_venta" class="form-label">Fecha de Venta <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="fecha_venta" name="fecha_venta" value="<%= fecha_venta %>" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="cantidad" class="form-label">Cantidad Vendida (kg) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" class="form-control" id="cantidad" name="cantidad" value="<%= cantidad %>" placeholder="Ej: <%= secado.peso_final %>" required>
+                        <small class="form-text text-muted">Por defecto, es el peso final del secado.</small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="precio_kg" class="form-label">Precio por Kg <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" class="form-control" id="precio_kg" name="precio_kg" value="<%= precio_kg %>" placeholder="Ej: 15000" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="comprador" class="form-label">Comprador</label>
+                        <input type="text" class="form-control" id="comprador" name="comprador" value="<%= comprador %>" placeholder="Nombre del comprador (opcional)">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="observaciones" class="form-label">Observaciones</label>
+                    <textarea class="form-control" id="observaciones" name="observaciones" rows="3" placeholder="Notas adicionales sobre la venta (opcional)"><%= observaciones %></textarea>
+                </div>
+                
+                <hr>
+                <p class="text-muted"><small>Al registrar esta venta, el lote <strong><%= lote.codigo %></strong> se marcará como "Finalizado" y no podrá continuar con otros procesos.</small></p>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check-circle me-2"></i>Registrar Venta y Finalizar Lote</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> 

@@ -3,6 +3,7 @@ const db = require('../config/database');
 const Usuario = require('../models/Usuario');
 const { validationResult } = require('express-validator');
 const { capitalizarPalabras } = require('../utils/helpers');
+const { setMessages } = require('../utils/messages');
 
 /**
  * Muestra la página de inicio de sesión

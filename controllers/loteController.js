@@ -24,6 +24,7 @@ const Empacado = require('../models/entities/Empacado');
 const { validationResult } = require('express-validator');
 const { capitalizarPalabras } = require('../utils/helpers'); // Si se usa para algo
 const seguimientoSecadoDAO = require('../models/dao/seguimientoSecadoDAO');
+const { setMessages } = require('../utils/messages');
 
 
 class LoteController {
@@ -188,163 +189,143 @@ class LoteController {
     }
 
     /**
-     * Muestra la vista general de todos los procesos para un lote específico.
+     * Muestra la vista de procesos de un lote.
      */
     async mostrarVistaProcesosLote(req, res) {
         try {
             const id_finca = parseInt(req.params.id_finca);
             const id_lote = parseInt(req.params.id_lote);
 
-            // Obtener la finca y el lote
+            // Verificar permisos
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
             if (!finca) {
-                req.flash('error', 'No tienes permisos para acceder a esta finca.');
+                setMessages.procesos.error(req, 'No tienes permisos para acceder a esta finca.');
                 return res.redirect('/fincas/gestionar');
             }
 
             const lote = await loteDAO.getLoteById(id_lote);
             if (!lote || lote.id_finca !== id_finca) {
-                req.flash('error', 'El lote no existe o no pertenece a esta finca.');
+                setMessages.procesos.error(req, 'El lote no existe o no pertenece a esta finca.');
                 return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
-            const todosLosProcesosDefinidos = await procesosDAO.getAllProcesosOrdenados();
+            // Obtener info del lote con nombres de estado y proceso - getLoteInfoById no existe, usamos getLoteById
+            // const loteInfo = await loteDAO.getLoteInfoById(id_lote);
+            // No es necesario esta línea ya que ya tenemos la información del lote en la variable 'lote'
             
-            const despulpadoInfo = await despulpadoDAO.getDespulpadoByLoteId(id_lote);
-            const fermentacionInfo = await fermentacionLavadoDAO.getFermentacionLavadoByLoteId(id_lote);
-            const zarandeoInfo = await zarandeoDAO.getZarandeoByLoteId(id_lote);
-            const secadoInfo = await secadoDAO.getSecadoByLoteId(id_lote);
-            const clasificacionInfo = await clasificacionDAO.getClasificacionByLoteId(id_lote);
-            const trillaInfo = await trillaDAO.getTrillaByLoteId(id_lote);
-            const tuesteInfo = await tuesteDAO.getTuesteByLoteId(id_lote);
-            const moliendaInfo = await moliendaDAO.getMoliendaByLoteId(id_lote);
-            // const controlCalidadInfo = await controlCalidadDAO.getControlCalidadByLoteId(id_lote); // Ya no se necesita aquí
-
-            // Obtener seguimientos de secado si existe el proceso
-            let seguimientosSecado = [];
-            if (secadoInfo && secadoInfo.id) {
-                seguimientosSecado = await seguimientoSecadoDAO.getSeguimientosBySecadoId(secadoInfo.id);
-            }
-
-            // Obtener todos los empacados del lote
-            let empacadoInfo = null;
-            try {
-                const todosEmpacados = await empacadoDAO.getAllEmpacadosByLoteId(id_lote);
-                if (todosEmpacados && todosEmpacados.length > 0) {
-                    // Si hay varios empacados, crear un objeto compuesto con la información relevante
-                    const empacadosCompletados = todosEmpacados.filter(e => e.id_estado_proceso === 3);
-                    const empacadosReiniciados = todosEmpacados.filter(e => e.id_estado_proceso === 1);
-                    
-                    if (empacadosCompletados.length > 0) {
-                        // Si hay empacados completados, mostrar esa información
-                        const fechaMasReciente = new Date(Math.max(...empacadosCompletados.map(e => new Date(e.fecha_empacado))));
-                        
-                        const pesoInicialTotal = empacadosCompletados.reduce((sum, e) => sum + parseFloat(e.peso_inicial), 0);
-                        const pesoEmpacadoTotal = empacadosCompletados.reduce((sum, e) => sum + parseFloat(e.peso_empacado), 0);
-                        const totalEmpaques = empacadosCompletados.reduce((sum, e) => sum + parseInt(e.total_empaques), 0);
-                        
-                        // Crear un resumen de tipos de productos empacados
-                        const tiposProductos = [...new Set(empacadosCompletados.map(e => e.tipo_producto_empacado))];
-                        
-                        empacadoInfo = {
-                            id: empacadosCompletados[0].id, // Usamos el ID del primer empacado para operaciones generales
-                            id_lote: id_lote,
-                            fecha_empacado: fechaMasReciente,
-                            peso_inicial: pesoInicialTotal,
-                            peso_empacado: pesoEmpacadoTotal,
-                            total_empaques: totalEmpaques,
-                            tipo_producto_empacado: tiposProductos.join(', '),
-                            id_estado_proceso: 3, // Marcamos como completado si hay al menos un empacado
-                            observaciones: empacadosCompletados.map(e => `${e.tipo_producto_empacado}: ${e.observaciones || 'N/A'}`).filter(obs => !obs.endsWith(': N/A')).join(' | '),
-                            empacados: empacadosCompletados // Incluimos los empacados individuales por si se necesitan
-                        };
-                    } else if (empacadosReiniciados.length > 0) {
-                        // Si solo hay empacados reiniciados, mostrar estado como reiniciado
-                        empacadoInfo = {
-                            id: empacadosReiniciados[0].id,
-                            id_lote: id_lote,
-                            id_estado_proceso: 1,
-                            empacados: empacadosReiniciados
-                        };
-                    }
-                }
-            } catch (error) {
-                console.error('Error al obtener datos de empacado:', error);
-                empacadoInfo = null;
-            }
-
-            const procesosConEstado = await Promise.all(todosLosProcesosDefinidos.map(async (procesoDef) => {
-                let etapaInfo = null;
-                
-                switch (procesoDef.nombre.toLowerCase()) {
+            // Obtener todos los procesos ordenados
+            const procesos = await procesosDAO.getAllProcesosOrdenados();
+            
+            // Obtener y relacionar datos de cada proceso
+            const procesosConEstado = await Promise.all(procesos.map(async proceso => {
+                switch (proceso.nombre.toLowerCase()) {
                     case 'recolección':
-                        etapaInfo = { id_estado_proceso: 3 }; // Asumiendo 3 como completado
-                        break;
+                        // Los datos de recolección ya están en el lote
+                        return proceso;
+                        
                     case 'despulpado':
-                        etapaInfo = despulpadoInfo;
-                        break;
+                        const despulpado = await despulpadoDAO.getDespulpadoByLoteId(id_lote);
+                        return { ...proceso, datosEtapa: despulpado };
+                        
                     case 'fermentación y lavado':
-                        etapaInfo = fermentacionInfo;
-                        break;
+                        const fermentacionLavado = await fermentacionLavadoDAO.getFermentacionLavadoByLoteId(id_lote);
+                        return { ...proceso, datosEtapa: fermentacionLavado };
+                        
                     case 'zarandeo':
-                        etapaInfo = zarandeoInfo;
-                        break;
+                        const zarandeo = await zarandeoDAO.getZarandeoByLoteId(id_lote);
+                        return { ...proceso, datosEtapa: zarandeo };
+                        
                     case 'secado': 
-                        etapaInfo = secadoInfo;
-                        break;
+                        const secado = await secadoDAO.getSecadoByLoteId(id_lote);
+                        return { ...proceso, datosEtapa: secado };
+                        
                     case 'clasificación':  
-                        etapaInfo = clasificacionInfo;
-                        break;
+                        const clasificacion = await clasificacionDAO.getClasificacionByLoteId(id_lote);
+                        return { ...proceso, datosEtapa: clasificacion };
+                        
                     case 'trilla':
-                        etapaInfo = trillaInfo;
-                        break;
+                        const trilla = await trillaDAO.getTrillaByLoteId(id_lote);
+                        return { ...proceso, datosEtapa: trilla };
+                        
                     case 'tueste':
-                        etapaInfo = tuesteInfo;
-                        break;
+                        const tueste = await tuesteDAO.getTuesteByLoteId(id_lote);
+                        return { ...proceso, datosEtapa: tueste };
+                        
                     case 'molienda':
-                        etapaInfo = moliendaInfo;
-                        break;
+                        const molienda = await moliendaDAO.getMoliendaByLoteId(id_lote);
+                        return { ...proceso, datosEtapa: molienda };
+                        
                     case 'empacado':
-                        etapaInfo = empacadoInfo;
-                        break;
+                        let datosEmpacado = null;
+                        const empacados = await empacadoDAO.getAllEmpacadosByLoteId(id_lote);
+                        if (empacados && empacados.length > 0) {
+                            // Contar cantidades totales por tipo
+                            let pesoInicialTotal = 0;
+                            let pesoEmpacadoTotal = 0;
+                            let totalEmpaques = 0;
+                            
+                            empacados.forEach(e => {
+                                if (e.id_estado_proceso === 3) { // Solo contar los terminados
+                                    pesoInicialTotal += parseFloat(e.peso_inicial) || 0;
+                                    pesoEmpacadoTotal += parseFloat(e.peso_empacado) || 0;
+                                    totalEmpaques += parseInt(e.total_empaques) || 0;
+                                }
+                            });
+                            
+                            // Tomar la fecha del empacado más reciente
+                            const ultimoEmpacado = [...empacados].sort((a, b) => {
+                                return new Date(b.fecha_empacado) - new Date(a.fecha_empacado);
+                            })[0];
+                            
+                            datosEmpacado = {
+                                id_estado_proceso: empacados.some(e => e.id_estado_proceso === 3) ? 3 : 
+                                                  empacados.some(e => e.id_estado_proceso === 2) ? 2 : 1,
+                                fecha_empacado: ultimoEmpacado.fecha_empacado,
+                                peso_inicial: pesoInicialTotal,
+                                peso_empacado: pesoEmpacadoTotal,
+                                total_empaques: totalEmpaques,
+                                observaciones: ultimoEmpacado.observaciones,
+                                empacados: empacados
+                            };
+                        }
+                        return { ...proceso, datosEtapa: datosEmpacado };
+                        
                     case 'control de calidad':
-                        // Marcar como "En construcción" en lugar de cargar datos
-                        etapaInfo = {
-                            // nombre_proceso: procesoDef.nombre, // `procesoDef.nombre` ya está en el objeto devuelto
-                            id_estado_proceso: 0, // Usar un ID que represente "Pendiente" o "No iniciado" (o crea uno para "En Construcción")
-                            enConstruccion: true, // Flag para la vista
-                            observaciones: "Funcionalidad en construcción" // Mensaje para mostrar
+                        // NOTA: Actualmente en construcción / no implementado
+                        return { 
+                            ...proceso, 
+                            datosEtapa: { 
+                                enConstruccion: true,
+                                id_estado_proceso: 0
+                            } 
                         };
-                        // Ya no necesitamos la importación temporal ni la llamada a la BD aquí
-                        // const tempControlCalidadDAO = require('../models/dao/controlCalidadDAO');
-                        // const tempData = await tempControlCalidadDAO.getControlCalidadByLoteId(id_lote);
-                        // etapaInfo = tempData;
-                        break;
+                        
+                    default:
+                        return proceso;
                 }
-
-                return {
-                    ...procesoDef,
-                    datosEtapa: etapaInfo,
-                };
             }));
-
-            const mensajeFlash = req.flash('mensaje');
-            const mensaje = mensajeFlash && mensajeFlash.length > 0 ? mensajeFlash : null;
-            const error = req.flash('error');
-
+            
+            // Obtener datos adicionales como seguimientos de secado
+            let seguimientosSecado = [];
+            if (procesosConEstado.find(p => p.nombre.toLowerCase() === 'secado' && p.datosEtapa)) {
+                const secadoInfo = await secadoDAO.getSecadoByLoteId(id_lote);
+                if (secadoInfo && secadoInfo.id) {
+                    seguimientosSecado = await seguimientoSecadoDAO.getSeguimientosBySecadoId(secadoInfo.id);
+                }
+            }
+            
+            // La renderización ahora usa los mensajes preparados por el middleware
             res.render('lotes/procesos', {
                 titulo: `Procesos del Lote: ${lote.codigo || lote.codigo_lote}`,
                 finca: finca,
                 lote: lote,
                 procesosConEstado: procesosConEstado,
-                seguimientosSecado: seguimientosSecado,
-                mensaje: mensaje,
-                error: error
+                seguimientosSecado: seguimientosSecado
             });
 
         } catch (error) {
             console.error('Error al mostrar vista de procesos:', error);
-            req.flash('error', 'Error al cargar la vista de procesos.');
+            setMessages.procesos.error(req, 'Error al cargar la vista de procesos: ' + error.message);
             res.redirect(`/fincas/${req.params.id_finca}/lotes`);
         }
     }
@@ -360,13 +341,13 @@ class LoteController {
             // Verificar que la finca pertenezca al usuario y que el lote exista
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
             if (!finca) {
-                req.flash('error', 'No tienes permisos para acceder a esta finca.');
+                setMessages.flujo.error(req, 'No tienes permisos para acceder a esta finca.');
                 return res.redirect('/fincas/gestionar');
             }
             
             const lote = await loteDAO.getLoteById(id_lote);
             if (!lote || lote.id_finca !== id_finca) {
-                req.flash('error', 'El lote no existe o no pertenece a esta finca.');
+                setMessages.flujo.error(req, 'El lote no existe o no pertenece a esta finca.');
                 return res.redirect(`/fincas/${id_finca}/lotes`);
             }
             
@@ -377,23 +358,21 @@ class LoteController {
             );
             
             if (!flujoLote || flujoLote.length === 0) {
-                req.flash('error', 'No se encontraron datos de flujo para este lote.');
+                setMessages.flujo.error(req, 'No se encontraron datos de flujo para este lote.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
             
-            // Enviar los datos a la vista
+            // Enviar los datos a la vista - los mensajes son manejados por el middleware
             res.render('lotes/flujo', {
                 titulo: `Flujo Completo del Lote: ${lote.codigo}`,
                 finca: finca,
                 lote: lote,
-                flujo: flujoLote[0], // Tomamos el primer registro (debería ser único por lote)
-                mensaje: req.flash('mensaje'),
-                error: req.flash('error')
+                flujo: flujoLote[0] // Tomamos el primer registro (debería ser único por lote)
             });
             
         } catch (error) {
             console.error('Error al mostrar vista de flujo de lote:', error);
-            req.flash('error', 'Error al cargar los datos del flujo de lote.');
+            setMessages.flujo.error(req, 'Error al cargar los datos del flujo de lote: ' + error.message);
             res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/procesos`);
         }
     }
@@ -411,19 +390,19 @@ class LoteController {
             // Verificar si el usuario tiene permisos sobre la finca/lote
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
             if (!finca) { 
-                req.flash('error', 'Finca no encontrada o sin permiso.');
+                setMessages.lotes.error(req, 'Finca no encontrada o sin permiso.');
                 return res.redirect('/fincas/gestionar'); 
             }
 
             const lote = await loteDAO.getLoteById(id_lote);
             if (!lote || lote.id_finca !== id_finca) { 
-                req.flash('error', 'Lote no encontrado o no pertenece a la finca.');
+                setMessages.lotes.error(req, 'Lote no encontrado o no pertenece a la finca.');
                 return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
             // No permitir cancelar lotes ya cancelados
             if (lote.id_estado_proceso === 4) {
-                req.flash('error', 'Este lote ya se encuentra cancelado.');
+                setMessages.procesos.error(req, 'Este lote ya se encuentra cancelado.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
@@ -437,7 +416,7 @@ class LoteController {
 
         } catch (error) {
             console.error('Error al mostrar formulario de cancelación de lote:', error);
-            req.flash('error', 'Error al cargar el formulario de cancelación.');
+            setMessages.lotes.error(req, 'Error al cargar el formulario de cancelación.');
             res.redirect(`/fincas/${req.params.id_finca}/lotes`);
         }
     }
@@ -452,32 +431,32 @@ class LoteController {
             const { motivo } = req.body;
 
             if (!motivo || motivo.trim() === '') {
-                req.flash('error', 'Debe proporcionar un motivo para la cancelación.');
+                setMessages.form.error(req, 'Debe proporcionar un motivo para la cancelación.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/cancelar`);
             }
 
             // Verificar si el usuario tiene permisos sobre la finca/lote
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
             if (!finca) { 
-                req.flash('error', 'Finca no encontrada o sin permiso.');
+                setMessages.lotes.error(req, 'Finca no encontrada o sin permiso.');
                 return res.redirect('/fincas/gestionar'); 
             }
 
             const lote = await loteDAO.getLoteById(id_lote);
             if (!lote || lote.id_finca !== id_finca) { 
-                req.flash('error', 'Lote no encontrado o no pertenece a la finca.');
+                setMessages.lotes.error(req, 'Lote no encontrado o no pertenece a la finca.');
                 return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
             // Cancelar el lote
             await loteDAO.cancelarLote(id_lote, motivo);
 
-            req.flash('mensaje', `El lote ${lote.codigo} ha sido cancelado exitosamente.`);
+            setMessages.lotes.success(req, `El lote ${lote.codigo} ha sido cancelado exitosamente.`);
             res.redirect(`/fincas/${id_finca}/lotes`);
 
         } catch (error) {
             console.error('Error al cancelar lote:', error);
-            req.flash('error', 'Error interno al cancelar el lote.');
+            setMessages.form.error(req, 'Error interno al cancelar el lote.');
             res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/cancelar`);
         }
     }
@@ -570,13 +549,13 @@ class LoteController {
             // Verificar permisos
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
             if (!finca) { 
-                req.flash('error', 'Finca no encontrada o sin permiso.');
+                setMessages.lotes.error(req, 'No tienes permisos para acceder a esta finca.');
                 return res.redirect('/fincas/gestionar'); 
             }
 
             const lote = await loteDAO.getLoteById(id_lote);
             if (!lote || lote.id_finca !== id_finca) { 
-                req.flash('error', 'Lote no encontrado o no pertenece a la finca.');
+                setMessages.lotes.error(req, 'El lote no existe o no pertenece a esta finca.');
                 return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
@@ -589,7 +568,7 @@ class LoteController {
             const secadoInfo = await secadoDAO.getSecadoByLoteId(id_lote);
             
             if (despulpadoInfo || fermentacionInfo || zarandeoInfo || secadoInfo) {
-                req.flash('error', 'No se puede modificar la recolección porque ya existen procesos posteriores registrados. Esto podría causar inconsistencias en los datos.');
+                setMessages.procesos.error(req, 'No se puede modificar la recolección porque ya existen procesos posteriores registrados. Esto podría causar inconsistencias en los datos.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
@@ -599,7 +578,7 @@ class LoteController {
             const horasTranscurridas = (ahora - fechaCreacion) / (1000 * 60 * 60);
             
             if (horasTranscurridas > 48) {
-                req.flash('error', 'No se puede modificar la recolección después de 48 horas de su registro por motivos de integridad de datos.');
+                setMessages.procesos.error(req, 'No se puede modificar la recolección después de 48 horas de su registro por motivos de integridad de datos.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
@@ -607,22 +586,22 @@ class LoteController {
             const procesoRecoleccionDef = (await procesosDAO.getAllProcesosOrdenados()).find(p => p.nombre.toLowerCase() === 'recolección');
             
             if (!procesoRecoleccionDef) {
-                req.flash('error', "Error de configuración: Proceso 'Recolección' no encontrado.");
+                setMessages.procesos.error(req, "Error de configuración: Proceso 'Recolección' no encontrado.");
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
             if (lote.id_proceso_actual !== procesoRecoleccionDef.id) {
-                req.flash('error', 'Solo se puede corregir la recolección si es el proceso actual del lote.');
+                setMessages.procesos.error(req, 'Solo se puede corregir la recolección si es el proceso actual del lote.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
             // Si pasa todas las validaciones, redirigir al formulario de edición
-            req.flash('mensaje', 'Corrección de recolección habilitada. Los cambios se registrarán en el historial de auditoría.');
+            setMessages.form.success(req, 'Corrección de recolección habilitada. Los cambios se registrarán en el historial de auditoría.');
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/recoleccion/corregir`);
 
         } catch (error) {
             console.error('Error al validar corrección de recolección:', error);
-            req.flash('error', 'Error interno al validar la corrección de recolección.');
+            setMessages.procesos.error(req, 'Error interno al validar la corrección de recolección.');
             res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/procesos`);
         }
     }
@@ -640,26 +619,26 @@ class LoteController {
             // Verificar permisos
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
             if (!finca) { 
-                req.flash('error', 'Finca no encontrada o sin permiso.');
+                setMessages.lotes.error(req, 'Finca no encontrada o sin permiso.');
                 return res.redirect('/fincas/gestionar'); 
             }
 
             const lote = await loteDAO.getLoteById(id_lote);
             if (!lote || lote.id_finca !== id_finca) { 
-                req.flash('error', 'Lote no encontrado o no pertenece a la finca.');
+                setMessages.lotes.error(req, 'Lote no encontrado o no pertenece a la finca.');
                 return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
             // Verificar que el proceso existe
             const secado = await secadoDAO.getSecadoByLoteId(id_lote);
             if (!secado || secado.id !== id_secado) {
-                req.flash('error', 'El proceso de secado no existe o no corresponde al lote indicado.');
+                setMessages.procesos.error(req, 'El proceso de secado no existe o no corresponde al lote indicado.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
             // Solo se pueden reiniciar procesos terminados
             if (secado.id_estado_proceso !== 3) {
-                req.flash('error', 'Solo se pueden reiniciar procesos que estén marcados como terminados.');
+                setMessages.procesos.error(req, 'Solo se pueden reiniciar procesos que estén marcados como terminados.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
@@ -670,18 +649,18 @@ class LoteController {
             const procesoSecadoDef = (await procesosDAO.getAllProcesosOrdenados()).find(p => p.nombre.toLowerCase() === 'secado');
             
             if (!procesoSecadoDef) {
-                req.flash('error', "Error de configuración: Proceso 'Secado' no encontrado.");
+                setMessages.procesos.error(req, "Error de configuración: Proceso 'Secado' no encontrado.");
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
             
             await loteDAO.updateLoteProcesoYEstado(id_lote, procesoSecadoDef.id, 2); // 2 = 'En progreso'
 
-            req.flash('mensaje', 'Proceso de Secado reiniciado exitosamente para su corrección.');
+            setMessages.procesos.success(req, 'Proceso de Secado reiniciado exitosamente para su corrección.');
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
 
         } catch (error) {
             console.error('Error al reiniciar proceso de secado:', error);
-            req.flash('error', 'Error interno al reiniciar el proceso de secado.');
+            setMessages.procesos.error(req, 'Error interno al reiniciar el proceso de secado.');
             res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/procesos`);
         }
     }
@@ -755,25 +734,25 @@ class LoteController {
             // Verificar permisos
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
             if (!finca) { 
-                req.flash('error', 'Finca no encontrada o sin permiso.');
+                setMessages.lotes.error(req, 'Finca no encontrada o sin permiso.');
                 return res.redirect('/fincas/gestionar'); 
             }
 
             const lote = await loteDAO.getLoteById(id_lote);
             if (!lote || lote.id_finca !== id_finca) { 
-                req.flash('error', 'Lote no encontrado o no pertenece a la finca.');
+                setMessages.lotes.error(req, 'Lote no encontrado o no pertenece a la finca.');
                 return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
             // Verificar que el secado existe y está en estado válido para corrección
             const secado = await secadoDAO.getSecadoByLoteId(id_lote);
             if (!secado) {
-                req.flash('error', 'No se encontró el proceso de secado para este lote.');
+                setMessages.procesos.error(req, 'No se encontró el proceso de secado para este lote.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
             if (secado.id_estado_proceso !== 1 && secado.id_estado_proceso !== 2 && secado.id_estado_proceso !== 3) {
-                req.flash('error', 'Solo se pueden corregir los datos de inicio cuando el secado está registrado, en progreso o terminado.');
+                setMessages.procesos.error(req, 'Solo se pueden corregir los datos de inicio cuando el secado está registrado, en progreso o terminado.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
@@ -791,14 +770,13 @@ class LoteController {
                 metodo_secado: req.flash('metodo_secado')[0] || secado.metodo_secado,
                 humedad_inicial_secado: req.flash('humedad_inicial_secado')[0] || secado.humedad_inicial,
                 observaciones_secado: req.flash('observaciones_secado')[0] || secado.observaciones,
-                decision_venta: req.flash('decision_venta')[0] || secado.decision_venta,
-                mensaje: req.flash('mensaje'),
-                error: req.flash('error')
+                decision_venta: req.flash('decision_venta')[0] || secado.decision_venta
+                // Los mensajes ya son manejados por el middleware
             });
 
         } catch (error) {
             console.error('Error al mostrar formulario de corrección de inicio de secado:', error);
-            req.flash('error', 'Error interno al cargar el formulario de corrección.');
+            setMessages.procesos.error(req, 'Error interno al cargar el formulario de corrección.');
             res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/procesos`);
         }
     }
@@ -814,25 +792,25 @@ class LoteController {
             // Verificar permisos
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
             if (!finca) { 
-                req.flash('error', 'Finca no encontrada o sin permiso.');
+                setMessages.lotes.error(req, 'Finca no encontrada o sin permiso.');
                 return res.redirect('/fincas/gestionar'); 
             }
 
             const lote = await loteDAO.getLoteById(id_lote);
             if (!lote || lote.id_finca !== id_finca) { 
-                req.flash('error', 'Lote no encontrado o no pertenece a la finca.');
+                setMessages.lotes.error(req, 'Lote no encontrado o no pertenece a la finca.');
                 return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
             // Verificar que el secado existe y está en estado válido para corrección
             const secado = await secadoDAO.getSecadoByLoteId(id_lote);
             if (!secado) {
-                req.flash('error', 'No se encontró el proceso de secado para este lote.');
+                setMessages.procesos.error(req, 'No se encontró el proceso de secado para este lote.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
             if (secado.id_estado_proceso !== 1 && secado.id_estado_proceso !== 2 && secado.id_estado_proceso !== 3) {
-                req.flash('error', 'Solo se pueden corregir los datos de inicio cuando el secado está registrado, en progreso o terminado.');
+                setMessages.procesos.error(req, 'Solo se pueden corregir los datos de inicio cuando el secado está registrado, en progreso o terminado.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
@@ -874,14 +852,15 @@ class LoteController {
             // Actualizar solo los datos de inicio
             await secadoDAO.updateSecado(secado.id, datosActualizacion);
 
-            req.flash('mensaje', 'Datos de inicio del secado corregidos exitosamente.');
+            setMessages.procesos.success(req, 'Datos de inicio del secado corregidos exitosamente.');
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
 
         } catch (error) {
             console.error('Error al corregir datos de inicio de secado:', error);
-            req.flash('error', 'Error interno al corregir los datos de inicio.');
+            setMessages.form.error(req, 'Error interno al corregir los datos de inicio.');
             
-            // Mantener los datos del formulario
+            // Mantener los datos del formulario usando req.flash temporalmente
+            // Esto se migrará completamente cuando se implemente el almacenamiento de datos de formulario
             req.flash('fecha_inicio_secado', req.body.fecha_inicio_secado);
             req.flash('metodo_secado', req.body.metodo_secado);
             req.flash('humedad_inicial_secado', req.body.humedad_inicial_secado);

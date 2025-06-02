@@ -1,0 +1,331 @@
+<div class="container mt-4">
+    <!-- Resumen de productos empacados disponibles -->
+    <% if (productosDisponibles && productosDisponibles.length > 0) { %>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Detalle por tipo de producto</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <% productosDisponibles.forEach(producto => { %>
+                        <div class="col-md-4 mb-3">
+                            <% 
+                            let bgColor = 'bg-success';
+                            let textColor = 'text-white';
+                            let icon = 'fas fa-seedling';
+                            
+                            if (producto.tipo_producto_empacado === 'Molido') {
+                                bgColor = 'bg-dark';
+                                icon = 'fas fa-mortar-pestle';
+                            } else if (producto.tipo_producto_empacado === 'Pasilla Molido') {
+                                bgColor = 'bg-warning';
+                                textColor = 'text-dark';
+                                icon = 'fas fa-mortar-pestle';
+                            }
+                            %>
+                            <div class="card h-100 border-<%= bgColor.replace('bg-', '') %>">
+                                <div class="card-header <%= bgColor %> <%= textColor %> text-center">
+                                    <i class="<%= icon %> me-2"></i>
+                                    <strong><%= producto.tipo_producto_empacado === 'Grano' ? 'Pergamino en Grano' : 
+                                              producto.tipo_producto_empacado === 'Molido' ? 'Pergamino Molido' : 
+                                              'Pasilla Molido' %></strong>
+                                </div>
+                                <div class="card-body text-center">
+                                    <div class="mb-2">
+                                        <strong>Empacado:</strong><br>
+                                        <span class="h5 <%= bgColor.replace('bg-', 'text-') %>"><%= producto.peso_final_producto %> kg</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Empaques:</strong><br>
+                                        <span class="h6 text-muted"><%= producto.total_empaques %> unidades</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Fecha:</strong><br>
+                                        <span class="text-muted small">
+                                            <%= new Date(producto.fecha_empacado).toLocaleDateString('es-ES') %>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0"><i class="fas fa-box-open me-2"></i><%= titulo %></h4>
+        </div>
+        <div class="card-body">
+            <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/ventas/registrar/empacado" method="POST" id="formVentaUnificado">
+                
+                <div class="alert alert-info" role="alert">
+                    Está registrando la venta de café empacado del lote <strong><%= lote.codigo %></strong> (Finca: <%= finca.nombre %>).
+                </div>
+
+                <% if (error && error.length > 0) { %>
+                    <div class="alert alert-danger">
+                        <% error.forEach(function(err) { %>
+                            <%= err %><br>
+                        <% }); %>
+                    </div>
+                <% } %>
+                <% if (mensaje && mensaje.length > 0) { %>
+                    <div class="alert alert-success">
+                        <%= mensaje %>
+                    </div>
+                <% } %>
+
+                <!-- Fecha común para todas las ventas -->
+                <div class="mb-4">
+                    <label for="fecha_venta" class="form-label">Fecha de Venta <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="fecha_venta" name="fecha_venta" value="<%= new Date().toISOString().split('T')[0] %>" required>
+                </div>
+
+                <hr>
+                <h5 class="mb-3">Selecciona los productos a vender:</h5>
+
+                <% productosDisponibles.forEach((producto, index) => { %>
+                    <% 
+                    let bgColor = 'success';
+                    let icon = 'fas fa-seedling';
+                    let nombreCompleto = 'Pergamino en Grano';
+                    let sufijo = 'grano';
+                    
+                    if (producto.tipo_producto_empacado === 'Molido') {
+                        bgColor = 'dark';
+                        icon = 'fas fa-mortar-pestle';
+                        nombreCompleto = 'Pergamino Molido';
+                        sufijo = 'molido';
+                    } else if (producto.tipo_producto_empacado === 'Pasilla Molido') {
+                        bgColor = 'warning';
+                        icon = 'fas fa-mortar-pestle';
+                        nombreCompleto = 'Pasilla Molido';
+                        sufijo = 'pasilla';
+                    }
+                    %>
+
+                    <div class="card mb-4 border-<%= bgColor %>">
+                        <div class="card-header bg-<%= bgColor %> <%= bgColor === 'warning' ? 'text-dark' : 'text-white' %>">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="vender_<%= sufijo %>" name="vender_<%= sufijo %>" 
+                                    data-tipo="<%= producto.tipo_producto_empacado %>">
+                                <label class="form-check-label" for="vender_<%= sufijo %>">
+                                    <i class="<%= icon %> me-1"></i> Vender <%= nombreCompleto %>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="form_<%= sufijo %>" style="display: none;">
+                            <input type="hidden" name="tipo_producto_<%= sufijo %>" value="<%= producto.tipo_producto_empacado %>">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="cantidad_disponible_<%= sufijo %>" class="form-label">Cantidad Disponible (kg):</label>
+                                        <input type="number" step="0.01" class="form-control" id="cantidad_disponible_<%= sufijo %>" 
+                                            name="cantidad_disponible_<%= sufijo %>" value="<%= producto.peso_final_producto %>" readonly>
+                                        <small class="form-text text-muted">Peso disponible para venta</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="cantidad_vender_<%= sufijo %>" class="form-label">Cantidad a Vender (kg):</label>
+                                        <input type="number" step="0.01" class="form-control" id="cantidad_vender_<%= sufijo %>" 
+                                            name="cantidad_vender_<%= sufijo %>" max="<%= producto.peso_final_producto %>" 
+                                            placeholder="Ej: 10.5">
+                                        <small class="form-text text-muted">Máximo: <%= producto.peso_final_producto %> kg</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="precio_kg_<%= sufijo %>" class="form-label">Precio por Kg:</label>
+                                        <input type="number" step="0.01" class="form-control" id="precio_kg_<%= sufijo %>" 
+                                            name="precio_kg_<%= sufijo %>" placeholder="Ej: 5.75">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="empaques_disponibles_<%= sufijo %>" class="form-label">Empaques Disponibles:</label>
+                                        <input type="number" class="form-control" id="empaques_disponibles_<%= sufijo %>" 
+                                            name="empaques_disponibles_<%= sufijo %>" value="<%= producto.total_empaques %>" readonly>
+                                        <small class="form-text text-muted">Empaques registrados</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="comprador_<%= sufijo %>" class="form-label">Comprador:</label>
+                                        <input type="text" class="form-control" id="comprador_<%= sufijo %>" 
+                                            name="comprador_<%= sufijo %>" placeholder="Nombre del comprador (opcional)">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="observaciones_<%= sufijo %>" class="form-label">Observaciones:</label>
+                                        <textarea class="form-control" id="observaciones_<%= sufijo %>" name="observaciones_<%= sufijo %>" 
+                                            placeholder="Observaciones sobre la venta" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cálculo automático del total -->
+                            <div class="alert alert-light">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Total a pagar:</strong> 
+                                        <span id="total_<%= sufijo %>" class="h5 text-<%= bgColor %>">$0.00</span>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <small class="text-muted">Cantidad × Precio por kg</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+
+                <!-- Mensaje si no hay productos seleccionados -->
+                <div id="mensaje_seleccionar" class="alert alert-warning" style="display: none;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Selecciona al menos un producto para vender.
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/procesos" class="btn btn-secondary me-md-2">Cancelar</a>
+                    <button type="submit" class="btn btn-success" id="btnRegistrarVenta" disabled>
+                        <i class="fas fa-dollar-sign me-2"></i>Registrar Venta de Productos
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Función para toggle de formularios según checkboxes
+    const toggleForms = () => {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="vender_"]');
+        let algunoSeleccionado = false;
+
+        checkboxes.forEach(checkbox => {
+            const sufijo = checkbox.id.replace('vender_', '');
+            const form = document.getElementById('form_' + sufijo);
+            const cantidadInput = document.getElementById('cantidad_vender_' + sufijo);
+            const precioInput = document.getElementById('precio_kg_' + sufijo);
+            
+            if (form) {
+                if (checkbox.checked) {
+                    form.style.display = 'block';
+                    // Hacer campos requeridos
+                    if (cantidadInput) cantidadInput.required = true;
+                    if (precioInput) precioInput.required = true;
+                    algunoSeleccionado = true;
+                } else {
+                    form.style.display = 'none';
+                    // Quitar requerimiento
+                    if (cantidadInput) {
+                        cantidadInput.required = false;
+                        cantidadInput.value = '';
+                    }
+                    if (precioInput) {
+                        precioInput.required = false;
+                        precioInput.value = '';
+                    }
+                }
+            }
+        });
+
+        // Actualizar estado del botón
+        const btnRegistrar = document.getElementById('btnRegistrarVenta');
+        const mensajeSeleccionar = document.getElementById('mensaje_seleccionar');
+        
+        if (btnRegistrar) {
+            btnRegistrar.disabled = !algunoSeleccionado;
+        }
+        
+        if (mensajeSeleccionar) {
+            mensajeSeleccionar.style.display = algunoSeleccionado ? 'none' : 'block';
+        }
+    };
+
+    // Función para calcular totales
+    const calcularTotal = (sufijo) => {
+        const cantidadInput = document.getElementById('cantidad_vender_' + sufijo);
+        const precioInput = document.getElementById('precio_kg_' + sufijo);
+        const totalSpan = document.getElementById('total_' + sufijo);
+        
+        if (cantidadInput && precioInput && totalSpan) {
+            const cantidad = parseFloat(cantidadInput.value) || 0;
+            const precio = parseFloat(precioInput.value) || 0;
+            const total = cantidad * precio;
+            
+            totalSpan.textContent = '$' + total.toFixed(2);
+        }
+    };
+
+    // Validación de cantidad máxima
+    const validarCantidad = (sufijo) => {
+        const cantidadInput = document.getElementById('cantidad_vender_' + sufijo);
+        const disponibleInput = document.getElementById('cantidad_disponible_' + sufijo);
+        
+        if (cantidadInput && disponibleInput) {
+            cantidadInput.addEventListener('input', function() {
+                const cantidad = parseFloat(this.value) || 0;
+                const disponible = parseFloat(disponibleInput.value) || 0;
+                
+                if (cantidad > disponible) {
+                    alert(`La cantidad a vender (${cantidad.toFixed(2)} kg) no puede exceder la cantidad disponible (${disponible.toFixed(2)} kg).`);
+                    this.value = disponible.toFixed(2);
+                }
+                calcularTotal(sufijo);
+            });
+        }
+    };
+
+    // Eventos de toggle para checkboxes
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="vender_"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', toggleForms);
+        
+        // Configurar eventos para cálculos
+        const sufijo = checkbox.id.replace('vender_', '');
+        const precioInput = document.getElementById('precio_kg_' + sufijo);
+        
+        if (precioInput) {
+            precioInput.addEventListener('input', () => calcularTotal(sufijo));
+        }
+        
+        validarCantidad(sufijo);
+    });
+
+    // Inicializar formularios
+    toggleForms();
+
+    // Validación del formulario antes de enviar
+    document.getElementById('formVentaUnificado').addEventListener('submit', function(event) {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="vender_"]:checked');
+        
+        if (checkboxes.length === 0) {
+            event.preventDefault();
+            alert('Debes seleccionar al menos un producto para vender.');
+            return;
+        }
+
+        // Validar que todos los productos seleccionados tengan datos completos
+        let datosCompletos = true;
+        checkboxes.forEach(checkbox => {
+            const sufijo = checkbox.id.replace('vender_', '');
+            const cantidadInput = document.getElementById('cantidad_vender_' + sufijo);
+            const precioInput = document.getElementById('precio_kg_' + sufijo);
+            
+            if (!cantidadInput.value || !precioInput.value) {
+                datosCompletos = false;
+            }
+        });
+
+        if (!datosCompletos) {
+            event.preventDefault();
+            alert('Por favor, completa la cantidad y precio para todos los productos seleccionados.');
+        }
+    });
+});
+</script> 

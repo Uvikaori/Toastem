@@ -22,6 +22,8 @@ const tuesteController = require('../controllers/tuesteController');
 const moliendaController = require('../controllers/moliendaController');
 const empacadoController = require('../controllers/empacadoController');
 const controlCalidadController = require('../controllers/controlCalidadController');
+const ventaController = require('../controllers/ventaController');
+const { validateVentaPergamino, validateVentaEmpacado } = require('../validators/ventaValidator');
 
 // Mostrar formulario para crear un nuevo lote para una finca
 router.get('/crear', loteController.mostrarFormularioCrearLote);
@@ -103,5 +105,17 @@ router.post('/:id_lote/recoleccion/corregir', isLoteOwner, loteController.correg
 // Rutas para el proceso de CONTROL DE CALIDAD (Opcional)
 router.get('/:id_lote/control-calidad/registrar', isLoteOwner, controlCalidadController.mostrarFormularioControlCalidad);
 router.post('/:id_lote/control-calidad', isLoteOwner, /* validateControlCalidad, */ controlCalidadController.registrarControlCalidad);
+
+// Rutas para el proceso de VENTA
+router.get('/:id_lote/ventas/registrar/pergamino', isLoteOwner, ventaController.mostrarFormularioVentaPergamino);
+router.post('/:id_lote/ventas/registrar/pergamino', isLoteOwner, validateVentaPergamino, ventaController.registrarVentaPergamino);
+
+// Rutas para VENTA DE PRODUCTO EMPACADO
+router.get('/:id_lote/ventas/registrar/empacado', isLoteOwner, ventaController.mostrarFormularioVentaEmpacado);
+router.post('/:id_lote/ventas/registrar/empacado', isLoteOwner, validateVentaEmpacado, ventaController.registrarVentaEmpacado);
+
+// Rutas para VENTA DE PRODUCTO MOLIDO (ELIMINADAS)
+// router.get('/:id_lote/ventas/registrar/molido', isLoteOwner, ventaController.mostrarFormularioVentaMolido);
+// router.post('/:id_lote/ventas/registrar/molido', isLoteOwner, validateVentaPergamino, ventaController.registrarVentaMolido);
 
 module.exports = router; 

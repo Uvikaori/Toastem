@@ -293,12 +293,17 @@
             </li>
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="lavado-tab" data-bs-toggle="tab" data-bs-target="#lavado" type="button" role="tab">
-                Lavado <span class="badge bg-primary"><%= lotesEnProceso.conteos.lavado_count || 0 %></span>
+                Lavado <span class="badge bg-primary"><%= lotesEnProceso.conteos.fermentacion_lavado_count || 0 %></span>
               </button>
             </li>
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="secado-tab" data-bs-toggle="tab" data-bs-target="#secado" type="button" role="tab">
                 Secado <span class="badge bg-primary"><%= lotesEnProceso.conteos.secado_count || 0 %></span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="clasificacion-tab" data-bs-toggle="tab" data-bs-target="#clasificacion" type="button" role="tab">
+                Clasificación <span class="badge bg-primary"><%= lotesEnProceso.conteos.clasificacion_count || 0 %></span>
               </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -313,7 +318,12 @@
             </li>
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="molido-tab" data-bs-toggle="tab" data-bs-target="#molido" type="button" role="tab">
-                Molido <span class="badge bg-primary"><%= lotesEnProceso.conteos.molido_count || 0 %></span>
+                Molido <span class="badge bg-primary"><%= lotesEnProceso.conteos.molienda_count || 0 %></span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="empacado-tab" data-bs-toggle="tab" data-bs-target="#empacado" type="button" role="tab">
+                Empacado <span class="badge bg-primary"><%= lotesEnProceso.conteos.empacado_count || 0 %></span>
               </button>
             </li>
           </ul>
@@ -426,6 +436,42 @@
               <% } %>
             </div>
             
+            <!-- Clasificación -->
+            <div class="tab-pane fade" id="clasificacion" role="tabpanel">
+              <% if (lotesEnProceso.clasificacion && lotesEnProceso.clasificacion.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Código</th>
+                        <th>Finca</th>
+                        <th>Fecha Inicio</th>
+                        <th>Peso Inicial (kg)</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% lotesEnProceso.clasificacion.forEach(lote => { %>
+                        <tr>
+                          <td><%= lote.codigo %></td>
+                          <td><%= lote.finca %></td>
+                          <td><%= new Date(lote.fecha_inicio).toLocaleDateString() %></td>
+                          <td class="format-number"><%= lote.peso_inicial ? lote.peso_inicial.toFixed(2) : 'N/A' %></td>
+                          <td>
+                            <a href="/fincas/<%= lote.id_finca %>/lotes/<%= lote.id %>/procesos" class="btn btn-sm btn-info">
+                              <i class="fas fa-eye"></i> Ver
+                            </a>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="alert alert-info">No hay lotes en proceso de clasificación.</div>
+              <% } %>
+            </div>
+            
             <!-- Trilla -->
             <div class="tab-pane fade" id="trilla" role="tabpanel">
               <% if (lotesEnProceso.trilla && lotesEnProceso.trilla.length > 0) { %>
@@ -532,6 +578,112 @@
               <% } else { %>
                 <div class="alert alert-info">No hay lotes en proceso de molido.</div>
               <% } %>
+            </div>
+            
+            <!-- Empacado -->
+            <div class="tab-pane fade" id="empacado" role="tabpanel">
+              <% if (lotesEnProceso.empacado && lotesEnProceso.empacado.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Código</th>
+                        <th>Finca</th>
+                        <th>Fecha Inicio</th>
+                        <th>Peso Inicial (kg)</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% lotesEnProceso.empacado.forEach(lote => { %>
+                        <tr>
+                          <td><%= lote.codigo %></td>
+                          <td><%= lote.finca %></td>
+                          <td><%= new Date(lote.fecha_inicio).toLocaleDateString() %></td>
+                          <td class="format-number"><%= lote.peso_inicial.toFixed(2) %></td>
+                          <td>
+                            <a href="/fincas/<%= lote.id_finca %>/lotes/<%= lote.id %>/procesos" class="btn btn-sm btn-info">
+                              <i class="fas fa-eye"></i> Ver
+                            </a>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="alert alert-info">No hay lotes en proceso de empacado.</div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Productos Empacados Disponibles -->
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Productos Empacados Disponibles</h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <!-- Grano -->
+            <div class="col-md-4">
+              <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                  <i class="fas fa-seedling me-2"></i>Café en Grano
+                </div>
+                <div class="card-body text-center">
+                  <h3 class="font-weight-bold mb-1"><%= productosEmpacados.grano.cantidad_empaques || 0 %></h3>
+                  <p class="text-muted">Empaques</p>
+                  <div class="border-top pt-2">
+                    <h4 class="format-number"><%= (productosEmpacados.grano.peso_total || 0).toFixed(2) %></h4>
+                    <p class="text-muted">Kilogramos</p>
+                  </div>
+                  <div class="border-top pt-2">
+                    <p class="text-muted small mb-0">Lotes: <%= productosEmpacados.grano.lotes_count || 0 %></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Molido -->
+            <div class="col-md-4">
+              <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                  <i class="fas fa-mortar-pestle me-2"></i>Café Molido
+                </div>
+                <div class="card-body text-center">
+                  <h3 class="font-weight-bold mb-1"><%= productosEmpacados.molido.cantidad_empaques || 0 %></h3>
+                  <p class="text-muted">Empaques</p>
+                  <div class="border-top pt-2">
+                    <h4 class="format-number"><%= (productosEmpacados.molido.peso_total || 0).toFixed(2) %></h4>
+                    <p class="text-muted">Kilogramos</p>
+                  </div>
+                  <div class="border-top pt-2">
+                    <p class="text-muted small mb-0">Lotes: <%= productosEmpacados.molido.lotes_count || 0 %></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Pasilla Molido -->
+            <div class="col-md-4">
+              <div class="card mb-3">
+                <div class="card-header bg-warning text-dark">
+                  <i class="fas fa-cookie-bite me-2"></i>Pasilla Molida
+                </div>
+                <div class="card-body text-center">
+                  <h3 class="font-weight-bold mb-1"><%= productosEmpacados.pasillaMolido.cantidad_empaques || 0 %></h3>
+                  <p class="text-muted">Empaques</p>
+                  <div class="border-top pt-2">
+                    <h4 class="format-number"><%= (productosEmpacados.pasillaMolido.peso_total || 0).toFixed(2) %></h4>
+                    <p class="text-muted">Kilogramos</p>
+                  </div>
+                  <div class="border-top pt-2">
+                    <p class="text-muted small mb-0">Lotes: <%= productosEmpacados.pasillaMolido.lotes_count || 0 %></p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

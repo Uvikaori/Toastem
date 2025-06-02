@@ -206,6 +206,46 @@ class LoteDAO {
         }
     }
 
+    /**
+     * Actualiza campos específicos de un lote.
+     * @param {number} id_lote - ID del lote a actualizar.
+     * @param {object} camposAActualizar - Objeto con los campos y sus nuevos valores. Ejemplo: { fecha_finalizacion: 'YYYY-MM-DD', observaciones: 'Nuevo texto' }
+     * @returns {Promise<boolean>} - True si fue exitoso, false en caso contrario.
+     */
+    async update(id_lote, camposAActualizar) {
+        if (Object.keys(camposAActualizar).length === 0) {
+            return false; // No hay campos para actualizar
+        }
+
+        const camposPermitidos = ['codigo', 'id_usuario', 'id_finca', 'fecha_recoleccion', 'peso_inicial', 'tipo_cafe', 'tipo_recoleccion', 'observaciones', 'id_destino_final', 'id_estado_proceso', 'id_proceso_actual', 'fecha_finalizacion'];
+        
+        let querySet = [];
+        let queryParams = [];
+
+        for (const campo in camposAActualizar) {
+            if (camposAActualizar.hasOwnProperty(campo) && camposPermitidos.includes(campo)) {
+                querySet.push(`${campo} = ?`);
+                queryParams.push(camposAActualizar[campo]);
+            }
+        }
+
+        if (querySet.length === 0) {
+            console.warn('Ningún campo válido para actualizar en el lote.');
+            return false;
+        }
+
+        queryParams.push(id_lote); // Añadir el ID del lote al final para el WHERE
+
+        try {
+            const sql = `UPDATE lotes SET ${querySet.join(', ')} WHERE id = ?`;
+            const [result] = await db.query(sql, queryParams);
+            return result.affectedRows > 0;
+        } catch (error) {
+            console.error('Error al actualizar el lote:', error);
+            throw error;
+        }
+    }
+
     // TODO: Añadir métodos para actualizar estado, peso final, etc.
 }
 

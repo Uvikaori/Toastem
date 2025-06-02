@@ -39,7 +39,7 @@
         </div>
     </div>
 
-    <%# Mostrar mensajes de éxito (flash) %>
+    <%# Mostrar mensajes de éxito %>
     <% if (typeof mensaje !== 'undefined' && mensaje && mensaje.length > 0) { %>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <%= mensaje %>
@@ -47,26 +47,40 @@
         </div>
     <% } %>
     
-    <%# Mostrar errores (no flash) %>
-    <% if (typeof error !== 'undefined' && error) { %>
-        <% if (Array.isArray(error) && error.length > 0 && error.some(err => err && err.toString().trim() !== '')) { %>
-            <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
-                <strong>Error:</strong>
-                <ul>
+    <%# Mostrar errores - Versión mejorada %>
+    <% 
+    // Función auxiliar para verificar si un mensaje de error está realmente presente
+    function hayError(error) {
+        if (!error) return false;
+        
+        if (Array.isArray(error)) {
+            // Verifica si hay al menos un mensaje de error no vacío en el array
+            return error.some(err => err && err.toString().trim() !== '');
+        } else if (typeof error === 'string') {
+            // Verifica si la cadena de error no está vacía
+            return error.trim() !== '';
+        }
+        
+        return false;
+    }
+    %>
+    
+    <% if (typeof error !== 'undefined' && hayError(error)) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong><i class="fas fa-exclamation-triangle me-1"></i> Error:</strong>
+            <% if (Array.isArray(error)) { %>
+                <ul class="mb-0 ps-3">
                 <% error.forEach(function(err) { %>
                     <% if (err && err.toString().trim() !== '') { %>
                         <li><%= Array.isArray(err) ? err.join(', ') : err %></li>
                     <% } %>
                 <% }) %>
                 </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <% } else if (typeof error === 'string' && error.trim() !== '') { %>
-            <div class="alert alert-danger alert-dismissible" role="alert" id="errorAlert">
-                <strong>Error:</strong> <%= error %>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <% } %>
+            <% } else { %>
+                <%= error %>
+            <% } %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     <% } %>
 
     <div class="row">
@@ -88,9 +102,16 @@
                     } else if (proceso.nombre.toLowerCase() === 'secado') {
                         if (!etapaInfo) {
                             urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/secado/iniciar`;
-                        } else if (etapaInfo.id_estado_proceso === 1 || etapaInfo.id_estado_proceso === 2) {
+                        } else if (etapaInfo.id_estado_proceso === 1 || etapaInfo.id_estado_proceso === 2) { // Registrado o En Progreso
                             urlAccionAdicional = `/fincas/${finca.id}/lotes/${lote.id}/secado/finalizar`;
                             textoAccionAdicional = 'Finalizar Secado';
+                            // También puede tener seguimiento si está en progreso
+                        } else if (etapaInfo.id_estado_proceso === 3) { // Terminado
+                            if (etapaInfo.decision_venta) {
+                                urlAccionAdicional = `/fincas/${finca.id}/lotes/${lote.id}/ventas/registrar/pergamino`; // NUEVA RUTA
+                                textoAccionAdicional = 'Registrar Venta Pergamino';
+                            }
+                            // Si está terminado y NO hay decision_venta, podría ir a Clasificación (lógica ya existente más abajo)
                         }
                     } else if (proceso.nombre.toLowerCase() === 'clasificación') {
                         urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/clasificacion/registrar`;
@@ -100,10 +121,22 @@
                         urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/tueste/registrar`;
                     } else if (proceso.nombre.toLowerCase() === 'molienda') {
                         urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/molienda/registrar`;
+                        // Eliminada funcionalidad de venta directa desde Molienda
                     } else if (proceso.nombre.toLowerCase() === 'empacado') {
                         urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/empacado/registrar`;
+                        // Si hay productos empacados (etapaInfo.empacados es el array)
+                        // y el lote no está cancelado ni finalizado, mostrar opción de vender empacado.
+                        if (etapaInfo && etapaInfo.empacados && Array.isArray(etapaInfo.empacados) && etapaInfo.empacados.length > 0 && lote.id_estado_proceso !== 4 && lote.id_estado_proceso !== 5) { 
+                            urlAccionAdicional = `/fincas/${finca.id}/lotes/${lote.id}/ventas/registrar/empacado`;
+                            textoAccionAdicional = 'Vender Producto Empacado';
+                        }
                     } else if (proceso.nombre.toLowerCase() === 'control de calidad') {
-                        urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/control-calidad/registrar`;
+                        if (etapaInfo && etapaInfo.enConstruccion) {
+                            // No definir urlFormulario ni urlAccionAdicional para que no se muestren botones
+                        } else {
+                            // Lógica original si en el futuro se habilita CC
+                            // urlFormulario = `/fincas/${finca.id}/lotes/${lote.id}/control-calidad/registrar`;
+                        }
                     }
                 %>
                 <div class="card h-100 shadow-sm proceso-card">
@@ -706,69 +739,84 @@
                         <% if (proceso.nombre.toLowerCase() === 'empacado' && proceso.datosEtapa) { %>
                             <hr>
                             <% if (proceso.datosEtapa.empacados && Array.isArray(proceso.datosEtapa.empacados)) { %>
-                                <!-- Mostrar información agrupada de empacados -->
-                                <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha de último empacado:</strong> <%= new Date(proceso.datosEtapa.fecha_empacado).toLocaleString("es-CO") %></p>
+                                <div class="mb-3">
+                                    <p class="mb-2"><i class="fas fa-calendar-alt text-secondary me-1"></i> <strong>Fecha de último empacado:</strong> 
+                                        <%= new Date(proceso.datosEtapa.fecha_empacado).toLocaleString("es-CO") %>
+                                    </p>
+                                    
+                                    <p class="mb-2"><i class="fas fa-weight text-secondary me-1"></i> <strong>Peso Total Inicial:</strong> 
+                                        <%= proceso.datosEtapa.peso_inicial ? parseFloat(proceso.datosEtapa.peso_inicial).toFixed(2) : '0.00' %> kg
+                                    </p>
+                                    
+                                    <p class="mb-2"><i class="fas fa-weight-hanging text-secondary me-1"></i> <strong>Peso Total Empacado:</strong> 
+                                        <%= proceso.datosEtapa.peso_empacado ? parseFloat(proceso.datosEtapa.peso_empacado).toFixed(2) : '0.00' %> kg
+                                    </p>
+                                    
+                                    <p class="mb-2"><i class="fas fa-boxes text-secondary me-1"></i> <strong>Total Unidades Empacadas:</strong> 
+                                        <%= proceso.datosEtapa.total_empaques || 0 %>
+                                    </p>
+                                </div>
                                 
-                                <% if (proceso.datosEtapa.tipo_producto_empacado && proceso.datosEtapa.tipo_producto_empacado.includes(',')) { %>
-                                    <p class="mb-1"><strong><i class="fas fa-tags text-secondary me-1"></i> Tipos de productos empacados:</strong> <%= proceso.datosEtapa.tipo_producto_empacado %></p>
-                                <% } %>
-                                
-                                <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Total Inicial:</strong> <%= proceso.datosEtapa.peso_inicial ? proceso.datosEtapa.peso_inicial.toFixed(2) : '0.00' %> kg</p>
-                                <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Total Empacado:</strong> <%= proceso.datosEtapa.peso_empacado ? proceso.datosEtapa.peso_empacado.toFixed(2) : '0.00' %> kg</p>
-                                <p class="mb-1"><strong><i class="fas fa-boxes text-secondary me-1"></i> Total Unidades Empacadas:</strong> <%= proceso.datosEtapa.total_empaques || 0 %></p>
-                                
-                                <!-- Detalle por tipo de café -->
                                 <% 
-                                const empacadosGrano = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Grano');
-                                const empacadosMolido = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Molido');
-                                const empacadosPasilla = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Pasilla Molido');
+                                const empacadosGrano = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Grano' && e.id_estado_proceso === 3);
+                                const empacadosMolido = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Molido' && e.id_estado_proceso === 3);
+                                const empacadosPasilla = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Pasilla Molido' && e.id_estado_proceso === 3);
                                 %>
                                 
                                 <div class="mt-3">
-                                    <h6 class="border-bottom pb-2 mb-3">Detalle por tipo de producto</h6>
+                                    <h6 class="mb-3">Detalle por tipo de producto</h6>
                                     
-                                    <div class="row">
+                                    <div class="row g-3">
                                         <% if (empacadosGrano.length > 0) { %>
-                                            <div class="col-md-4 mb-3">
-                                                <div class="card border-success h-100">
-                                                    <div class="card-header bg-success text-white py-1">
-                                                        <h6 class="mb-0"><i class="fas fa-seedling me-1"></i> Pergamino en Grano</h6>
-                                                    </div>
-                                                    <div class="card-body py-2">
-                                                        <p class="mb-1 small"><strong>Empacado:</strong> <%= empacadosGrano.reduce((sum, e) => sum + parseFloat(e.peso_empacado), 0).toFixed(2) %> kg</p>
-                                                        <p class="mb-1 small"><strong>Empaques:</strong> <%= empacadosGrano.reduce((sum, e) => sum + parseInt(e.total_empaques), 0) %> unidades</p>
-                                                        <p class="mb-0 small"><strong>Fecha:</strong> <%= new Date(Math.max(...empacadosGrano.map(e => new Date(e.fecha_empacado)))).toLocaleDateString("es-CO") %></p>
-                                                    </div>
+                                            <div class="col-12">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-seedling text-success me-1"></i>
+                                                    <strong>Café Pergamino en Grano</strong>
+                                                </div>
+                                                <div class="ms-4 mt-2">
+                                                    <p class="mb-1">Empacado: <%= empacadosGrano.reduce((sum, e) => sum + parseFloat(e.peso_empacado || 0), 0).toFixed(2) %> kg</p>
+                                                    <p class="mb-1">Empaques: <%= empacadosGrano.reduce((sum, e) => sum + parseInt(e.total_empaques || 0), 0) %> unidades</p>
+                                                    <% try { %>
+                                                        <p class="mb-1">Fecha: <%= new Date(Math.max(...empacadosGrano.map(e => new Date(e.fecha_empacado)))).toLocaleDateString("es-CO") %></p>
+                                                    <% } catch (e) { %>
+                                                        <p class="mb-1">Fecha: No disponible</p>
+                                                    <% } %>
                                                 </div>
                                             </div>
                                         <% } %>
                                         
                                         <% if (empacadosMolido.length > 0) { %>
-                                            <div class="col-md-4 mb-3">
-                                                <div class="card border-primary h-100">
-                                                    <div class="card-header bg-primary text-white py-1">
-                                                        <h6 class="mb-0"><i class="fas fa-mortar-pestle me-1"></i> Pergamino Molido</h6>
-                                                    </div>
-                                                    <div class="card-body py-2">
-                                                        <p class="mb-1 small"><strong>Empacado:</strong> <%= empacadosMolido.reduce((sum, e) => sum + parseFloat(e.peso_empacado), 0).toFixed(2) %> kg</p>
-                                                        <p class="mb-1 small"><strong>Empaques:</strong> <%= empacadosMolido.reduce((sum, e) => sum + parseInt(e.total_empaques), 0) %> unidades</p>
-                                                        <p class="mb-0 small"><strong>Fecha:</strong> <%= new Date(Math.max(...empacadosMolido.map(e => new Date(e.fecha_empacado)))).toLocaleDateString("es-CO") %></p>
-                                                    </div>
+                                            <div class="col-12">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-coffee text-info me-1"></i>
+                                                    <strong>Café Pergamino Molido</strong>
+                                                </div>
+                                                <div class="ms-4 mt-2">
+                                                    <p class="mb-1">Empacado: <%= empacadosMolido.reduce((sum, e) => sum + parseFloat(e.peso_empacado || 0), 0).toFixed(2) %> kg</p>
+                                                    <p class="mb-1">Empaques: <%= empacadosMolido.reduce((sum, e) => sum + parseInt(e.total_empaques || 0), 0) %> unidades</p>
+                                                    <% try { %>
+                                                        <p class="mb-1">Fecha: <%= new Date(Math.max(...empacadosMolido.map(e => new Date(e.fecha_empacado)))).toLocaleDateString("es-CO") %></p>
+                                                    <% } catch (e) { %>
+                                                        <p class="mb-1">Fecha: No disponible</p>
+                                                    <% } %>
                                                 </div>
                                             </div>
                                         <% } %>
                                         
                                         <% if (empacadosPasilla.length > 0) { %>
-                                            <div class="col-md-4 mb-3">
-                                                <div class="card border-warning h-100">
-                                                    <div class="card-header bg-warning text-dark py-1">
-                                                        <h6 class="mb-0"><i class="fas fa-mortar-pestle me-1"></i> Pasilla Molido</h6>
-                                                    </div>
-                                                    <div class="card-body py-2">
-                                                        <p class="mb-1 small"><strong>Empacado:</strong> <%= empacadosPasilla.reduce((sum, e) => sum + parseFloat(e.peso_empacado), 0).toFixed(2) %> kg</p>
-                                                        <p class="mb-1 small"><strong>Empaques:</strong> <%= empacadosPasilla.reduce((sum, e) => sum + parseInt(e.total_empaques), 0) %> unidades</p>
-                                                        <p class="mb-0 small"><strong>Fecha:</strong> <%= new Date(Math.max(...empacadosPasilla.map(e => new Date(e.fecha_empacado)))).toLocaleDateString("es-CO") %></p>
-                                                    </div>
+                                            <div class="col-12">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-coffee text-warning me-1"></i>
+                                                    <strong>Café Pasilla Molido</strong>
+                                                </div>
+                                                <div class="ms-4 mt-2">
+                                                    <p class="mb-1">Empacado: <%= empacadosPasilla.reduce((sum, e) => sum + parseFloat(e.peso_empacado || 0), 0).toFixed(2) %> kg</p>
+                                                    <p class="mb-1">Empaques: <%= empacadosPasilla.reduce((sum, e) => sum + parseInt(e.total_empaques || 0), 0) %> unidades</p>
+                                                    <% try { %>
+                                                        <p class="mb-1">Fecha: <%= new Date(Math.max(...empacadosPasilla.map(e => new Date(e.fecha_empacado)))).toLocaleDateString("es-CO") %></p>
+                                                    <% } catch (e) { %>
+                                                        <p class="mb-1">Fecha: No disponible</p>
+                                                    <% } %>
                                                 </div>
                                             </div>
                                         <% } %>
@@ -776,48 +824,33 @@
                                 </div>
                                 
                                 <% if (proceso.datosEtapa.observaciones) { %>
-                                    <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= proceso.datosEtapa.observaciones %></small></p>
+                                    <div class="mt-3">
+                                        <p class="mb-0 text-muted"><small><i class="fas fa-info-circle me-1"></i> <strong>Observaciones:</strong> <%= proceso.datosEtapa.observaciones %></small></p>
+                                    </div>
                                 <% } %>
                             <% } else { %>
-                                <!-- Vista clásica para mantener compatibilidad con la estructura anterior -->
-                                <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Empacado:</strong> <%= new Date(proceso.datosEtapa.fecha_empacado).toLocaleString("es-CO") %></p>
-                                <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial:</strong> <%= typeof proceso.datosEtapa.peso_inicial !== 'undefined' ? proceso.datosEtapa.peso_inicial : '0.00' %> kg</p>
-                                <p class="mb-1"><strong><i class="fas fa-boxes text-secondary me-1"></i> Unidades Empacadas:</strong> <%= typeof proceso.datosEtapa.total_empaques !== 'undefined' ? proceso.datosEtapa.total_empaques : '0' %></p>
-                                <p class="mb-1"><strong><i class="fas fa-weight-hanging text-secondary me-1"></i> Peso Empacado:</strong> <%= typeof proceso.datosEtapa.peso_empacado !== 'undefined' ? proceso.datosEtapa.peso_empacado : '0.00' %> kg</p>
-                                <p class="mb-1"><strong><i class="fas fa-tag text-secondary me-1"></i> Tipo de Producto:</strong> <%= proceso.datosEtapa.tipo_producto_empacado || 'No especificado' %></p>
+                                <p class="mb-2"><i class="fas fa-calendar-alt text-secondary me-1"></i> <strong>Fecha Empacado:</strong> 
+                                    <%= new Date(proceso.datosEtapa.fecha_empacado).toLocaleString("es-CO") %>
+                                </p>
+                                
+                                <p class="mb-2"><i class="fas fa-weight text-secondary me-1"></i> <strong>Peso Inicial:</strong> 
+                                    <%= typeof proceso.datosEtapa.peso_inicial !== 'undefined' ? parseFloat(proceso.datosEtapa.peso_inicial).toFixed(2) : '0.00' %> kg
+                                </p>
+                                
+                                <p class="mb-2"><i class="fas fa-boxes text-secondary me-1"></i> <strong>Unidades Empacadas:</strong> 
+                                    <%= typeof proceso.datosEtapa.total_empaques !== 'undefined' ? proceso.datosEtapa.total_empaques : '0' %>
+                                </p>
+                                
+                                <p class="mb-2"><i class="fas fa-weight-hanging text-secondary me-1"></i> <strong>Peso Empacado:</strong> 
+                                    <%= typeof proceso.datosEtapa.peso_empacado !== 'undefined' ? parseFloat(proceso.datosEtapa.peso_empacado).toFixed(2) : '0.00' %> kg
+                                </p>
+                                
+                                <p class="mb-2"><i class="fas fa-tag text-secondary me-1"></i> <strong>Tipo de Producto:</strong> 
+                                    <%= proceso.datosEtapa.tipo_producto_empacado || 'No especificado' %>
+                                </p>
                                 
                                 <% if (proceso.datosEtapa.observaciones) { %>
-                                    <% 
-                                        // Filtrar observaciones para ocultar textos de corrección automática
-                                        let observacionesFiltradas = proceso.datosEtapa.observaciones;
-                                        let procesoCorregido = false;
-                                        
-                                        if (observacionesFiltradas) {
-                                            // Verificar si hay correcciones
-                                            procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
-                                            
-                                            // Dividir por líneas y filtrar las que contienen texto de corrección
-                                            const lineas = observacionesFiltradas.split('\n');
-                                            const lineasFiltradas = lineas.filter(linea => 
-                                                !linea.includes('[CORRECCIÓN COMPLETADA]') && 
-                                                linea.trim() !== ''
-                                            );
-                                            observacionesFiltradas = lineasFiltradas.join('\n').trim();
-                                        }
-                                    %>
-                                    
-                                    <!-- Mostrar indicador de corrección si aplica -->
-                                    <% if (procesoCorregido) { %>
-                                        <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
-                                            <i class="fas fa-edit me-1"></i>
-                                            <strong>Proceso corregido:</strong> Este proceso ha sido modificado para corregir inconsistencias en los datos.
-                                        </div>
-                                    <% } %>
-                                    
-                                    <!-- Mostrar observaciones del usuario -->
-                                    <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
-                                        <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
-                                    <% } %>
+                                    <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= proceso.datosEtapa.observaciones %></small></p>
                                 <% } %>
                             <% } %>
                         <% } %>
