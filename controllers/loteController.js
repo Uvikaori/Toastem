@@ -10,7 +10,6 @@ const trillaDAO = require('../models/dao/trillaDAO'); // Nuevo DAO
 const tuesteDAO = require('../models/dao/tuesteDAO'); // Nuevo DAO para tueste
 const moliendaDAO = require('../models/dao/moliendaDAO');
 const empacadoDAO = require('../models/dao/empacadoDAO');
-const controlCalidadDAO = require('../models/dao/controlCalidadDAO');
 const db = require('../config/database'); // Importar la conexión a la base de datos
 const Lote = require('../models/entities/Lote');
 const Despulpado = require('../models/entities/Despulpado'); // Entidad Despulpado
@@ -22,7 +21,6 @@ const Trilla = require('../models/entities/Trilla'); // Nueva entidad
 const Tueste = require('../models/entities/Tueste'); // Nueva entidad para tueste
 const Molienda = require('../models/entities/Molienda');
 const Empacado = require('../models/entities/Empacado');
-const ControlCalidad = require('../models/entities/ControlCalidad');
 const { validationResult } = require('express-validator');
 const { capitalizarPalabras } = require('../utils/helpers'); // Si se usa para algo
 const seguimientoSecadoDAO = require('../models/dao/seguimientoSecadoDAO');
@@ -220,7 +218,7 @@ class LoteController {
             const trillaInfo = await trillaDAO.getTrillaByLoteId(id_lote);
             const tuesteInfo = await tuesteDAO.getTuesteByLoteId(id_lote);
             const moliendaInfo = await moliendaDAO.getMoliendaByLoteId(id_lote);
-            const controlCalidadInfo = await controlCalidadDAO.getControlCalidadByLoteId(id_lote);
+            // const controlCalidadInfo = await controlCalidadDAO.getControlCalidadByLoteId(id_lote); // Ya no se necesita aquí
 
             // Obtener seguimientos de secado si existe el proceso
             let seguimientosSecado = [];
@@ -275,12 +273,12 @@ class LoteController {
                 empacadoInfo = null;
             }
 
-            const procesosConEstado = todosLosProcesosDefinidos.map(procesoDef => {
+            const procesosConEstado = await Promise.all(todosLosProcesosDefinidos.map(async (procesoDef) => {
                 let etapaInfo = null;
                 
                 switch (procesoDef.nombre.toLowerCase()) {
                     case 'recolección':
-                        etapaInfo = { id_estado_proceso: 3 };
+                        etapaInfo = { id_estado_proceso: 3 }; // Asumiendo 3 como completado
                         break;
                     case 'despulpado':
                         etapaInfo = despulpadoInfo;
@@ -310,7 +308,17 @@ class LoteController {
                         etapaInfo = empacadoInfo;
                         break;
                     case 'control de calidad':
-                        etapaInfo = controlCalidadInfo;
+                        // Marcar como "En construcción" en lugar de cargar datos
+                        etapaInfo = {
+                            // nombre_proceso: procesoDef.nombre, // `procesoDef.nombre` ya está en el objeto devuelto
+                            id_estado_proceso: 0, // Usar un ID que represente "Pendiente" o "No iniciado" (o crea uno para "En Construcción")
+                            enConstruccion: true, // Flag para la vista
+                            observaciones: "Funcionalidad en construcción" // Mensaje para mostrar
+                        };
+                        // Ya no necesitamos la importación temporal ni la llamada a la BD aquí
+                        // const tempControlCalidadDAO = require('../models/dao/controlCalidadDAO');
+                        // const tempData = await tempControlCalidadDAO.getControlCalidadByLoteId(id_lote);
+                        // etapaInfo = tempData;
                         break;
                 }
 
@@ -318,7 +326,7 @@ class LoteController {
                     ...procesoDef,
                     datosEtapa: etapaInfo,
                 };
-            });
+            }));
 
             const mensajeFlash = req.flash('mensaje');
             const mensaje = mensajeFlash && mensajeFlash.length > 0 ? mensajeFlash : null;
@@ -387,86 +395,6 @@ class LoteController {
             console.error('Error al mostrar vista de flujo de lote:', error);
             req.flash('error', 'Error al cargar los datos del flujo de lote.');
             res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/procesos`);
-        }
-    }
-
-    /**
-     * Muestra el formulario para registrar el proceso de control de calidad.
-     */
-    async mostrarFormularioControlCalidad(req, res) {
-        try {
-            const id_lote = parseInt(req.params.id_lote);
-            const lote = req.lote;
-
-            // Verificar si ya existe un registro de control de calidad
-            const controlExistente = await controlCalidadDAO.getControlCalidadByLoteId(id_lote);
-            if (controlExistente) {
-                req.flash('error', 'Ya existe un registro de control de calidad para este lote.');
-                return res.redirect(`/fincas/${req.params.id_finca}/lotes/${id_lote}/procesos`);
-            }
-
-            res.render('lotes/control-calidad', {
-                titulo: 'Registrar Control de Calidad',
-                lote: lote,
-                finca: req.finca,
-                fecha_control: req.flash('fecha_control')[0] || '',
-                tipo_control: req.flash('tipo_control')[0] || '',
-                resultado_control: req.flash('resultado_control')[0] || '',
-                puntaje_cata: req.flash('puntaje_cata')[0] || '',
-                observaciones: req.flash('observaciones')[0] || '',
-                error: req.flash('error')
-            });
-
-        } catch (error) {
-            console.error('Error al mostrar formulario de control de calidad:', error);
-            req.flash('error', 'Error al cargar el formulario de control de calidad.');
-            res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/procesos`);
-        }
-    }
-
-    /**
-     * Procesa el registro de control de calidad.
-     */
-    async registrarControlCalidad(req, res) {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            req.flash('error', errors.array().map(e => e.msg));
-            req.flash('fecha_control', req.body.fecha_control);
-            req.flash('tipo_control', req.body.tipo_control);
-            req.flash('resultado_control', req.body.resultado_control);
-            req.flash('puntaje_cata', req.body.puntaje_cata);
-            req.flash('observaciones', req.body.observaciones);
-            return res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/control-calidad/registrar`);
-        }
-
-        try {
-            const id_lote = parseInt(req.params.id_lote);
-            const {
-                fecha_control,
-                tipo_control,
-                resultado_control,
-                puntaje_cata,
-                observaciones
-            } = req.body;
-
-            const controlCalidad = new ControlCalidad(
-                null,
-                id_lote,
-                fecha_control,
-                tipo_control,
-                resultado_control,
-                puntaje_cata,
-                observaciones
-            );
-
-            await controlCalidadDAO.createControlCalidad(controlCalidad);
-            req.flash('mensaje', 'Proceso de control de calidad registrado exitosamente.');
-            res.redirect(`/fincas/${req.params.id_finca}/lotes/${id_lote}/procesos`);
-
-        } catch (error) {
-            console.error('Error al registrar control de calidad:', error);
-            req.flash('error', 'Error al registrar el proceso de control de calidad.');
-            res.redirect(`/fincas/${req.params.id_finca}/lotes/${req.params.id_lote}/control-calidad/registrar`);
         }
     }
 

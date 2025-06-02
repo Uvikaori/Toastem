@@ -12,7 +12,6 @@ const { validateTrilla } = require('../validators/trillaValidator');
 const { validateTueste } = require('../validators/tuesteValidator'); 
 const { validateMolienda } = require('../validators/moliendaValidator'); 
 // const { validateEmpacado } = require('../validators/empacadoValidator'); 
-const { validateControlCalidad } = require('../validators/controlCalidadValidator'); 
 const despulpadoController = require('../controllers/despulpadoController');
 const fermentacionLavadoController = require('../controllers/fermentacionLavadoController');
 const zarandeoController = require('../controllers/zarandeoController');
@@ -22,6 +21,7 @@ const trillaController = require('../controllers/trillaController');
 const tuesteController = require('../controllers/tuesteController');
 const moliendaController = require('../controllers/moliendaController');
 const empacadoController = require('../controllers/empacadoController');
+const controlCalidadController = require('../controllers/controlCalidadController');
 
 // Mostrar formulario para crear un nuevo lote para una finca
 router.get('/crear', loteController.mostrarFormularioCrearLote);
@@ -93,15 +93,15 @@ router.post('/:id_lote/empacado', isLoteOwner, empacadoController.registrarEmpac
 router.post('/:id_lote/empacado/:id_empacado/reiniciar', isLoteOwner, empacadoController.reiniciarProcesoEmpacado);
 router.post('/:id_lote/empacado/reiniciar-todos', isLoteOwner, empacadoController.reiniciarTodosEmpacados);
 
-// Rutas para el proceso de CONTROL DE CALIDAD (Opcional)
-router.get('/:id_lote/control-calidad/registrar', isLoteOwner, loteController.mostrarFormularioControlCalidad);
-router.post('/:id_lote/control-calidad', isLoteOwner, validateControlCalidad, loteController.registrarControlCalidad);
-
 // Rutas para gestión de correcciones y cancelaciones
 router.get('/:id_lote/cancelar', isLoteOwner, loteController.mostrarFormularioCancelarLote);
 router.post('/:id_lote/cancelar', isLoteOwner, loteController.cancelarLote);
 router.get('/:id_lote/duplicar', isLoteOwner, loteController.mostrarFormularioDuplicarLote);
 router.post('/:id_lote/duplicar', isLoteOwner, loteController.duplicarLote);
 router.post('/:id_lote/recoleccion/corregir', isLoteOwner, loteController.corregirProcesoRecoleccion);
+
+// Rutas para el proceso de CONTROL DE CALIDAD (Opcional)
+router.get('/:id_lote/control-calidad/registrar', isLoteOwner, controlCalidadController.mostrarFormularioControlCalidad);
+router.post('/:id_lote/control-calidad', isLoteOwner, /* validateControlCalidad, */ controlCalidadController.registrarControlCalidad);
 
 module.exports = router; 
