@@ -113,7 +113,8 @@
                 <div class="mb-3">
                     <label for="fecha_empacado" class="form-label">Fecha de Empacado:</label>
                     <input type="date" class="form-control" id="fecha_empacado" name="fecha_empacado" 
-                        value="<%= new Date().toISOString().split('T')[0] %>">
+                           value="<%= fecha_empacado || new Date().toISOString().split('T')[0] %>" required>
+                    <small class="form-text text-muted">Formato: DD/MM/YYYY</small>
                 </div>
 
                 <!-- Tipos de café a empacar -->
@@ -270,87 +271,4 @@
 </div>
 
 <link rel="stylesheet" href="/css/lotes/procesos.css">
-<script src="/js/lotes/procesos.js"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Toggle de formularios según checkboxes
-    const toggleForms = () => {
-        const empacarGrano = document.getElementById('empacar_grano');
-        const formGrano = document.getElementById('form_grano');
-        if (empacarGrano && formGrano) {
-            formGrano.querySelectorAll('input, textarea').forEach(input => {
-                input.required = false;
-            });
-            formGrano.style.display = empacarGrano.checked ? 'block' : 'none';
-        }
-
-        const empacarMolido = document.getElementById('empacar_molido');
-        const formMolido = document.getElementById('form_molido');
-        if (empacarMolido && formMolido) {
-            formMolido.querySelectorAll('input, textarea').forEach(input => {
-                input.required = false;
-            });
-            formMolido.style.display = empacarMolido.checked ? 'block' : 'none';
-        }
-
-        const empacarPasilla = document.getElementById('empacar_pasilla');
-        const formPasilla = document.getElementById('form_pasilla');
-        if (empacarPasilla && formPasilla) {
-            formPasilla.querySelectorAll('input, textarea').forEach(input => {
-                input.required = false;
-            });
-            formPasilla.style.display = empacarPasilla.checked ? 'block' : 'none';
-        }
-
-        const btnRegistrar = document.getElementById('btnRegistrarEmpacado');
-        if (btnRegistrar) {
-            btnRegistrar.disabled = false;
-        }
-    };
-
-    // Eventos de toggle para checkboxes
-    const checkboxes = document.querySelectorAll('.form-check-input');
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', toggleForms);
-    });
-
-    // Inicializar formularios
-    toggleForms();
-
-    // Validación para Pergamino en Grano - ahora más permisiva
-    const pesoInicialGrano = document.getElementById('peso_inicial_grano');
-    const pesoEmpacadoGrano = document.getElementById('peso_empacado_grano');
-    
-    if (pesoInicialGrano && pesoEmpacadoGrano) {
-        pesoEmpacadoGrano.addEventListener('input', function() {
-            // No hacemos ninguna validación, para hacerlo más permisivo
-        });
-    }
-    
-    // Validación para Pergamino Molido - ahora más permisiva
-    const pesoInicialMolido = document.getElementById('peso_inicial_molido');
-    const pesoEmpacadoMolido = document.getElementById('peso_empacado_molido');
-    
-    if (pesoInicialMolido && pesoEmpacadoMolido) {
-        pesoEmpacadoMolido.addEventListener('input', function() {
-            // No hacemos ninguna validación, para hacerlo más permisivo
-        });
-    }
-    
-    // Validación para Pasilla Molido - ahora más permisiva
-    const pesoInicialPasilla = document.getElementById('peso_inicial_pasilla');
-    const pesoEmpacadoPasilla = document.getElementById('peso_empacado_pasilla');
-    
-    if (pesoInicialPasilla && pesoEmpacadoPasilla) {
-        pesoEmpacadoPasilla.addEventListener('input', function() {
-            // No hacemos ninguna validación, para hacerlo más permisivo
-        });
-    }
-
-    // Validación del formulario antes de enviar - ahora más permisiva
-    document.getElementById('formEmpacadoUnificado').addEventListener('submit', function(event) {
-        // No bloqueamos el envío del formulario, para hacerlo más permisivo
-    });
-});
-</script> 
+<script src="/js/lotes/procesos.js"></script> 

@@ -44,14 +44,14 @@
                 <div class="row">
                     <% if (tueste_info.peso_pergamino_final && tueste_info.peso_pergamino_final > 0) { %>
                         <div class="col-md-6">
-                            <div class="alert alert-info">
+                            <div class="alert alert-info" data-pergamino-peso="<%= tueste_info.peso_pergamino_final %>">
                                 <p><strong>Peso Pergamino Final:</strong> <%= tueste_info.peso_pergamino_final %> kg</p>
                             </div>
                         </div>
                     <% } %>
                     <% if (tueste_info.peso_pasilla_final && tueste_info.peso_pasilla_final > 0) { %>
                         <div class="col-md-6">
-                            <div class="alert alert-warning">
+                            <div class="alert alert-warning" data-pasilla-peso="<%= tueste_info.peso_pasilla_final %>">
                                 <p><strong>Peso Pasilla Final:</strong> <%= tueste_info.peso_pasilla_final %> kg</p>
                             </div>
                         </div>
@@ -153,109 +153,4 @@
 </div>
 
 <link rel="stylesheet" href="/css/lotes/procesos.css">
-<script src="/js/lotes/procesos.js"></script>
-
-<script>
-// Script para formatear los números correctamente
-document.addEventListener('DOMContentLoaded', function() {
-    // Función para formatear el valor al perder el foco
-    function formatNumberInput(input) {
-        const value = parseFloat(input.value);
-        if (!isNaN(value)) {
-            input.value = value.toString(); // Asegura que se use punto como separador decimal
-        }
-    }
-
-    // Aplicar a los campos de peso
-    const pesoInputs = document.querySelectorAll('input[type="number"]');
-    pesoInputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            formatNumberInput(this);
-        });
-    });
-    
-    function setupCafeMoliendaSection(idPrefix, tipoCafeReal, pesoTostadoFinal) {
-        // Asegurar que pesoTostadoFinal sea un número
-        const pesoTostadoFinalNum = parseFloat(pesoTostadoFinal || 0);
-        
-        const mantenerGranoCheck = document.getElementById(`${idPrefix}_mantener_grano_check`);
-        const granoSection = document.getElementById(`${idPrefix}_grano_section`);
-        const pesoMantenidoGranoInput = document.getElementById(`${idPrefix}_peso_mantenido_grano`);
-        
-        const moliendaSeparator = document.getElementById(`${idPrefix}_molienda_separator`);
-        const moliendaTitle = document.getElementById(`${idPrefix}_molienda_title`);
-        const pesoInicialAMolerInput = document.getElementById(`${idPrefix}_peso_inicial_a_moler`);
-        const tipoMoliendaField = document.getElementById(`${idPrefix}_tipo_molienda_field`);
-        const pesoFinalField = document.getElementById(`${idPrefix}_peso_final_field`);
-        const tipoMoliendaSelect = document.getElementById(`${idPrefix}_tipo_molienda`);
-        const pesoFinalMolidoInput = document.getElementById(`${idPrefix}_peso_final_molido`);
-
-        // Si es Pasilla, la lógica de mantener en grano no aplica y los campos de molienda son siempre visibles
-        if (tipoCafeReal.toLowerCase() === 'pasilla') {
-            if(granoSection) granoSection.style.display = 'none';
-            if(moliendaSeparator) moliendaSeparator.style.display = 'block'; // O 'none' si no quieres separador para Pasilla
-            if(moliendaTitle) moliendaTitle.style.display = 'block';
-            pesoInicialAMolerInput.value = pesoTostadoFinalNum.toFixed(2);
-            tipoMoliendaField.style.display = 'block';
-            pesoFinalField.style.display = 'block';
-            tipoMoliendaSelect.setAttribute('required', 'required');
-            pesoFinalMolidoInput.setAttribute('required', 'required');
-            return; // No se necesita más configuración para Pasilla
-        }
-
-        // Lógica original para Pergamino (o cualquier otro tipo que permita mantener en grano)
-        if (!mantenerGranoCheck) return; 
-
-        mantenerGranoCheck.addEventListener('change', function() {
-            const mostrarGrano = this.checked;
-            granoSection.style.display = mostrarGrano ? 'block' : 'none';
-            moliendaSeparator.style.display = mostrarGrano ? 'block' : 'none';
-            moliendaTitle.style.display = mostrarGrano ? 'block' : 'none';
-            
-            actualizarPesosYMolienda();
-        });
-
-        pesoMantenidoGranoInput.addEventListener('input', function() {
-            actualizarPesosYMolienda();
-        });
-
-        function actualizarPesosYMolienda() {
-            let pesoMantenidoGrano = 0;
-            if (mantenerGranoCheck.checked) {
-                pesoMantenidoGrano = parseFloat(pesoMantenidoGranoInput.value) || 0;
-                if (pesoMantenidoGrano < 0) pesoMantenidoGrano = 0;
-                if (pesoMantenidoGrano > pesoTostadoFinalNum) {
-                    pesoMantenidoGrano = pesoTostadoFinalNum;
-                    pesoMantenidoGranoInput.value = pesoMantenidoGrano.toFixed(2);
-                }
-            }
-            
-            const pesoParaMoler = pesoTostadoFinalNum - pesoMantenidoGrano;
-            pesoInicialAMolerInput.value = pesoParaMoler.toFixed(2);
-
-            const hayAlgoParaMoler = pesoParaMoler > 0.001; 
-            
-            tipoMoliendaField.style.display = hayAlgoParaMoler ? 'block' : 'none';
-            pesoFinalField.style.display = hayAlgoParaMoler ? 'block' : 'none';
-            
-            if (hayAlgoParaMoler) {
-                tipoMoliendaSelect.setAttribute('required', 'required');
-                pesoFinalMolidoInput.setAttribute('required', 'required');
-            } else {
-                tipoMoliendaSelect.removeAttribute('required');
-                pesoFinalMolidoInput.removeAttribute('required');
-                tipoMoliendaSelect.value = ''; 
-                pesoFinalMolidoInput.value = ''; 
-            }
-        }
-        actualizarPesosYMolienda();
-    }
-
-    <% if (tueste_info && tueste_info.peso_pergamino_final && parseFloat(tueste_info.peso_pergamino_final) > 0) { %>
-        setupCafeMoliendaSection('pergamino', 'Pergamino', <%= parseFloat(tueste_info.peso_pergamino_final) %>);
-    <% } %>
-    <% if (tueste_info && tueste_info.peso_pasilla_final && parseFloat(tueste_info.peso_pasilla_final) > 0) { %>
-        setupCafeMoliendaSection('pasilla', 'Pasilla', <%= parseFloat(tueste_info.peso_pasilla_final) %>);
-    <% } %>
-});
-</script> 
+<script src="/js/lotes/procesos.js"></script> 

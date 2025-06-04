@@ -32,9 +32,9 @@
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="fecha_fin_secado" class="form-label">Fecha y Hora de Finalización Secado: </label>
-                        <input type="datetime-local" class="form-control" id="fecha_fin_secado" name="fecha_fin_secado" value="<%= fecha_fin_secado %>" required>
-                        <small class="form-text text-muted">Campo obligatorio. Debe ser posterior a la fecha de inicio.</small>
+                        <label for="fecha_fin_secado" class="form-label">Fecha y Hora Fin Secado:</label>
+                        <input type="datetime-local" class="form-control" id="fecha_fin_secado" name="fecha_fin_secado" value="<%= fecha_fin_secado || '' %>" required>
+                        <small class="form-text text-muted">Campo obligatorio. Formato: DD/MM/YYYY HH:mm</small>
                     </div>
                     <div class="col-md-6">
                         <label for="peso_final_secado" class="form-label">Peso Final Después del Secado (kg):</label>

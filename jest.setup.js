@@ -1,5 +1,5 @@
 const mysql = require('mysql2/promise');
-const dbConfig = require('./config/database.test');
+const dbModuleOriginal = require('./config/database');
 
 // Mock de la clase Database
 jest.mock('./config/database', () => {
@@ -24,7 +24,7 @@ process.env.PORT = 3001; // Puerto diferente para pruebas
 process.env.DB_HOST = 'localhost';
 process.env.DB_USER = 'root';
 process.env.DB_PASSWORD = '';
-process.env.DB_DATABASE = 'toastem_test_db'; // Base de datos específica para pruebas
+process.env.DB_NAME = 'toastem_test_db'; // CAMBIADO de DB_DATABASE a DB_NAME
 process.env.SESSION_SECRET = 'test_secret';
 
 // Configuración de JWT para pruebas
@@ -41,8 +41,16 @@ global.testDb = null;
 
 // Configuración antes de todas las pruebas
 beforeAll(async () => {
-  // Crear conexión a la base de datos de pruebas
-  global.testDb = await mysql.createConnection(dbConfig);
+  // Crear objeto de configuración para la base de datos de prueba
+  const testDbConfig = {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME, 
+  };
+  
+  // Crear conexión a la base de datos de pruebas usando el objeto de configuración
+  global.testDb = await mysql.createConnection(testDbConfig); // CAMBIADO
   
   // Limpiar y preparar la base de datos de pruebas
   await global.testDb.execute('DROP TABLE IF EXISTS usuarios');

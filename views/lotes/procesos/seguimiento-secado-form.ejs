@@ -63,10 +63,10 @@
                 <input type="hidden" name="id_finca_param" value="<%= finca.id %>">
                 
                 <div class="mb-3">
-                    <label for="fecha_seguimiento" class="form-label">Fecha y Hora:</label>
+                    <label for="fecha_seguimiento" class="form-label">Fecha y Hora del Seguimiento:</label>
                     <input type="datetime-local" class="form-control" id="fecha_seguimiento" name="fecha_seguimiento" 
-                        value="<%= new Date().toISOString().slice(0, 16) %>" required>
-                    <small class="text-muted">Fecha y hora de la medición</small>
+                           value="<%= fecha_seguimiento || new Date().toISOString().slice(0, 16) %>" required>
+                    <small class="form-text text-muted">Formato: DD/MM/YYYY HH:mm</small>
                 </div>
                 
                 <div class="row">

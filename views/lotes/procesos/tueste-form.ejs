@@ -73,7 +73,7 @@
                                    value="<%= fecha_tueste_pergamino %>"
                                    min="<%= fecha_trilla.split('T')[0] %>"
                                    <%= trilla_info && trilla_info.peso_pergamino_final > 0 ? 'required' : '' %>>
-                            <small class="form-text text-muted">Fecha en que se realizó el tueste del café pergamino. Debe ser posterior a la fecha de trilla.</small>
+                            <small class="form-text text-muted">Formato: DD/MM/YYYY. Debe ser posterior a la fecha de trilla.</small>
                         </div>
 
                         <div class="mb-3">
@@ -125,7 +125,7 @@
                                    value="<%= fecha_tueste_pasilla %>"
                                    min="<%= fecha_trilla.split('T')[0] %>"
                                    <%= trilla_info && trilla_info.peso_pasilla_final > 0 ? 'required' : '' %>>
-                            <small class="form-text text-muted">Fecha en que se realizó el tueste del café pasilla. Debe ser posterior a la fecha de trilla.</small>
+                            <small class="form-text text-muted">Formato: DD/MM/YYYY. Debe ser posterior a la fecha de trilla.</small>
                         </div>
 
                         <div class="mb-3">
@@ -159,7 +159,7 @@
                            value="<%= fecha_tueste || new Date().toISOString().split('T')[0] %>"
                            min="<%= fecha_trilla.split('T')[0] %>"
                            required>
-                    <small class="form-text text-muted">Fecha de registro del proceso completo de tueste. Debe ser posterior a la fecha de trilla.</small>
+                    <small class="form-text text-muted">Formato: DD/MM/YYYY. Fecha de registro del proceso completo de tueste.</small>
                 </div>
 
                 <div class="mb-3">
@@ -176,21 +176,6 @@
         </div>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Calcular el peso final total automáticamente
-        function calcularPesoFinalTotal() {
-            let pesoPergamino = parseFloat(document.getElementById('peso_pergamino_final').value) || 0;
-            let pesoPasilla = parseFloat(document.getElementById('peso_pasilla_final').value) || 0;
-            document.getElementById('peso_final').value = (pesoPergamino + pesoPasilla).toFixed(2);
-        }
-
-        // Añadir listeners a los inputs de peso final
-        document.getElementById('peso_pergamino_final').addEventListener('input', calcularPesoFinalTotal);
-        document.getElementById('peso_pasilla_final').addEventListener('input', calcularPesoFinalTotal);
-    });
-</script>
 
 <link rel="stylesheet" href="/css/lotes/procesos.css">
 <script src="/js/lotes/procesos.js"></script> 

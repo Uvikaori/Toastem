@@ -9,7 +9,6 @@ class FincaController {
         try {
             console.log('Sesión actual:', req.session); 
             
-            // Verificar si el usuario está autenticado
             if (!req.session.usuario || !req.session.usuario.id) {
                 console.log('Usuario no autenticado, redirigiendo...'); 
                 req.flash('error', 'Debes iniciar sesión para acceder a esta página');
@@ -17,15 +16,14 @@ class FincaController {
             }
 
             const fincas = await fincaDAO.getFincasByUserId(req.session.usuario.id);
-            const municipiosVeredasAll = await fincaDAO.getMunicipiosVeredas(); // Obtener todos para mostrar en la card
+            const municipiosVeredasAll = await fincaDAO.getMunicipiosVeredas();
             
             res.render('gestionar-fincas', { 
                 titulo: 'Gestionar Fincas | Toastem',
                 fincas: Array.isArray(fincas) ? fincas : [],
-                municipiosVeredasAll: municipiosVeredasAll, // Pasar a la vista
+                municipiosVeredasAll: municipiosVeredasAll,
                 mensaje: req.flash('mensaje'),
                 error: req.flash('error'),
-                // Para el modal de edición de finca, si se usa en esta página
                 departamentos: await fincaDAO.getDepartamentos(), 
             });
         } catch (error) {
@@ -46,17 +44,15 @@ class FincaController {
             }
 
             const departamentos = await fincaDAO.getDepartamentos();
-            // Ya no pasamos todos los municipiosVeredas. Se cargarán dinámicamente.
 
             res.render('fincas/crear', {
                 titulo: 'Crear Nueva Finca | Toastem',
                 departamentos: departamentos,
-                // Los siguientes campos se usarán para repoblar si hay error y se seleccionaron valores
                 nombre: req.flash('nombre')[0] || '',
                 ubicacion: req.flash('ubicacion')[0] || '',
                 selectedDepartamento: req.flash('selectedDepartamento')[0] || '',
-                selectedMunicipio: req.flash('selectedMunicipio')[0] || '', // Nuevo para repoblar
-                selectedMunicipioVereda: req.flash('selectedMunicipioVereda')[0] || '', // ID de la vereda
+                selectedMunicipio: req.flash('selectedMunicipio')[0] || '',
+                selectedMunicipioVereda: req.flash('selectedMunicipioVereda')[0] || '',
                 mensaje: req.flash('mensaje'),
                 error: req.flash('error')
             });
@@ -67,7 +63,6 @@ class FincaController {
         }
     }
 
-    // API para obtener municipios por departamento
     async getMunicipiosAPI(req, res) {
         try {
             const nombreDepartamento = req.params.departamento;
@@ -82,7 +77,6 @@ class FincaController {
         }
     }
 
-    // API para obtener veredas por municipio (y departamento para asegurar unicidad del municipio)
     async getVeredasAPI(req, res) {
         try {
             const nombreDepartamento = req.params.departamento;
@@ -91,7 +85,7 @@ class FincaController {
                 return res.status(400).json({ error: 'Departamento y municipio son requeridos' });
             }
             const veredas = await fincaDAO.getVeredasPorMunicipio(nombreDepartamento, nombreMunicipio);
-            res.json(veredas); // Devuelve [{id, nombre_ver}, ...]
+            res.json(veredas);
         } catch (error) {
             console.error('Error al obtener veredas API:', error);
             res.status(500).json({ error: 'Error interno al obtener veredas' });
@@ -107,9 +101,9 @@ class FincaController {
             req.flash('error', errors.array().map(e => e.msg));
             req.flash('nombre', req.body.nombre);
             req.flash('ubicacion', req.body.ubicacion);
-            req.flash('selectedDepartamento', req.body.departamento); // Nombre del departamento
-            req.flash('selectedMunicipio', req.body.municipio);       // Nombre del municipio
-            req.flash('selectedMunicipioVereda', req.body.id_municipio_vereda); // ID de la vereda
+            req.flash('selectedDepartamento', req.body.departamento);
+            req.flash('selectedMunicipio', req.body.municipio);
+            req.flash('selectedMunicipioVereda', req.body.id_municipio_vereda);
             return res.redirect('/fincas/crear');
         }
 
@@ -119,8 +113,6 @@ class FincaController {
                  return res.redirect('/auth/login');
             }
 
-            // departamento y municipio del body son solo para repoblar el form en caso de error.
-            // El que se guarda es id_municipio_vereda.
             const { nombre, ubicacion, id_municipio_vereda } = req.body;
 
             const nombreCapitalizado = capitalizarPalabras(nombre);
@@ -151,56 +143,35 @@ class FincaController {
     async actualizarFinca(req, res) {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            // Manejar errores de validación (ej: devolver JSON con errores)
             return res.status(400).json({ errors: errors.array() });
         }
 
         try {
             const { id } = req.params;
             if (!id || isNaN(id)) {
-                 // Si es JSON API
                  return res.status(400).json({ success: false, message: 'ID de finca inválido' });
-                 // Si es web app con flash:
-                 // req.flash('error', 'ID de finca inválido');
-                 // return res.redirect('/ruta/a/editar');
             }
-
-            // Verificar que la finca pertenece al usuario (IMPORTANTE, si no se hace en DAO)
-            // const fincaExistente = await fincaDAO.getFincaByIdAndUserId(id, req.session.usuario.id);
-            // if (!fincaExistente) {
-            //     return res.status(404).json({ success: false, message: 'Finca no encontrada o no pertenece al usuario' });
-            // }
 
             const { nombre, ubicacion, id_municipio_vereda } = req.body;
 
-            // Capitalizar antes de actualizar
             const nombreCapitalizado = capitalizarPalabras(nombre);
             const ubicacionCapitalizada = ubicacion ? capitalizarPalabras(ubicacion) : '';
 
             const finca = new Finca(
                 parseInt(id),
                 req.session.usuario.id,
-                nombreCapitalizado, // Usar nombre capitalizado
-                ubicacionCapitalizada, // Usar ubicación capitalizada
-                parseInt(id_municipio_vereda) // Asegurar que se incluye en la actualización si es necesario
+                nombreCapitalizado,
+                ubicacionCapitalizada,
+                parseInt(id_municipio_vereda)
             );
 
-            await fincaDAO.updateFinca(finca); // Asegurarse que updateFinca maneje id_municipio_vereda si es editable
+            await fincaDAO.updateFinca(finca);
 
-            // Respuesta para JSON API
             res.json({ success: true, message: 'Finca actualizada exitosamente' });
-
-            // Si fuera web app con flash:
-            // req.flash('mensaje', 'Finca actualizada exitosamente.');
-            // res.redirect('/fincas/gestionar');
 
         } catch (error) {
             console.error('Error al actualizar finca:', error);
-            // Respuesta para JSON API
             res.status(500).json({ success: false, message: 'Error interno al actualizar la finca' });
-             // Si fuera web app con flash:
-            // req.flash('error', 'Error interno al actualizar la finca.');
-            // res.redirect('/ruta/a/editar/' + req.params.id);
         }
     }
 
@@ -208,7 +179,6 @@ class FincaController {
         try {
             const { id } = req.params;
             
-            // Validar que id sea un número
             if (!id || isNaN(id)) {
                 return res.status(400).json({ 
                     success: false, 

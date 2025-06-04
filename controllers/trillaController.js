@@ -33,19 +33,16 @@ class TrillaController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
-            // Verificar que la clasificación esté terminada
             if (clasificacion.id_estado_proceso !== 3) {
                 req.flash('error', 'El proceso de Clasificación debe estar completado antes de registrar la Trilla.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
             
-            // Verificar si hay datos en flash (provienen de una validación fallida)
             const fechaTrilla = req.flash('fecha_trilla')[0];
             const pesoPergaminoFinal = req.flash('peso_pergamino_final')[0];
             const pesoPasillaFinal = req.flash('peso_pasilla_final')[0];
             const observacionesFlash = req.flash('observaciones')[0];
 
-            // Determinar título según si es nuevo registro o edición
             const titulo = trilla && trilla.id_estado_proceso === 2 
                 ? `Editar Trilla - Lote ${lote.codigo}` 
                 : `Registrar Trilla - Lote ${lote.codigo}`;
@@ -57,7 +54,6 @@ class TrillaController {
                 peso_clasificado_final: clasificacion.peso_total,
                 peso_pergamino: clasificacion.peso_pergamino,
                 peso_pasilla: clasificacion.peso_pasilla,
-                // Prioridad: 1. Valores de flash, 2. Valores existentes, 3. Valores por defecto
                 fecha_trilla: fechaTrilla || (trilla ? trilla.fecha_trilla : new Date().toISOString().slice(0, 16)),
                 peso_pergamino_final: pesoPergaminoFinal || (trilla ? trilla.peso_pergamino_final : ''),
                 peso_pasilla_final: pesoPasillaFinal || (trilla ? trilla.peso_pasilla_final : ''),
@@ -98,27 +94,23 @@ class TrillaController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/trilla/registrar`);
             }
 
-            // Validar que el lote existe
             const lote = await loteDAO.getLoteById(id_lote);
             if (!lote) {
                 req.flash('error', 'No se encontró el lote especificado.');
                 return res.redirect('/fincas/gestionar');
             }
 
-            // Obtener datos de clasificación
             const clasificacion = await clasificacionDAO.getClasificacionByLoteId(id_lote);
             if (!clasificacion) {
                 req.flash('error', 'No se encontró el registro de clasificación para este lote.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
             
-            // Verificar que la clasificación esté terminada
             if (clasificacion.id_estado_proceso !== 3) {
                 req.flash('error', 'El proceso de Clasificación debe estar completado antes de registrar la Trilla.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
-            // Convertir valores a números y asegurar que son valores válidos
             const pergaminoFinal = parseFloat(peso_pergamino_final);
             const pasillaFinal = parseFloat(peso_pasilla_final);
             
@@ -132,10 +124,9 @@ class TrillaController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/trilla/registrar`);
             }
 
-            // Verificar que los pesos finales no sean mayores que los iniciales (con tolerancia)
             const pergaminoInicial = parseFloat(clasificacion.peso_pergamino) || 0;
             const pasillaInicial = parseFloat(clasificacion.peso_pasilla) || 0;
-            const tolerancia = 0.01; // 1%
+            const tolerancia = 0.01;
             
             if (pergaminoFinal > pergaminoInicial * (1 + tolerancia)) {
                 req.flash('error', `El peso final del pergamino (${pergaminoFinal} kg) no puede ser mayor que el peso inicial (${pergaminoInicial} kg) más una tolerancia del 1%.`);
@@ -147,62 +138,54 @@ class TrillaController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/trilla/registrar`);
             }
 
-            // Calcular peso final total
             const peso_final = pergaminoFinal + pasillaFinal;
 
-            // Verificar si ya existe un registro de trilla para este lote
             const trillaExistente = await trillaDAO.getTrillaByLoteId(id_lote);
             
             console.log('Trilla existente:', trillaExistente);
             
             if (trillaExistente && (trillaExistente.id_estado_proceso === 2 || trillaExistente.id_estado_proceso === 1)) {
-                // Si existe y está en estado "En progreso" o "Registrado", actualizarlo
                 let nuevasObservaciones = observaciones || trillaExistente.observaciones || '';
                 if (nuevasObservaciones && !nuevasObservaciones.includes("[ACTUALIZADO]")) {
                     nuevasObservaciones += '\n[ACTUALIZADO] ' + new Date().toLocaleString();
                 }
                 
-                // Crear objeto con datos actualizados
                 const datosActualizacion = {
                     fecha_trilla,
                     peso_pergamino_final: pergaminoFinal,
                     peso_pasilla_final: pasillaFinal,
                     peso_final,
                     observaciones: nuevasObservaciones,
-                    id_estado_proceso: 3 // Cambiar a terminado
+                    id_estado_proceso: 3
                 };
                 
                 console.log('Actualizando trilla con datos:', datosActualizacion);
                 
-                // Actualizar el registro
                 const resultado = await trillaDAO.updateTrilla(trillaExistente.id, datosActualizacion);
                 console.log('Resultado de actualización:', resultado);
                 
                 req.flash('mensaje', 'Trilla actualizada exitosamente.');
             } else {
-                // Si no existe o no está en estado "En progreso", crear uno nuevo
                 const trillaData = new Trilla(
-                    null, // id
+                    null,
                     id_lote,
                     fecha_trilla,
-                    pergaminoInicial, // peso_pergamino_inicial
-                    pasillaInicial, // peso_pasilla_inicial
-                    pergaminoFinal, // peso_pergamino_final
-                    pasillaFinal, // peso_pasilla_final
-                    peso_final, // peso_final
-                    observaciones, // observaciones
-                    3 // id_estado_proceso = 3 (Terminado)
+                    pergaminoInicial,
+                    pasillaInicial,
+                    pergaminoFinal,
+                    pasillaFinal,
+                    peso_final,
+                    observaciones,
+                    3
                 );
     
                 console.log('Creando nueva trilla con datos:', trillaData);
                 
-                // Registrar trilla
                 await trillaDAO.createTrilla(trillaData);
                 
                 req.flash('mensaje', 'Trilla registrada exitosamente.');
             }
 
-            // Buscar el siguiente proceso
             const todosLosProcesos = await procesosDAO.getAllProcesosOrdenados();
             const procesoTrillaDef = todosLosProcesos.find(p => p.nombre.toLowerCase() === 'trilla');
             
@@ -213,9 +196,8 @@ class TrillaController {
             
             const siguienteProcesoDef = todosLosProcesos.find(p => p.orden === (procesoTrillaDef.orden + 1));
             const idNuevoProcesoActualParaLote = siguienteProcesoDef ? siguienteProcesoDef.id : procesoTrillaDef.id;
-            const nuevoEstadoLote = siguienteProcesoDef ? 2 : 3; // 2 = 'En progreso', 3 = 'Terminado'
+            const nuevoEstadoLote = siguienteProcesoDef ? 2 : 3;
 
-            // Actualizar estado del lote
             await loteDAO.updateLoteProcesoYEstado(id_lote, idNuevoProcesoActualParaLote, nuevoEstadoLote);
 
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
@@ -235,7 +217,6 @@ class TrillaController {
             const id_lote = parseInt(req.params.id_lote);
             const id_trilla = parseInt(req.params.id_trilla);
 
-            // Verificar permisos
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
             if (!finca) { 
                 req.flash('error', 'Finca no encontrada o sin permiso.');
@@ -248,23 +229,19 @@ class TrillaController {
                 return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
-            // Verificar que el proceso existe
             const trilla = await trillaDAO.getTrillaByLoteId(id_lote);
             if (!trilla || trilla.id !== id_trilla) {
                 req.flash('error', 'El proceso de trilla no existe o no corresponde al lote indicado.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
-            // Solo se pueden reiniciar procesos terminados
             if (trilla.id_estado_proceso !== 3) {
                 req.flash('error', 'Solo se pueden reiniciar procesos que estén marcados como terminados.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
-            // Reiniciar el proceso
             await trillaDAO.reiniciarTrilla(id_trilla);
 
-            // Actualizar el estado del lote
             const procesoTrillaDef = (await procesosDAO.getAllProcesosOrdenados()).find(p => p.nombre.toLowerCase() === 'trilla');
             
             if (!procesoTrillaDef) {
@@ -272,7 +249,7 @@ class TrillaController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
             
-            await loteDAO.updateLoteProcesoYEstado(id_lote, procesoTrillaDef.id, 2); // 2 = 'En progreso'
+            await loteDAO.updateLoteProcesoYEstado(id_lote, procesoTrillaDef.id, 2);
 
             req.flash('mensaje', 'Proceso de Trilla reiniciado exitosamente para su corrección.');
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);

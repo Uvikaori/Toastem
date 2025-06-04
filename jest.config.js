@@ -4,7 +4,7 @@ module.exports = {
 
   // Archivos de prueba a incluir
   testMatch: [
-    '**/tests/**/*.test.js'
+    '**/__tests__/**/*.test.js'
   ],
 
   // Archivos a ignorar
@@ -15,7 +15,7 @@ module.exports = {
   ],
 
   // Archivo de configuración global
-  setupFilesAfterEnv: ['./tests/setup/test_db_config.js'],
+  setupFilesAfterEnv: ['./jest.setup.js'],
 
   // Ambiente de pruebas
   testEnvironment: 'node',

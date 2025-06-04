@@ -40,11 +40,12 @@
 
             <p class="mb-3"><strong>Peso del lote después del Secado (Peso inicial para clasificación):</strong> <%= peso_secado_final %> kg</p>
             <hr/>
-            <form id="clasificacionForm" action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/clasificacion" method="POST">
+            <form id="clasificacionForm" action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/clasificacion" method="POST" data-peso-secado-final="<%= peso_secado_final %>">
                 
                 <div class="mb-3">
                     <label for="fecha_clasificacion" class="form-label">Fecha y Hora de Clasificación:</label>
                     <input type="datetime-local" class="form-control" id="fecha_clasificacion" name="fecha_clasificacion" value="<%= fecha_clasificacion %>" required>
+                    <small class="form-text text-muted">Formato: DD/MM/YYYY HH:mm</small>
                 </div>
 
                 <div class="row">
@@ -89,65 +90,6 @@
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const pesoPergaminoInput = document.getElementById('peso_pergamino');
-    const pesoPasillaInput = document.getElementById('peso_pasilla');
-    const pesoTotalInput = document.getElementById('peso_total');
-    const calculoSuma = document.getElementById('calculoSuma');
-    const pesoTotalFeedback = document.getElementById('pesoTotalFeedback');
-    const btnSubmit = document.getElementById('btnSubmit');
-    const pesoSecadoFinal = <%= peso_secado_final %>;
-    const toleranciaMax = pesoSecadoFinal * 1.01;
-
-    // Función para actualizar la suma
-    function actualizarSuma() {
-        const pesoPergamino = parseFloat(pesoPergaminoInput.value) || 0;
-        const pesoPasilla = parseFloat(pesoPasillaInput.value) || 0;
-        const pesoTotal = parseFloat(pesoTotalInput.value) || 0;
-        const suma = pesoPergamino + pesoPasilla;
-        
-        calculoSuma.textContent = `Suma: ${suma.toFixed(2)} kg`;
-        
-        // Validar que la suma sea igual al peso total
-        const tolerancia = 0.1;
-        if (Math.abs(suma - pesoTotal) > tolerancia) {
-            pesoTotalInput.classList.add('is-invalid');
-            pesoTotalFeedback.textContent = `El peso total debe ser igual a la suma del pergamino y pasilla (${suma.toFixed(2)} kg)`;
-            btnSubmit.disabled = true;
-        } else if (pesoTotal > toleranciaMax) {
-            pesoTotalInput.classList.add('is-invalid');
-            pesoTotalFeedback.textContent = `El peso total no puede superar ${toleranciaMax.toFixed(2)} kg (peso final del secado + 1%)`;
-            btnSubmit.disabled = true;
-        } else {
-            pesoTotalInput.classList.remove('is-invalid');
-            btnSubmit.disabled = false;
-        }
-    }
-
-    // Eventos para actualizar la suma cuando cambien los valores
-    pesoPergaminoInput.addEventListener('input', actualizarSuma);
-    pesoPasillaInput.addEventListener('input', actualizarSuma);
-    pesoTotalInput.addEventListener('input', actualizarSuma);
-
-    // Sugerir el peso total como la suma automáticamente
-    document.querySelectorAll('.peso-input').forEach(input => {
-        input.addEventListener('change', function() {
-            const pesoPergamino = parseFloat(pesoPergaminoInput.value) || 0;
-            const pesoPasilla = parseFloat(pesoPasillaInput.value) || 0;
-            const suma = pesoPergamino + pesoPasilla;
-            
-            pesoTotalInput.value = suma.toFixed(2);
-            actualizarSuma();
-        });
-    });
-
-    // Inicializar suma al cargar la página
-    actualizarSuma();
-});
-</script>
-
 
 <link rel="stylesheet" href="/css/lotes/procesos.css">
 <script src="/js/lotes/procesos.js"></script> 

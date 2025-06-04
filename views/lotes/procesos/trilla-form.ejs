@@ -46,11 +46,9 @@
                 <% } %>
                 
                 <div class="mb-3">
-                    <label for="fecha_trilla" class="form-label">Fecha y Hora de Trilla: <span class="text-danger">*</span></label>
-                    <input type="datetime-local" class="form-control" id="fecha_trilla" name="fecha_trilla" 
-                           value="<%= typeof fecha_trilla === 'string' && fecha_trilla.includes('T') ? fecha_trilla : (new Date(fecha_trilla).toISOString().slice(0, 16)) %>" 
-                           required>
-                    <small class="form-text text-muted">Campo obligatorio. Fecha y hora en que se realizó la trilla.</small>
+                    <label for="fecha_trilla" class="form-label">Fecha y Hora de Trilla:</label>
+                    <input type="datetime-local" class="form-control" id="fecha_trilla" name="fecha_trilla" value="<%= fecha_trilla %>" required>
+                    <small class="form-text text-muted">Formato: DD/MM/YYYY HH:mm</small>
                 </div>
 
                 <div class="row mb-3">
@@ -87,25 +85,4 @@
 </div>
 
 <link rel="stylesheet" href="/css/lotes/procesos.css">
-<script src="/js/lotes/procesos.js"></script>
-
-<script>
-// Script para formatear los números correctamente
-document.addEventListener('DOMContentLoaded', function() {
-    // Función para formatear el valor al perder el foco
-    function formatNumberInput(input) {
-        const value = parseFloat(input.value);
-        if (!isNaN(value)) {
-            input.value = value.toString(); // Asegura que se use punto como separador decimal
-        }
-    }
-
-    // Aplicar a los campos de peso
-    const pesoInputs = document.querySelectorAll('input[type="number"]');
-    pesoInputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            formatNumberInput(this);
-        });
-    });
-});
-</script> 
+<script src="/js/lotes/procesos.js"></script> 

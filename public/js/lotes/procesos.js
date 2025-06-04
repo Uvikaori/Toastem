@@ -20,6 +20,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Inicializar manejadores de eventos para cálculos de clasificación
     inicializarCalculosClasificacion();
+    
+    // Inicializar funcionalidades específicas según la página
+    inicializarTueste();
+    inicializarMolienda();
+    inicializarEmpacado();
+    inicializarTrilla();
 });
 
 /**
@@ -93,10 +99,48 @@ function inicializarCalculosClasificacion() {
         const pesoPergamino = document.getElementById('peso_pergamino');
         const pesoPasilla = document.getElementById('peso_pasilla');
         const pesoTotal = document.getElementById('peso_total');
+        const calculoSuma = document.getElementById('calculoSuma');
+        const pesoTotalFeedback = document.getElementById('pesoTotalFeedback');
+        const btnSubmit = document.getElementById('btnSubmit');
         
         // Verificar si los campos existen
         if (!pesoPergamino || !pesoPasilla || !pesoTotal) {
             return; // Salir si algún campo no existe
+        }
+        
+        // Obtener peso del secado desde el atributo data del formulario
+        const pesoSecadoFinal = parseFloat(formClasificacion.getAttribute('data-peso-secado-final')) || 100;
+        const toleranciaMax = pesoSecadoFinal * 1.01;
+        
+        // Función para actualizar la suma
+        function actualizarSuma() {
+            const pesoPergaminoVal = parseFloat(pesoPergamino.value) || 0;
+            const pesoPasillaVal = parseFloat(pesoPasilla.value) || 0;
+            const pesoTotalVal = parseFloat(pesoTotal.value) || 0;
+            const suma = pesoPergaminoVal + pesoPasillaVal;
+            
+            if (calculoSuma) {
+                calculoSuma.textContent = `Suma: ${suma.toFixed(2)} kg`;
+            }
+            
+            // Validar que la suma sea igual al peso total
+            const tolerancia = 0.1;
+            if (Math.abs(suma - pesoTotalVal) > tolerancia) {
+                pesoTotal.classList.add('is-invalid');
+                if (pesoTotalFeedback) {
+                    pesoTotalFeedback.textContent = `El peso total debe ser igual a la suma del pergamino y pasilla (${suma.toFixed(2)} kg)`;
+                }
+                if (btnSubmit) btnSubmit.disabled = true;
+            } else if (pesoTotalVal > toleranciaMax) {
+                pesoTotal.classList.add('is-invalid');
+                if (pesoTotalFeedback) {
+                    pesoTotalFeedback.textContent = `El peso total no puede superar ${toleranciaMax.toFixed(2)} kg (peso final del secado + 1%)`;
+                }
+                if (btnSubmit) btnSubmit.disabled = true;
+            } else {
+                pesoTotal.classList.remove('is-invalid');
+                if (btnSubmit) btnSubmit.disabled = false;
+            }
         }
         
         // Función para calcular el total
@@ -116,21 +160,271 @@ function inicializarCalculosClasificacion() {
             if (totalCalculado > 0) {
                 pesoTotal.value = totalCalculado.toFixed(2);
             }
+            
+            actualizarSuma();
         };
         
-        // Asignar evento a los campos de peso
+        // Asignar eventos a los campos de peso
         if (pesoPergamino) {
             pesoPergamino.addEventListener('input', calcularTotal);
+            pesoPergamino.addEventListener('input', actualizarSuma);
+            pesoPergamino.addEventListener('change', calcularTotal);
         }
         
         if (pesoPasilla) {
             pesoPasilla.addEventListener('input', calcularTotal);
+            pesoPasilla.addEventListener('input', actualizarSuma);
+            pesoPasilla.addEventListener('change', calcularTotal);
+        }
+        
+        if (pesoTotal) {
+            pesoTotal.addEventListener('input', actualizarSuma);
         }
         
         // Si ya hay valores, calcular el total al cargar
         if ((pesoPergamino && pesoPergamino.value) || (pesoPasilla && pesoPasilla.value)) {
             calcularTotal();
         }
+        
+        // Inicializar suma al cargar la página
+        actualizarSuma();
+    }
+}
+
+/**
+ * Inicializa funcionalidades del formulario de tueste
+ */
+function inicializarTueste() {
+    const formTueste = document.querySelector('form[action*="tueste"]');
+    
+    if (formTueste) {
+        // Calcular el peso final total automáticamente
+        function calcularPesoFinalTotal() {
+            const pesoPergamino = parseFloat(document.getElementById('peso_pergamino_final')?.value) || 0;
+            const pesoPasilla = parseFloat(document.getElementById('peso_pasilla_final')?.value) || 0;
+            const pesoFinalInput = document.getElementById('peso_final');
+            if (pesoFinalInput) {
+                pesoFinalInput.value = (pesoPergamino + pesoPasilla).toFixed(2);
+            }
+        }
+
+        // Añadir listeners a los inputs de peso final
+        const pesoPergaminoFinal = document.getElementById('peso_pergamino_final');
+        const pesoPasillaFinal = document.getElementById('peso_pasilla_final');
+        
+        if (pesoPergaminoFinal) {
+            pesoPergaminoFinal.addEventListener('input', calcularPesoFinalTotal);
+        }
+        
+        if (pesoPasillaFinal) {
+            pesoPasillaFinal.addEventListener('input', calcularPesoFinalTotal);
+        }
+    }
+}
+
+/**
+ * Inicializa funcionalidades del formulario de molienda
+ */
+function inicializarMolienda() {
+    const formMolienda = document.querySelector('form[action*="molienda"]');
+    
+    if (formMolienda) {
+        // Función para formatear el valor al perder el foco
+        function formatNumberInput(input) {
+            const value = parseFloat(input.value);
+            if (!isNaN(value)) {
+                input.value = value.toString(); // Asegura que se use punto como separador decimal
+            }
+        }
+
+        // Aplicar a los campos de peso
+        const pesoInputs = document.querySelectorAll('input[type="number"]');
+        pesoInputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                formatNumberInput(this);
+            });
+        });
+        
+        function setupCafeMoliendaSection(idPrefix, tipoCafeReal, pesoTostadoFinal) {
+            // Asegurar que pesoTostadoFinal sea un número
+            const pesoTostadoFinalNum = parseFloat(pesoTostadoFinal || 0);
+            
+            const mantenerGranoCheck = document.getElementById(`${idPrefix}_mantener_grano_check`);
+            const granoSection = document.getElementById(`${idPrefix}_grano_section`);
+            const pesoMantenidoGranoInput = document.getElementById(`${idPrefix}_peso_mantenido_grano`);
+            
+            const moliendaSeparator = document.getElementById(`${idPrefix}_molienda_separator`);
+            const moliendaTitle = document.getElementById(`${idPrefix}_molienda_title`);
+            const pesoInicialAMolerInput = document.getElementById(`${idPrefix}_peso_inicial_a_moler`);
+            const tipoMoliendaField = document.getElementById(`${idPrefix}_tipo_molienda_field`);
+            const pesoFinalField = document.getElementById(`${idPrefix}_peso_final_field`);
+            const tipoMoliendaSelect = document.getElementById(`${idPrefix}_tipo_molienda`);
+            const pesoFinalMolidoInput = document.getElementById(`${idPrefix}_peso_final_molido`);
+
+            // Si es Pasilla, la lógica de mantener en grano no aplica y los campos de molienda son siempre visibles
+            if (tipoCafeReal.toLowerCase() === 'pasilla') {
+                if(granoSection) granoSection.style.display = 'none';
+                if(moliendaSeparator) moliendaSeparator.style.display = 'block';
+                if(moliendaTitle) moliendaTitle.style.display = 'block';
+                if (pesoInicialAMolerInput) pesoInicialAMolerInput.value = pesoTostadoFinalNum.toFixed(2);
+                if (tipoMoliendaField) tipoMoliendaField.style.display = 'block';
+                if (pesoFinalField) pesoFinalField.style.display = 'block';
+                if (tipoMoliendaSelect) tipoMoliendaSelect.setAttribute('required', 'required');
+                if (pesoFinalMolidoInput) pesoFinalMolidoInput.setAttribute('required', 'required');
+                return;
+            }
+
+            // Lógica original para Pergamino (o cualquier otro tipo que permita mantener en grano)
+            if (!mantenerGranoCheck) return; 
+
+            mantenerGranoCheck.addEventListener('change', function() {
+                const mostrarGrano = this.checked;
+                if (granoSection) granoSection.style.display = mostrarGrano ? 'block' : 'none';
+                if (moliendaSeparator) moliendaSeparator.style.display = mostrarGrano ? 'block' : 'none';
+                if (moliendaTitle) moliendaTitle.style.display = mostrarGrano ? 'block' : 'none';
+                
+                actualizarPesosYMolienda();
+            });
+
+            if (pesoMantenidoGranoInput) {
+                pesoMantenidoGranoInput.addEventListener('input', function() {
+                    actualizarPesosYMolienda();
+                });
+            }
+
+            function actualizarPesosYMolienda() {
+                let pesoMantenidoGrano = 0;
+                if (mantenerGranoCheck.checked && pesoMantenidoGranoInput) {
+                    pesoMantenidoGrano = parseFloat(pesoMantenidoGranoInput.value) || 0;
+                    if (pesoMantenidoGrano < 0) pesoMantenidoGrano = 0;
+                    if (pesoMantenidoGrano > pesoTostadoFinalNum) {
+                        pesoMantenidoGrano = pesoTostadoFinalNum;
+                        pesoMantenidoGranoInput.value = pesoMantenidoGrano.toFixed(2);
+                    }
+                }
+                
+                const pesoParaMoler = pesoTostadoFinalNum - pesoMantenidoGrano;
+                if (pesoInicialAMolerInput) {
+                    pesoInicialAMolerInput.value = pesoParaMoler.toFixed(2);
+                }
+
+                const hayAlgoParaMoler = pesoParaMoler > 0.001; 
+                
+                if (tipoMoliendaField) tipoMoliendaField.style.display = hayAlgoParaMoler ? 'block' : 'none';
+                if (pesoFinalField) pesoFinalField.style.display = hayAlgoParaMoler ? 'block' : 'none';
+                
+                if (hayAlgoParaMoler) {
+                    if (tipoMoliendaSelect) tipoMoliendaSelect.setAttribute('required', 'required');
+                    if (pesoFinalMolidoInput) pesoFinalMolidoInput.setAttribute('required', 'required');
+                } else {
+                    if (tipoMoliendaSelect) {
+                        tipoMoliendaSelect.removeAttribute('required');
+                        tipoMoliendaSelect.value = '';
+                    }
+                    if (pesoFinalMolidoInput) {
+                        pesoFinalMolidoInput.removeAttribute('required');
+                        pesoFinalMolidoInput.value = '';
+                    }
+                }
+            }
+            actualizarPesosYMolienda();
+        }
+
+        // Buscar datos de tueste en el DOM para inicializar las secciones
+        const pergaminoData = document.querySelector('[data-pergamino-peso]');
+        const pasillaData = document.querySelector('[data-pasilla-peso]');
+        
+        if (pergaminoData) {
+            const peso = parseFloat(pergaminoData.getAttribute('data-pergamino-peso'));
+            if (peso > 0) {
+                setupCafeMoliendaSection('pergamino', 'Pergamino', peso);
+            }
+        }
+        
+        if (pasillaData) {
+            const peso = parseFloat(pasillaData.getAttribute('data-pasilla-peso'));
+            if (peso > 0) {
+                setupCafeMoliendaSection('pasilla', 'Pasilla', peso);
+            }
+        }
+    }
+}
+
+/**
+ * Inicializa funcionalidades del formulario de empacado
+ */
+function inicializarEmpacado() {
+    const formEmpacado = document.getElementById('formEmpacadoUnificado');
+    
+    if (formEmpacado) {
+        // Toggle de formularios según checkboxes
+        const toggleForms = () => {
+            const empacarGrano = document.getElementById('empacar_grano');
+            const formGrano = document.getElementById('form_grano');
+            if (empacarGrano && formGrano) {
+                formGrano.querySelectorAll('input, textarea').forEach(input => {
+                    input.required = false;
+                });
+                formGrano.style.display = empacarGrano.checked ? 'block' : 'none';
+            }
+
+            const empacarMolido = document.getElementById('empacar_molido');
+            const formMolido = document.getElementById('form_molido');
+            if (empacarMolido && formMolido) {
+                formMolido.querySelectorAll('input, textarea').forEach(input => {
+                    input.required = false;
+                });
+                formMolido.style.display = empacarMolido.checked ? 'block' : 'none';
+            }
+
+            const empacarPasilla = document.getElementById('empacar_pasilla');
+            const formPasilla = document.getElementById('form_pasilla');
+            if (empacarPasilla && formPasilla) {
+                formPasilla.querySelectorAll('input, textarea').forEach(input => {
+                    input.required = false;
+                });
+                formPasilla.style.display = empacarPasilla.checked ? 'block' : 'none';
+            }
+
+            const btnRegistrar = document.getElementById('btnRegistrarEmpacado');
+            if (btnRegistrar) {
+                btnRegistrar.disabled = false;
+            }
+        };
+
+        // Eventos de toggle para checkboxes
+        const checkboxes = document.querySelectorAll('.form-check-input');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', toggleForms);
+        });
+
+        // Inicializar formularios
+        toggleForms();
+    }
+}
+
+/**
+ * Inicializa funcionalidades del formulario de trilla
+ */
+function inicializarTrilla() {
+    const formTrilla = document.querySelector('form[action*="trilla"]');
+    
+    if (formTrilla) {
+        // Función para formatear el valor al perder el foco
+        function formatNumberInput(input) {
+            const value = parseFloat(input.value);
+            if (!isNaN(value)) {
+                input.value = value.toString(); // Asegura que se use punto como separador decimal
+            }
+        }
+
+        // Aplicar a los campos de peso
+        const pesoInputs = document.querySelectorAll('input[type="number"]');
+        pesoInputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                formatNumberInput(this);
+            });
+        });
     }
 }
 
