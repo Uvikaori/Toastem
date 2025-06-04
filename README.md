@@ -76,7 +76,7 @@ toastem/
 - Seguimiento del proceso de secado
 - Clasificación y trilla
 - Proceso de tueste y molienda
-- Informes y precios
+- Dashboard
 
 ## Solución de Problemas Comunes
 
@@ -133,10 +133,12 @@ Toastem implementa diversas medidas de seguridad para proteger los datos de los 
    - Secado
    - Clasificación
    - Trilla
-   - Tueste (opcional)
-   - Molienda (opcional)
-   - Empacado
-4. Generación de informes del proceso productivo
+   - Tueste 
+   - Molienda 
+   - Empacado  
+   - Venta
+
+4. Generación de informes del proceso productivo por medio de Dashboard
 
 ## Tecnologías utilizadas
 

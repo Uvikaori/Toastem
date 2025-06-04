@@ -976,24 +976,6 @@
                                                 </form>
                                             </li>
                                         <% } %>
-                                        <% if (proceso.nombre.toLowerCase() === 'clasificación') { %>
-                                            <li>
-                                                <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/clasificacion/<%= proceso.datosEtapa.id %>/reiniciar" method="POST">
-                                                    <button type="submit" class="dropdown-item text-warning">
-                                                        <i class="fas fa-redo-alt me-1"></i> Reiniciar Proceso
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        <% } %>
-                                        <% if (proceso.nombre.toLowerCase() === 'trilla' && proceso.datosEtapa && (proceso.datosEtapa.id_estado_proceso === 3 || proceso.datosEtapa.id_estado_proceso === 1 || proceso.datosEtapa.id_estado_proceso === 2)) { %>
-                                            <li>
-                                                <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/trilla/<%= proceso.datosEtapa.id %>/reiniciar" method="POST">
-                                                    <button type="submit" class="dropdown-item text-warning">
-                                                        <i class="fas fa-redo-alt me-1"></i> Reiniciar Proceso
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        <% } %>
                                         <% if (proceso.nombre.toLowerCase() === 'molienda') { %>
                                             <% if (proceso.datosEtapa && Array.isArray(proceso.datosEtapa)) { %>
                                                 <% // Si hay al menos una molienda completada, mostrar opción de reiniciar el proceso completo
@@ -1001,7 +983,7 @@
                                                 if (hayMoliendaCompletada) { %>
                                                 <li>
                                                     <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/molienda/reiniciar" method="POST">
-                                                        <button type="submit" class="dropdown-item text-warning">
+                                                        <button type="submit" class="dropdown-item text-danger">
                                                             <i class="fas fa-redo-alt me-1"></i> Reiniciar Proceso de Molienda
                                                         </button>
                                                     </form>
@@ -1031,7 +1013,7 @@
                                                 <% if (empacadosMolido.length > 0) { %>
                                                     <li>
                                                         <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/empacado/<%= empacadosMolido[0].id %>/reiniciar" method="POST">
-                                                            <button type="submit" class="dropdown-item text-primary">
+                                                            <button type="submit" class="dropdown-item text-info">
                                                                 <i class="fas fa-redo-alt me-1"></i> Reiniciar Empacado de Molido
                                                             </button>
                                                         </form>
@@ -1041,7 +1023,7 @@
                                                 <% if (empacadosPasilla.length > 0) { %>
                                                     <li>
                                                         <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/empacado/<%= empacadosPasilla[0].id %>/reiniciar" method="POST">
-                                                            <button type="submit" class="dropdown-item text-warning">
+                                                            <button type="submit" class="dropdown-item text-dark">
                                                                 <i class="fas fa-redo-alt me-1"></i> Reiniciar Empacado de Pasilla
                                                             </button>
                                                         </form>
@@ -1102,34 +1084,18 @@
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuSecado<%= proceso.id %>">
                                         <% if (proceso.datosEtapa.id_estado_proceso === 1 || proceso.datosEtapa.id_estado_proceso === 2) { %>
-                                            <!-- Secado en estado inicial o en progreso: permitir corregir datos de inicio -->
                                             <li>
                                                 <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/secado/corregir-inicio" class="dropdown-item text-info">
                                                     <i class="fas fa-edit me-1"></i> Corregir Datos de Inicio
                                                 </a>
                                             </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <span class="dropdown-item-text text-muted" style="font-size: 0.75rem;">
-                                                    <i class="fas fa-info-circle me-1"></i>
-                                                    Solo se pueden modificar los datos de inicio
-                                                </span>
-                                            </li>
                                         <% } else if (proceso.datosEtapa.id_estado_proceso === 3) { %>
-                                            <!-- Secado terminado: permitir reinicio completo -->
                                             <li>
                                                 <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/secado/<%= proceso.datosEtapa.id %>/reiniciar" method="POST">
                                                     <button type="submit" class="dropdown-item text-warning">
-                                                        <i class="fas fa-redo-alt me-1"></i> Reiniciar Proceso Completo
+                                                        <i class="fas fa-redo-alt me-1"></i> Reiniciar Proceso
                                                     </button>
                                                 </form>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <span class="dropdown-item-text text-muted" style="font-size: 0.75rem;">
-                                                    <i class="fas fa-exclamation-triangle me-1"></i>
-                                                    Reiniciar eliminará todos los datos del secado
-                                                </span>
                                             </li>
                                         <% } %>
                                     </ul>
