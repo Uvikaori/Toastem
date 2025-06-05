@@ -9,16 +9,8 @@ class Database {
   async getConnection() {
     if (!this.pool) {
       // Configuración directa para Railway (sin depender de .env)
-      this.pool = mysql.createPool({
-        host: 'shortline.proxy.rlwy.net',
-        port: 33692,
-        user: 'root',
-        password: 'liEXzBFCzYKWsrhHJovnGhRIWoOndiOC',
-        database: 'railway',
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0
-      });
+      const connectionString = 'mysql://root:liEXzBFCzYKWsrhHJovnGhRIWoOndiOC@shortline.proxy.rlwy.net:33692/railway';
+      this.pool = mysql.createPool(connectionString);
       
       console.log('Configuración de DB:', {
         host: 'shortline.proxy.rlwy.net',
