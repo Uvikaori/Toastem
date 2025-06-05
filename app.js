@@ -17,6 +17,13 @@ const helpers = require('./utils/helpers');
 const loteRoutes = require('./routes/loteRoutes');
 const apiRoutes = require('./routes/apiRoutes');
 
+// Cargar variables de entorno al inicio
+require('dotenv').config();
+// Sobreescribir la variable NODE_ENV si no está definida
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'development';
+}
+
 // Configuración de Swagger
 const swaggerOptions = {
   definition: {

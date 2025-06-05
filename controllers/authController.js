@@ -46,9 +46,17 @@ const iniciarSesion = async (req, res) => {
       });
     }
 
+    // Información de depuración sobre la conexión a la base de datos
+    console.log('Configuración DB:', {
+      host: db.pool ? db.pool.config.connectionConfig.host : 'No disponible',
+      port: db.pool ? db.pool.config.connectionConfig.port : 'No disponible',
+      database: db.pool ? db.pool.config.connectionConfig.database : 'No disponible'
+    });
+
     // Buscar usuario
     let usuarios;
     try {
+      console.log('Intentando ejecutar consulta para buscar usuario...');
       [usuarios] = await db.query(
         'SELECT * FROM usuarios WHERE email = ?',
         [correo]
