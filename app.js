@@ -75,7 +75,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Desactivado para funcionar tanto en HTTP como HTTPS
     maxAge: 24 * 60 * 60 * 1000, // 24 horas
     httpOnly: true, // Previene acceso JS al lado del cliente
     sameSite: 'lax' // Restringe cookies a mismo sitio
@@ -142,13 +142,26 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
+// Error handler - con más detalles temporalmente para depuración en producción
 app.use((err, req, res, next) => {
   console.error('Error:', err);
+  
+  // Distinguir entre peticiones API y vistas
+  if (req.xhr || req.path.includes('/auth/login') && req.method === 'POST') {
+    // Para APIs, devolver JSON con detalles
+    return res.status(500).json({ 
+      error: 'Error interno del servidor', 
+      message: err.message,
+      stack: process.env.NODE_ENV === 'production' ? null : err.stack
+    });
+  }
+  
+  // Para vistas, renderizar página de error
   res.status(500).render('error', { 
     titulo: 'Error interno del servidor | Toastem',
     mensaje: 'Ocurrió un error inesperado.',
-    hideNavbar: true
+    hideNavbar: true,
+    error: process.env.NODE_ENV === 'development' ? err : {}
   });
 });
 

@@ -47,11 +47,22 @@ const iniciarSesion = async (req, res) => {
     }
 
     // Buscar usuario
-    const [usuarios] = await db.query(
-      'SELECT * FROM usuarios WHERE email = ?',
-      [correo]
-    );
-    console.log('Usuario encontrado:', usuarios[0]?.id);
+    let usuarios;
+    try {
+      [usuarios] = await db.query(
+        'SELECT * FROM usuarios WHERE email = ?',
+        [correo]
+      );
+      console.log('Usuario encontrado:', usuarios[0]?.id);
+    } catch (dbError) {
+      console.error('Error de base de datos al buscar usuario:', dbError);
+      return res.status(500).json({
+        errores: { 
+          general: 'Error al buscar el usuario en la base de datos',
+          details: dbError.message
+        }
+      });
+    }
 
     if (usuarios.length === 0) {
       return res.status(400).json({
@@ -62,7 +73,19 @@ const iniciarSesion = async (req, res) => {
     const usuario = usuarios[0];
 
     // Verificar contraseña
-    const contraseñaValida = await bcrypt.compare(contraseña, usuario.password);
+    let contraseñaValida;
+    try {
+      contraseñaValida = await bcrypt.compare(contraseña, usuario.password);
+    } catch (bcryptError) {
+      console.error('Error al verificar contraseña con bcrypt:', bcryptError);
+      return res.status(500).json({
+        errores: { 
+          general: 'Error al verificar la contraseña',
+          details: bcryptError.message
+        }
+      });
+    }
+    
     if (!contraseñaValida) {
       return res.status(400).json({
         errores: { contraseña: 'La contraseña es incorrecta' }
@@ -88,9 +111,11 @@ const iniciarSesion = async (req, res) => {
     req.session.save(err => {
       if (err) {
         console.error('Error al guardar sesión después de limpiar flash:', err);
-        // Por ahora responderemos con el error original para no complicar.
         return res.status(500).json({
-          errores: { general: 'Error al procesar el inicio de sesión al guardar la sesión.' }
+          errores: { 
+            general: 'Error al procesar el inicio de sesión al guardar la sesión.',
+            details: err.message
+          }
         });
       }
 
@@ -104,7 +129,11 @@ const iniciarSesion = async (req, res) => {
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
     res.status(500).json({
-      errores: { general: 'Error al procesar el inicio de sesión' }
+      errores: { 
+        general: 'Error al procesar el inicio de sesión',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'production' ? null : error.stack
+      }
     });
   }
 };
