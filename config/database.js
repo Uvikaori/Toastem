@@ -1,3 +1,3 @@
-const db = require('../config/railwayDatabase');
+const db = require('./railwayDatabase');
 
 module.exports = db; 

@@ -173,17 +173,22 @@ if (process.env.NODE_ENV !== 'test') {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, async () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`Entorno: ${process.env.NODE_ENV || 'development'}`);
     
     // Test DB connection
     try {
+      console.log('Intentando conectar a la base de datos...');
       const connected = await db.testConnection();
       if (connected) {
-        console.log('Conexión a la base de datos establecida correctamente');
+        console.log('✅ Conexión a la base de datos establecida correctamente');
+        console.log(`Host: ${db.pool ? db.pool.config.connectionConfig.host : 'No disponible'}`);
+        console.log(`Puerto: ${db.pool ? db.pool.config.connectionConfig.port : 'No disponible'}`);
+        console.log(`Base de datos: ${db.pool ? db.pool.config.connectionConfig.database : 'No disponible'}`);
       } else {
-        console.error('No se pudo conectar a la base de datos');
+        console.error('❌ No se pudo conectar a la base de datos');
       }
     } catch (error) {
-      console.error('Error al conectar a la base de datos:', error);
+      console.error('❌ Error al conectar a la base de datos:', error);
     }
   });
 }
