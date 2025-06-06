@@ -249,7 +249,9 @@ class EmpacadoController {
                 empacado_molido: empacadoMolido,
                 empacado_pasilla: empacadoPasilla,
                 formData: formData,
-                mostrarMensajeOpcional: mostrarMensajeOpcional
+                mostrarMensajeOpcional: mostrarMensajeOpcional,
+                mensaje: req.flash('mensaje'),
+                error: req.flash('error')
             });
 
         } catch (error) {

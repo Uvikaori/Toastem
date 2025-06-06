@@ -7,7 +7,7 @@ const isAuthenticated = (req, res, next) => {
   }
   
   // Si la petición es AJAX, devolver error 401
-  if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+  if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
     return res.status(401).json({ 
       success: false, 
       message: 'No autorizado' 
