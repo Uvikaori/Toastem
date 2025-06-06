@@ -50,9 +50,9 @@
                 <small>Este es el peso total de café disponible después del proceso de molienda.</small>
             </div>
 
-            <% if ((peso_pergamino_grano > 0 && !empacado_grano.some(e => e.id_estado_proceso === 3)) || 
-                  (peso_pergamino_molido > 0 && !empacado_molido.some(e => e.id_estado_proceso === 3)) || 
-                  (peso_pasilla_molido > 0 && !empacado_pasilla.some(e => e.id_estado_proceso === 3))) { %>
+            <% if ((peso_pergamino_grano > 0 && (!Array.isArray(empacado_grano) || !empacado_grano.some(e => e.id_estado_proceso === 3))) || 
+                  (peso_pergamino_molido > 0 && (!Array.isArray(empacado_molido) || !empacado_molido.some(e => e.id_estado_proceso === 3))) || 
+                  (peso_pasilla_molido > 0 && (!Array.isArray(empacado_pasilla) || !empacado_pasilla.some(e => e.id_estado_proceso === 3)))) { %>
                 <div class="alert alert-warning">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     <strong>Importante:</strong> Registra el empacado de todos los tipos de café disponibles en un solo formulario.
@@ -67,7 +67,7 @@
                         </div>
                         <div class="card-body">
                             <p class="mb-0"><strong>Disponible:</strong> <%= peso_pergamino_grano.toFixed(2) %> kg</p>
-                            <% if (empacado_grano.some(e => e.id_estado_proceso === 3)) { %>
+                            <% if (Array.isArray(empacado_grano) && empacado_grano.some(e => e.id_estado_proceso === 3)) { %>
                                 <div class="badge bg-success mt-2">Empacado</div>
                             <% } %>
                         </div>
@@ -80,7 +80,7 @@
                         </div>
                         <div class="card-body">
                             <p class="mb-0"><strong>Disponible:</strong> <%= peso_pergamino_molido.toFixed(2) %> kg</p>
-                            <% if (empacado_molido.some(e => e.id_estado_proceso === 3)) { %>
+                            <% if (Array.isArray(empacado_molido) && empacado_molido.some(e => e.id_estado_proceso === 3)) { %>
                                 <div class="badge bg-success mt-2">Empacado</div>
                             <% } %>
                         </div>
@@ -93,7 +93,7 @@
                         </div>
                         <div class="card-body">
                             <p class="mb-0"><strong>Disponible:</strong> <%= peso_pasilla_molido.toFixed(2) %> kg</p>
-                            <% if (empacado_pasilla.some(e => e.id_estado_proceso === 3)) { %>
+                            <% if (Array.isArray(empacado_pasilla) && empacado_pasilla.some(e => e.id_estado_proceso === 3)) { %>
                                 <div class="badge bg-success mt-2">Empacado</div>
                             <% } %>
                         </div>
@@ -113,7 +113,7 @@
                 <div class="mb-3">
                     <label for="fecha_empacado" class="form-label">Fecha de Empacado:</label>
                     <input type="date" class="form-control" id="fecha_empacado" name="fecha_empacado" 
-                           value="<%= fecha_empacado || new Date().toISOString().split('T')[0] %>" required>
+                           value="<%= typeof fecha_empacado !== 'undefined' ? fecha_empacado : new Date().toISOString().split('T')[0] %>" required>
                     <small class="form-text text-muted">Formato: DD/MM/YYYY</small>
                 </div>
 

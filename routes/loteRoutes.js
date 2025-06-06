@@ -11,7 +11,7 @@ const { validateClasificacion } = require('../validators/clasificacionAtributosV
 const { validateTrilla } = require('../validators/trillaValidator'); 
 const { validateTueste } = require('../validators/tuesteValidator'); 
 const { validateMolienda } = require('../validators/moliendaValidator'); 
-// const { validateEmpacado } = require('../validators/empacadoValidator'); 
+const { validateEmpacado } = require('../validators/empacadoValidator');
 const despulpadoController = require('../controllers/despulpadoController');
 const fermentacionLavadoController = require('../controllers/fermentacionLavadoController');
 const zarandeoController = require('../controllers/zarandeoController');
@@ -2154,7 +2154,7 @@ router.get('/:id_lote/empacado/registrar', isLoteOwner, empacadoController.mostr
  *       500:
  *         description: Error interno del servidor
  */
-router.post('/:id_lote/empacado', isLoteOwner, empacadoController.registrarEmpacado);
+router.post('/:id_lote/empacado', isLoteOwner, validateEmpacado, empacadoController.registrarEmpacado);
 
 /**
  * @swagger
