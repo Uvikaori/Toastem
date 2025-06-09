@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarMolienda();
     inicializarEmpacado();
     inicializarTrilla();
+    
+    // Prevenir scroll en campos numéricos
+    prevenirScrollEnCamposNumericos();
 });
 
 /**
@@ -454,4 +457,56 @@ function mostrarAlerta(mensaje, tipo = 'info') {
             setTimeout(() => alertaDiv.remove(), 150);
         }, 5000);
     }
+}
+
+/**
+ * Previene que la rueda del ratón haga scroll en la página cuando se está sobre un campo numérico
+ */
+function prevenirScrollEnCamposNumericos() {
+    const camposNumericos = document.querySelectorAll('input[type="number"]');
+    
+    camposNumericos.forEach(campo => {
+        // Prevenir scroll con la rueda del ratón
+        campo.addEventListener('wheel', function(e) {
+            // Solo si el campo está enfocado, prevenimos el scroll de la página
+            if (document.activeElement === this) {
+                e.preventDefault();
+            }
+        }, { passive: false }); // Es importante usar passive: false para poder prevenir el comportamiento por defecto
+        
+        // Prevenir scroll con teclado (flechas arriba/abajo)
+        campo.addEventListener('keydown', function(e) {
+            // Códigos de tecla para flechas arriba y abajo
+            if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && document.activeElement === this) {
+                e.stopPropagation(); // Evitar que el evento se propague a los manejadores de eventos de scroll
+            }
+        });
+        
+        // Agregar clase visual cuando el campo tiene foco
+        campo.addEventListener('focus', function() {
+            this.classList.add('input-number-focused');
+        });
+        
+        campo.addEventListener('blur', function() {
+            this.classList.remove('input-number-focused');
+        });
+    });
+    
+    // Añadir estilo CSS para los campos numéricos enfocados
+    const style = document.createElement('style');
+    style.textContent = `
+        .input-number-focused {
+            box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+            border-color: rgba(81, 203, 238, 1);
+            transition: all 0.3s ease;
+        }
+        
+        /* Añadir indicadores de flechas más visibles en inputs numéricos */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            opacity: 1;
+            height: 24px;
+        }
+    `;
+    document.head.appendChild(style);
 } 
