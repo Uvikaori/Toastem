@@ -553,6 +553,10 @@ class SecadoController {
                 lote: lote,
                 secado: secado,
                 seguimientos: seguimientos,
+                fecha_seguimiento: req.flash('fecha_seguimiento')[0] || '',
+                temperatura: req.flash('temperatura')[0] || '',
+                humedad: req.flash('humedad')[0] || '',
+                observaciones_seguimiento: req.flash('observaciones_seguimiento')[0] || '',
                 mensaje: req.flash('mensaje'),
                 error: req.flash('error')
             });
@@ -578,6 +582,10 @@ class SecadoController {
 
         if (!errors.isEmpty()) {
             req.flash('error', errors.array().map(e => e.msg));
+            req.flash('fecha_seguimiento', req.body.fecha_seguimiento);
+            req.flash('temperatura', req.body.temperatura);
+            req.flash('humedad', req.body.humedad);
+            req.flash('observaciones_seguimiento', req.body.observaciones_seguimiento);
             return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/secado/seguimiento`);
         }
 
@@ -587,6 +595,10 @@ class SecadoController {
             // Validaciones básicas
             if (!id_secado) {
                 req.flash('error', 'El ID del proceso de secado es requerido');
+                req.flash('fecha_seguimiento', req.body.fecha_seguimiento);
+                req.flash('temperatura', req.body.temperatura);
+                req.flash('humedad', req.body.humedad);
+                req.flash('observaciones_seguimiento', req.body.observaciones_seguimiento);
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/secado/seguimiento`);
             }
 
@@ -606,6 +618,10 @@ class SecadoController {
             // Verificar que se haya proporcionado al menos un dato
             if (!temperatura && !humedad && !observaciones_seguimiento) {
                 req.flash('error', 'Debe proporcionar al menos un dato (temperatura, humedad u observaciones)');
+                req.flash('fecha_seguimiento', req.body.fecha_seguimiento);
+                req.flash('temperatura', req.body.temperatura);
+                req.flash('humedad', req.body.humedad);
+                req.flash('observaciones_seguimiento', req.body.observaciones_seguimiento);
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/secado/seguimiento`);
             }
 
@@ -630,6 +646,10 @@ class SecadoController {
         } catch (error) {
             console.error('Error al procesar seguimiento de secado:', error);
             req.flash('error', 'Error interno al registrar el seguimiento: ' + error.message);
+            req.flash('fecha_seguimiento', req.body.fecha_seguimiento);
+            req.flash('temperatura', req.body.temperatura);
+            req.flash('humedad', req.body.humedad);
+            req.flash('observaciones_seguimiento', req.body.observaciones_seguimiento);
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/secado/seguimiento`);
         }
     }

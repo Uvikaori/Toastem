@@ -7,6 +7,7 @@ const { validateDespulpado } = require('../validators/despulpadoValidator');
 const { validateFermentacionLavado } = require('../validators/fermentacionLavadoValidator');
 const { validateZarandeo } = require('../validators/zarandeoValidator'); 
 const { validateInicioSecado, validateFinSecado } = require('../validators/secadoValidator'); 
+const { validateSeguimientoSecado } = require('../validators/seguimientoSecadoValidator');
 const { validateClasificacion } = require('../validators/clasificacionAtributosValidator'); 
 const { validateTrilla } = require('../validators/trillaValidator'); 
 const { validateTueste } = require('../validators/tuesteValidator'); 
@@ -1191,7 +1192,7 @@ router.get('/:id_lote/secado/seguimiento', isLoteOwner, secadoController.mostrar
  *       500:
  *         description: Error interno del servidor
  */
-router.post('/:id_lote/secado/seguimiento', isLoteOwner, secadoController.procesarSeguimientoSecado);
+router.post('/:id_lote/secado/seguimiento', isLoteOwner, validateSeguimientoSecado, secadoController.procesarSeguimientoSecado);
 
 /**
  * @swagger
