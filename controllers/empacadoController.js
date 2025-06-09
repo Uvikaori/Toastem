@@ -236,6 +236,11 @@ class EmpacadoController {
 
             const formData = req.flash('formData')[0] || {};
             
+            // Asegurarnos de que todos los arrays necesarios estén definidos para evitar errores
+            const empacadoGranoArray = Array.isArray(empacadoGrano) ? empacadoGrano : [];
+            const empacadoMolidoArray = Array.isArray(empacadoMolido) ? empacadoMolido : [];
+            const empacadoPasillaArray = Array.isArray(empacadoPasilla) ? empacadoPasilla : [];
+            
             res.render('lotes/procesos/empacado-form', {
                 titulo: 'Registrar Empacado - Lote ' + lote.codigo,
                 finca: finca,
@@ -245,11 +250,14 @@ class EmpacadoController {
                 peso_pergamino_molido: pesoPergaminoMolido,
                 peso_pergamino_grano: pesoPergaminoGrano,
                 peso_pasilla_molido: pesoPasillaMolido,
-                empacado_grano: empacadoGrano,
-                empacado_molido: empacadoMolido,
-                empacado_pasilla: empacadoPasilla,
+                empacado_grano: empacadoGranoArray,
+                empacado_molido: empacadoMolidoArray,
+                empacado_pasilla: empacadoPasillaArray,
                 formData: formData,
-                mostrarMensajeOpcional: mostrarMensajeOpcional
+                mostrarMensajeOpcional: mostrarMensajeOpcional,
+                mensaje: req.flash('mensaje'),
+                error: req.flash('error'),
+                fecha_empacado: new Date().toISOString().split('T')[0]
             });
 
         } catch (error) {
