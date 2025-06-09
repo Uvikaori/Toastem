@@ -14,7 +14,7 @@
                 <i class="fas fa-project-diagram me-1"></i> Ver Flujo Completo
             </a>
             
-            <!-- Menú desplegable para acciones adicionales sobre el lote -->
+
             <div class="btn-group me-2">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-cog me-1"></i> Acciones
@@ -31,7 +31,7 @@
                 </ul>
             </div>
             
-            <!-- Badges de estado y proceso en línea aparte -->
+            
             <div class="d-flex justify-content-end mt-2">
                 <span class="badge fs-6 me-3" style="background-color: #2c6c7c;">Lote Estado: <%= lote.estado_proceso_nombre %></span>
                 <span class="badge bg-secondary fs-6">Proceso Actual: <%= lote.proceso_actual_nombre %></span>
@@ -39,25 +39,20 @@
         </div>
     </div>
 
-    <%# Mostrar mensajes de éxito %>
-    <% if (typeof mensaje !== 'undefined' && mensaje && mensaje.length > 0) { %>
+        <% if (typeof mensaje !== 'undefined' && mensaje && mensaje.length > 0) { %>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <%= mensaje %>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <% } %>
     
-    <%# Mostrar errores - Versión mejorada %>
     <% 
-    // Función auxiliar para verificar si un mensaje de error está realmente presente
     function hayError(error) {
         if (!error) return false;
         
         if (Array.isArray(error)) {
-            // Verifica si hay al menos un mensaje de error no vacío en el array
             return error.some(err => err && err.toString().trim() !== '');
         } else if (typeof error === 'string') {
-            // Verifica si la cadena de error no está vacía
             return error.trim() !== '';
         }
         
@@ -286,8 +281,7 @@
                             <% } %>
                         <% } %>
                         
-                        <%# Detalles específicos del proceso si existen %>
-                        <% if (proceso.nombre.toLowerCase() === 'recolección') { %>
+                                                <% if (proceso.nombre.toLowerCase() === 'recolección') { %>
                             <hr>
                             <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Recolección:</strong> <%= new Date(lote.fecha_recoleccion).toLocaleDateString("es-CO") %></p>
                             <p class="mb-1"><strong><i class="fas fa-coffee text-secondary me-1"></i> Tipo de Café:</strong> <%= lote.tipo_cafe %></p>
@@ -308,9 +302,7 @@
                                 </ul>
                             </div>
                         <% } %>
-                        <%# --- FIN Detalles Recolección --- %>
-                        
-                        <%# Detalles específicos del proceso si existen %>
+                                                
                         <% if (proceso.nombre.toLowerCase() === 'despulpado') { %>
                             <hr>
                             <% if (proceso.datosEtapa) { %>
@@ -320,15 +312,12 @@
                                 <p class="mb-1"><strong><i class="fas fa-balance-scale text-secondary me-1"></i> Peso Final (Desp.):</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
                                 <% if (proceso.datosEtapa.observaciones) { %>
                                     <% 
-                                        // Filtrar observaciones para ocultar textos de corrección automática
                                         let observacionesFiltradas = proceso.datosEtapa.observaciones;
                                         let procesoCorregido = false;
                                         
                                         if (observacionesFiltradas) {
-                                            // Verificar si hay correcciones
                                             procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
                                             
-                                            // Dividir por líneas y filtrar las que contienen texto de corrección
                                             const lineas = observacionesFiltradas.split('\n');
                                             const lineasFiltradas = lineas.filter(linea => 
                                                 !linea.includes('[CORRECCIÓN COMPLETADA]') && 
@@ -338,7 +327,6 @@
                                         }
                                     %>
                                     
-                                    <!-- Mostrar indicador de corrección si aplica -->
                                     <% if (procesoCorregido) { %>
                                         <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
                                             <i class="fas fa-edit me-1"></i>
@@ -346,7 +334,6 @@
                                         </div>
                                     <% } %>
                                     
-                                    <!-- Mostrar observaciones del usuario -->
                                     <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
                                         <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
                                     <% } %>
@@ -355,9 +342,7 @@
                                 <p class="text-muted"><i class="fas fa-info-circle me-1"></i> No se ha registrado el proceso de despulpado aún.</p>
                             <% } %>
                         <% } %>
-                        <%# --- FIN Detalles Despulpado --- %>
-
-                        <%# Detalles específicos del proceso si existen %>
+                        
                         <% if (proceso.nombre.toLowerCase() === 'fermentación y lavado' && proceso.datosEtapa) { %>
                             <hr>
                             <p class="mb-1"><strong><i class="fas fa-hourglass-start text-secondary me-1"></i> Inicio Fermentación:</strong> <%= new Date(proceso.datosEtapa.fecha_inicio_fermentacion).toLocaleString("es-CO") %></p>
@@ -366,15 +351,12 @@
                             <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final (Post-Lavado):</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
                             <% if (proceso.datosEtapa.observaciones) { %>
                                 <% 
-                                    // Filtrar observaciones para ocultar textos de corrección automática
                                     let observacionesFiltradas = proceso.datosEtapa.observaciones;
                                     let procesoCorregido = false;
                                     
                                     if (observacionesFiltradas) {
-                                        // Verificar si hay correcciones
                                         procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
                                         
-                                        // Dividir por líneas y filtrar las que contienen texto de corrección
                                         const lineas = observacionesFiltradas.split('\n');
                                         const lineasFiltradas = lineas.filter(linea => 
                                             !linea.includes('[CORRECCIÓN COMPLETADA]') && 
@@ -384,7 +366,6 @@
                                     }
                                 %>
                                 
-                                <!-- Mostrar indicador de corrección si aplica -->
                                 <% if (procesoCorregido) { %>
                                     <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
                                         <i class="fas fa-edit me-1"></i>
@@ -392,15 +373,12 @@
                                     </div>
                                 <% } %>
                                 
-                                <!-- Mostrar observaciones del usuario -->
                                 <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
                                     <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
                                 <% } %>
                             <% } %>
                         <% } %>
-                        <%# --- FIN Detalles Fermentación y Lavado --- %>
-
-                        <%# Detalles específicos del proceso si existen %>
+                        
                         <% if (proceso.nombre.toLowerCase() === 'zarandeo' && proceso.datosEtapa) { %>
                             <hr>
                             <p class="mb-1"><strong><i class="fas fa-calendar-day text-secondary me-1"></i> Fecha Zarandeo:</strong> <%= new Date(proceso.datosEtapa.fecha_zarandeo).toLocaleString("es-CO") %></p>
@@ -408,15 +386,12 @@
                             <p class="mb-1"><strong><i class="fas fa-balance-scale text-secondary me-1"></i> Peso Final (Post-Zarandeo):</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
                             <% if (proceso.datosEtapa.observaciones) { %>
                                 <% 
-                                    // Filtrar observaciones para ocultar textos de corrección automática
                                     let observacionesFiltradas = proceso.datosEtapa.observaciones;
                                     let procesoCorregido = false;
                                     
                                     if (observacionesFiltradas) {
-                                        // Verificar si hay correcciones
                                         procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
                                         
-                                        // Dividir por líneas y filtrar las que contienen texto de corrección
                                         const lineas = observacionesFiltradas.split('\n');
                                         const lineasFiltradas = lineas.filter(linea => 
                                             !linea.includes('[CORRECCIÓN COMPLETADA]') && 
@@ -426,7 +401,6 @@
                                     }
                                 %>
                                 
-                                <!-- Mostrar indicador de corrección si aplica -->
                                 <% if (procesoCorregido) { %>
                                     <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
                                         <i class="fas fa-edit me-1"></i>
@@ -434,16 +408,12 @@
                                     </div>
                                 <% } %>
                                 
-                                <!-- Mostrar observaciones del usuario -->
                                 <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
                                     <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
                                 <% } %>
                             <% } %>
                         <% } %>
-                        <%# --- FIN Detalles Zarandeo --- %>
-
-                        <%# Detalles específicos del proceso si existen %>
-                        <% if (proceso.nombre.toLowerCase() === 'secado' && proceso.datosEtapa) { %>
+                                                <% if (proceso.nombre.toLowerCase() === 'secado' && proceso.datosEtapa) { %>
                             <hr>
                             <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Inicio:</strong> <%= new Date(proceso.datosEtapa.fecha_inicio).toLocaleString("es-CO") %></p>
                             <p class="mb-1"><strong><i class="fas fa-cogs text-secondary me-1"></i> Método:</strong> <%= proceso.datosEtapa.metodo_secado %></p>
@@ -455,11 +425,35 @@
                                 <p class="mb-1"><strong><i class="fas fa-weight-hanging text-secondary me-1"></i> Peso Final:</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
                             <% } %>
                             <% if (proceso.datosEtapa.observaciones) { %>
-                                <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= proceso.datosEtapa.observaciones %></small></p>
+                                <% 
+                                    let observacionesFiltradas = proceso.datosEtapa.observaciones;
+                                    let procesoCorregido = false;
+                                    
+                                    if (observacionesFiltradas) {
+                                        procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
+                                        
+                                        const lineas = observacionesFiltradas.split('\n');
+                                        const lineasFiltradas = lineas.filter(linea => 
+                                            !linea.includes('[CORRECCIÓN COMPLETADA]') && 
+                                            linea.trim() !== ''
+                                        );
+                                        observacionesFiltradas = lineasFiltradas.join('\n').trim();
+                                    }
+                                %>
+                                
+                                <% if (procesoCorregido) { %>
+                                    <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
+                                        <i class="fas fa-edit me-1"></i>
+                                        <strong>Proceso corregido:</strong> Este proceso ha sido modificado para corregir inconsistencias en los datos.
+                                    </div>
+                                <% } %>
+                                
+                                <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
+                                    <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
+                                <% } %>
                             <% } %>
 
-                            <%# Historial de Seguimiento %>
-                            <% if (proceso.nombre.toLowerCase() === 'secado' && proceso.datosEtapa && typeof seguimientosSecado !== 'undefined' && seguimientosSecado.length > 0) { %>
+                                                        <% if (proceso.nombre.toLowerCase() === 'secado' && proceso.datosEtapa && typeof seguimientosSecado !== 'undefined' && seguimientosSecado.length > 0) { %>
                                 <hr>
                                 <h6 class="mb-2"><i class="fas fa-history me-1"></i> Historial de Seguimiento</h6>
                                 <div class="table-responsive">
@@ -489,15 +483,11 @@
                             <hr>
                             <p class="text-muted"><i class="fas fa-info-circle me-1"></i> No se ha iniciado el proceso de secado aún.</p>
                         <% } %>
-                        <%# --- FIN Detalles Secado --- %>
-
-                        <%# Modal de Seguimiento de Secado %>
-                        <% if (proceso.nombre.toLowerCase() === 'secado' && proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2) { %>
+                                                <% if (proceso.nombre.toLowerCase() === 'secado' && proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2) { %>
                             <a href="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/secado/seguimiento" class="btn btn-info btn-sm">
                                 <i class="fas fa-thermometer-half me-1"></i> Agregar Seguimiento
                             </a>
                         <% } %>
-                        <%# Detalles específicos del proceso si existen %>
                         <% if (proceso.nombre.toLowerCase() === 'clasificación' && proceso.datosEtapa) { %>
                             <hr>
                             <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha:</strong> <%= new Date(proceso.datosEtapa.fecha_clasificacion).toLocaleString("es-CO") %></p>
@@ -513,15 +503,12 @@
                             <% } %>
                             <% if (proceso.datosEtapa.observaciones) { %>
                                 <% 
-                                    // Filtrar observaciones para ocultar textos de corrección automática
                                     let observacionesFiltradas = proceso.datosEtapa.observaciones;
                                     let procesoCorregido = false;
                                     
                                     if (observacionesFiltradas) {
-                                        // Verificar si hay correcciones
                                         procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
                                         
-                                        // Dividir por líneas y filtrar las que contienen texto de corrección
                                         const lineas = observacionesFiltradas.split('\n');
                                         const lineasFiltradas = lineas.filter(linea => 
                                             !linea.includes('[CORRECCIÓN COMPLETADA]') && 
@@ -531,7 +518,6 @@
                                     }
                                 %>
                                 
-                                <!-- Mostrar indicador de corrección si aplica -->
                                 <% if (procesoCorregido) { %>
                                     <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
                                         <i class="fas fa-edit me-1"></i>
@@ -539,16 +525,12 @@
                                     </div>
                                 <% } %>
                                 
-                                <!-- Mostrar observaciones del usuario -->
                                 <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
                                     <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
                                 <% } %>
                             <% } %>
                         <% } %>
-                        <%# --- FIN Detalles Clasificación --- %>
-
-                        <%# Detalles específicos del proceso si existen %>
-                        <% if (proceso.nombre.toLowerCase() === 'trilla' && proceso.datosEtapa && (proceso.datosEtapa.id_estado_proceso === 3 || proceso.datosEtapa.id_estado_proceso === 1 || proceso.datosEtapa.id_estado_proceso === 2)) { %>
+                                                <% if (proceso.nombre.toLowerCase() === 'trilla' && proceso.datosEtapa && (proceso.datosEtapa.id_estado_proceso === 3 || proceso.datosEtapa.id_estado_proceso === 1 || proceso.datosEtapa.id_estado_proceso === 2)) { %>
                             <hr>
                             <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha:</strong> <%= new Date(proceso.datosEtapa.fecha_trilla).toLocaleString("es-CO") %></p>
                             <div class="row">
@@ -564,15 +546,12 @@
                             <p class="mb-1"><strong><i class="fas fa-calculator text-secondary me-1"></i> Peso Total Final:</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
                             <% if (proceso.datosEtapa.observaciones) { %>
                                 <% 
-                                    // Filtrar observaciones para ocultar textos de corrección automática
                                     let observacionesFiltradas = proceso.datosEtapa.observaciones;
                                     let procesoCorregido = false;
                                     
                                     if (observacionesFiltradas) {
-                                        // Verificar si hay correcciones
                                         procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
                                         
-                                        // Dividir por líneas y filtrar las que contienen texto de corrección
                                         const lineas = observacionesFiltradas.split('\n');
                                         const lineasFiltradas = lineas.filter(linea => 
                                             !linea.includes('[CORRECCIÓN COMPLETADA]') && 
@@ -582,7 +561,6 @@
                                     }
                                 %>
                                 
-                                <!-- Mostrar indicador de corrección si aplica -->
                                 <% if (procesoCorregido) { %>
                                     <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
                                         <i class="fas fa-edit me-1"></i>
@@ -590,16 +568,12 @@
                                     </div>
                                 <% } %>
                                 
-                                <!-- Mostrar observaciones del usuario -->
                                 <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
                                     <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
                                 <% } %>
                             <% } %>
                         <% } %>
-                        <%# --- FIN Detalles Trilla --- %>
-
-                        <%# Detalles específicos del proceso si existen %>
-                        <% if (proceso.nombre.toLowerCase() === 'tueste' && proceso.datosEtapa) { %>
+                                                <% if (proceso.nombre.toLowerCase() === 'tueste' && proceso.datosEtapa) { %>
                             <hr>
                             <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Registro:</strong> <%= new Date(proceso.datosEtapa.fecha_tueste).toLocaleString("es-CO") %></p>
                             <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial Total:</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
@@ -630,15 +604,12 @@
                             
                             <% if (proceso.datosEtapa.observaciones) { %>
                                 <% 
-                                    // Filtrar observaciones para ocultar textos de corrección automática
                                     let observacionesFiltradas = proceso.datosEtapa.observaciones;
                                     let procesoCorregido = false;
                                     
                                     if (observacionesFiltradas) {
-                                        // Verificar si hay correcciones
                                         procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
                                         
-                                        // Dividir por líneas y filtrar las que contienen texto de corrección
                                         const lineas = observacionesFiltradas.split('\n');
                                         const lineasFiltradas = lineas.filter(linea => 
                                             !linea.includes('[CORRECCIÓN COMPLETADA]') && 
@@ -648,7 +619,6 @@
                                     }
                                 %>
                                 
-                                <!-- Mostrar indicador de corrección si aplica -->
                                 <% if (procesoCorregido) { %>
                                     <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
                                         <i class="fas fa-edit me-1"></i>
@@ -656,16 +626,12 @@
                                     </div>
                                 <% } %>
                                 
-                                <!-- Mostrar observaciones del usuario -->
                                 <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
                                     <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
                                 <% } %>
                             <% } %>
                         <% } %>
-                        <%# --- FIN Detalles Tueste --- %>
-
-                        <%# Detalles específicos del proceso si existen %>
-                        <% if (proceso.nombre.toLowerCase() === 'molienda' && proceso.datosEtapa) { %>
+                                                <% if (proceso.nombre.toLowerCase() === 'molienda' && proceso.datosEtapa) { %>
                             <hr>
                             <% if (Array.isArray(proceso.datosEtapa) && proceso.datosEtapa.length > 0) { %>
                                 <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Molienda General:</strong> <%= new Date(proceso.datosEtapa[0].fecha_molienda).toLocaleString("es-CO") %></p>
@@ -719,7 +685,7 @@
                                         <p class="mb-1 mt-2 fst-italic"><small><strong>Obs. Generales:</strong> <%= observacionesComunes %></small></p>
                                     <% } %>
                                 <% } %>
-                            <% } else if (proceso.datosEtapa) { // Caso de una sola molienda (objeto) - podría ser obsoleto pero se mantiene por si acaso %>
+                            <% } else if (proceso.datosEtapa) { %>
                                 <p class="mb-1"><strong><i class="fas fa-calendar-alt text-secondary me-1"></i> Fecha Molienda:</strong> <%= new Date(proceso.datosEtapa.fecha_molienda).toLocaleString("es-CO") %></p>
                                 <p class="mb-1"><strong><i class="fas fa-weight text-secondary me-1"></i> Peso Inicial:</strong> <%= proceso.datosEtapa.peso_inicial %> kg</p>
                                 <% if (proceso.datosEtapa.es_grano) { %>
@@ -729,14 +695,36 @@
                                 <% } %>
                                 <p class="mb-1"><strong><i class="fas fa-balance-scale-right text-secondary me-1"></i> Peso Final:</strong> <%= proceso.datosEtapa.peso_final %> kg</p>
                                 <% if (proceso.datosEtapa.observaciones) { %>
-                                    <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= proceso.datosEtapa.observaciones %></small></p>
+                                    <% 
+                                        let observacionesFiltradas = proceso.datosEtapa.observaciones;
+                                        let procesoCorregido = false;
+                                        
+                                        if (observacionesFiltradas) {
+                                            procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
+                                            
+                                            const lineas = observacionesFiltradas.split('\n');
+                                            const lineasFiltradas = lineas.filter(linea => 
+                                                !linea.includes('[CORRECCIÓN COMPLETADA]') && 
+                                                linea.trim() !== ''
+                                            );
+                                            observacionesFiltradas = lineasFiltradas.join('\n').trim();
+                                        }
+                                    %>
+                                    
+                                    <% if (procesoCorregido) { %>
+                                        <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
+                                            <i class="fas fa-edit me-1"></i>
+                                            <strong>Proceso corregido:</strong> Este proceso ha sido modificado para corregir inconsistencias en los datos.
+                                        </div>
+                                    <% } %>
+                                    
+                                    <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
+                                        <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
+                                    <% } %>
                                 <% } %>
                             <% } %>
                         <% } %>
-                        <%# --- FIN Detalles Molienda --- %>
-
-                        <%# Detalles específicos del proceso si existen %>
-                        <% if (proceso.nombre.toLowerCase() === 'empacado' && proceso.datosEtapa) { %>
+                                                <% if (proceso.nombre.toLowerCase() === 'empacado' && proceso.datosEtapa) { %>
                             <hr>
                             <% if (proceso.datosEtapa.empacados && Array.isArray(proceso.datosEtapa.empacados)) { %>
                                 <div class="mb-3">
@@ -824,9 +812,32 @@
                                 </div>
                                 
                                 <% if (proceso.datosEtapa.observaciones) { %>
-                                    <div class="mt-3">
-                                        <p class="mb-0 text-muted"><small><i class="fas fa-info-circle me-1"></i> <strong>Observaciones:</strong> <%= proceso.datosEtapa.observaciones %></small></p>
-                                    </div>
+                                    <% 
+                                        let observacionesFiltradas = proceso.datosEtapa.observaciones;
+                                        let procesoCorregido = false;
+                                        
+                                        if (observacionesFiltradas) {
+                                            procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
+                                            
+                                            const lineas = observacionesFiltradas.split('\n');
+                                            const lineasFiltradas = lineas.filter(linea => 
+                                                !linea.includes('[CORRECCIÓN COMPLETADA]') && 
+                                                linea.trim() !== ''
+                                            );
+                                            observacionesFiltradas = lineasFiltradas.join('\n').trim();
+                                        }
+                                    %>
+                                    
+                                    <% if (procesoCorregido) { %>
+                                        <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
+                                            <i class="fas fa-edit me-1"></i>
+                                            <strong>Proceso corregido:</strong> Este proceso ha sido modificado para corregir inconsistencias en los datos.
+                                        </div>
+                                    <% } %>
+                                    
+                                    <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
+                                        <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
+                                    <% } %>
                                 <% } %>
                             <% } else { %>
                                 <p class="mb-2"><i class="fas fa-calendar-alt text-secondary me-1"></i> <strong>Fecha Empacado:</strong> 
@@ -850,14 +861,36 @@
                                 </p>
                                 
                                 <% if (proceso.datosEtapa.observaciones) { %>
-                                    <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= proceso.datosEtapa.observaciones %></small></p>
+                                    <% 
+                                        let observacionesFiltradas = proceso.datosEtapa.observaciones;
+                                        let procesoCorregido = false;
+                                        
+                                        if (observacionesFiltradas) {
+                                            procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
+                                            
+                                            const lineas = observacionesFiltradas.split('\n');
+                                            const lineasFiltradas = lineas.filter(linea => 
+                                                !linea.includes('[CORRECCIÓN COMPLETADA]') && 
+                                                linea.trim() !== ''
+                                            );
+                                            observacionesFiltradas = lineasFiltradas.join('\n').trim();
+                                        }
+                                    %>
+                                    
+                                    <% if (procesoCorregido) { %>
+                                        <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
+                                            <i class="fas fa-edit me-1"></i>
+                                            <strong>Proceso corregido:</strong> Este proceso ha sido modificado para corregir inconsistencias en los datos.
+                                        </div>
+                                    <% } %>
+                                    
+                                    <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
+                                        <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
+                                    <% } %>
                                 <% } %>
                             <% } %>
                         <% } %>
-                        <%# --- FIN Detalles Empacado --- %>
-
-                        <%# Detalles específicos del proceso si existen %>
-                        <% if (proceso.nombre.toLowerCase() === 'control de calidad' && proceso.datosEtapa) { %>
+                                                <% if (proceso.nombre.toLowerCase() === 'control de calidad' && proceso.datosEtapa) { %>
                             <hr>
                             <p class="mb-1"><strong><i class="fas fa-calendar-check text-secondary me-1"></i> Fecha Control:</strong> <%= new Date(proceso.datosEtapa.fecha_control).toLocaleString("es-CO") %></p>
                             <p class="mb-1"><strong><i class="fas fa-vials text-secondary me-1"></i> Tipo de Control:</strong> <%= proceso.datosEtapa.tipo_control %></p>
@@ -867,15 +900,12 @@
                             <% } %>
                             <% if (proceso.datosEtapa.observaciones) { %>
                                 <% 
-                                    // Filtrar observaciones para ocultar textos de corrección automática
                                     let observacionesFiltradas = proceso.datosEtapa.observaciones;
                                     let procesoCorregido = false;
                                     
                                     if (observacionesFiltradas) {
-                                        // Verificar si hay correcciones
                                         procesoCorregido = observacionesFiltradas.includes('[CORRECCIÓN COMPLETADA]');
                                         
-                                        // Dividir por líneas y filtrar las que contienen texto de corrección
                                         const lineas = observacionesFiltradas.split('\n');
                                         const lineasFiltradas = lineas.filter(linea => 
                                             !linea.includes('[CORRECCIÓN COMPLETADA]') && 
@@ -885,7 +915,6 @@
                                     }
                                 %>
                                 
-                                <!-- Mostrar indicador de corrección si aplica -->
                                 <% if (procesoCorregido) { %>
                                     <div class="alert alert-warning py-1 px-2 mb-2" style="font-size: 0.8rem;">
                                         <i class="fas fa-edit me-1"></i>
@@ -893,13 +922,12 @@
                                     </div>
                                 <% } %>
                                 
-                                <!-- Mostrar observaciones del usuario -->
                                 <% if (observacionesFiltradas && observacionesFiltradas.length > 0) { %>
                                     <p class="mb-1 mt-2 fst-italic"><small><strong>Obs:</strong> <%= observacionesFiltradas %></small></p>
                                 <% } %>
                             <% } %>
                         <% } %>
-                        <%# --- FIN Detalles Control de Calidad --- %>
+                        
 
                   
                   </div>
@@ -961,7 +989,7 @@
                             }
                             %>
                             <% if (mostrarDropdownGeneral) { %>
-                                <!-- Menú de acciones para procesos terminados o reiniciados (excepto secado que tiene su propio menú) -->
+
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton<%= proceso.id %>" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="fas fa-ellipsis-v"></i>
@@ -993,7 +1021,7 @@
                                         <% } %>
                                         <% if (proceso.nombre.toLowerCase() === 'empacado' && proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 3) { %>
                                             <% if (proceso.datosEtapa.empacados && Array.isArray(proceso.datosEtapa.empacados)) { %>
-                                                <!-- Si hay múltiples empacados, mostrar opciones de reinicio para cada tipo -->
+
                                                 <% 
                                                 const empacadosGrano = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Grano' && e.id_estado_proceso === 3);
                                                 const empacadosMolido = proceso.datosEtapa.empacados.filter(e => e.tipo_producto_empacado === 'Molido' && e.id_estado_proceso === 3);
@@ -1041,7 +1069,7 @@
                                                     </li>
                                                 <% } %>
                                             <% } else { %>
-                                                <!-- Opción para estructura antigua -->
+
                                                 <li>
                                                     <form action="/fincas/<%= finca.id %>/lotes/<%= lote.id %>/empacado/<%= proceso.datosEtapa.id %>/reiniciar" method="POST">
                                                         <button type="submit" class="dropdown-item text-warning">
@@ -1051,12 +1079,12 @@
                                                 </li>
                                             <% } %>
                                         <% } %>
-                                        <!-- Aquí puedes agregar más acciones si lo deseas -->
+
                                     </ul>
                                 </div>
                             <% } %>
                             
-                            <!-- Menú específico para procesos en estado 2 (En progreso) -->
+                            
                             <% if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2 && proceso.nombre.toLowerCase() !== 'secado') { %>
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuProgreso<%= proceso.id %>" data-bs-toggle="dropdown" aria-expanded="false">
@@ -1076,7 +1104,7 @@
                                 </div>
                             <% } %>
                             
-                            <!-- Menú específico para secado (estado 1, 2 o 3) -->
+                            
                             <% if (proceso.datosEtapa && proceso.nombre.toLowerCase() === 'secado' && (proceso.datosEtapa.id_estado_proceso === 1 || proceso.datosEtapa.id_estado_proceso === 2 || proceso.datosEtapa.id_estado_proceso === 3)) { %>
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuSecado<%= proceso.id %>" data-bs-toggle="dropdown" aria-expanded="false">

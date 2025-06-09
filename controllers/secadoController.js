@@ -8,7 +8,6 @@ const Secado = require('../models/entities/Secado');
 const { validationResult } = require('express-validator');
 
 class SecadoController {
-    // --- Controladores para SECADO (Inicio) ---
     async mostrarFormularioInicioSecado(req, res) {
         try {
             const id_finca = parseInt(req.params.id_finca);
@@ -32,14 +31,13 @@ class SecadoController {
             }
 
             const zarandeoInfo = await zarandeoDAO.getZarandeoByLoteId(id_lote);
-            if (!zarandeoInfo || zarandeoInfo.id_estado_proceso !== 3) { // 3 = Terminado
+            if (!zarandeoInfo || zarandeoInfo.id_estado_proceso !== 3) {
                 req.flash('error', 'El proceso de Zarandeo debe estar completado para iniciar el secado.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
-            // Obtener la fecha actual en formato datetime-local
             const now = new Date();
-            const fechaActual = now.toISOString().slice(0, 16); // Formato: YYYY-MM-DDTHH:mm
+            const fechaActual = now.toISOString().slice(0, 16);
 
             res.render('lotes/procesos/secado-inicio-form', {
                 titulo: `Iniciar Proceso de Secado - Lote ${lote.codigo}`,
@@ -50,7 +48,7 @@ class SecadoController {
                 metodo_secado: req.flash('metodo_secado')[0] || '',
                 humedad_inicial_secado: req.flash('humedad_inicial_secado')[0] || '',
                 observaciones_secado: req.flash('observaciones_secado')[0] || '',
-                decision_venta: false, // Valor por defecto
+                decision_venta: false,
                 mensaje: req.flash('mensaje'),
                 error: req.flash('error')
             });
@@ -64,7 +62,7 @@ class SecadoController {
     async registrarInicioSecado(req, res) {
         const id_finca = parseInt(req.params.id_finca);
         const id_lote = parseInt(req.params.id_lote);
-        const errors = validationResult(req); // Usará validateInicioSecado
+        const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
             req.flash('error', errors.array().map(e => e.msg));
@@ -82,35 +80,29 @@ class SecadoController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/secado/iniciar`);
             }
 
-            // Extraer el peso inicial del formulario (campo hidden)
             const peso_inicial = req.body.peso_inicial_secado || zarandeoInfo.peso_final;
             
-            // Determinar si hay decisión de venta (checkbox)
             const decision_venta = req.body.decision_venta ? 1 : 0;
             const fecha_decision = decision_venta ? new Date() : null;
 
             const secadoData = new Secado(
-                null, // id
+                null,
                 id_lote,
-                peso_inicial, // Ahora obtenemos del formulario o fallback al zarandeo
+                peso_inicial,
                 req.body.fecha_inicio_secado,
                 req.body.metodo_secado,
                 req.body.humedad_inicial_secado || null,
-                null, // fecha_fin (se registra al finalizar)
-                null, // peso_final (se registra al finalizar)
+                null,
+                null,
                 req.body.observaciones_secado
-                // id_estado_proceso es 2 ('En progreso') por defecto desde la entidad Secado
             );
             
-            // Realizar la inserción básica
             const id_secado = await secadoDAO.createSecado(secadoData);
-            
-            // Actualizar campos adicionales (decision_venta y fecha_decision)
             if (id_secado) {
                 await secadoDAO.updateSecado(id_secado, { decision_venta, fecha_decision });
             }
 
-            // Actualizar estado general y proceso actual del LOTE al proceso de Secado
+
             const todosLosProcesos = await procesosDAO.getAllProcesosOrdenados();
             const procesoSecadoDef = todosLosProcesos.find(p => p.nombre.toLowerCase() === 'secado');
 
@@ -119,7 +111,7 @@ class SecadoController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
             
-            // El lote sigue 'En progreso' (estado 2), pero su proceso actual es 'Secado'
+
             await loteDAO.updateLoteProcesoYEstado(id_lote, procesoSecadoDef.id, 2);
 
             req.flash('mensaje', 'Proceso de Secado iniciado exitosamente.');
@@ -153,7 +145,7 @@ class SecadoController {
                 req.flash('error', 'El proceso de Secado no ha sido iniciado para este lote.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
-            if (secadoInfo.id_estado_proceso === 3) { // 3 = Terminado
+            if (secadoInfo.id_estado_proceso === 3) {
                 req.flash('info', 'El proceso de Secado ya fue finalizado para este lote.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
@@ -166,7 +158,7 @@ class SecadoController {
                 titulo: `Finalizar Secado - Lote ${lote.codigo}`,
                 finca: finca,
                 lote: lote,
-                secado: secadoInfo, // Pasar la info del secado actual (ej. fecha_inicio)
+                secado: secadoInfo,
                 fecha_fin_secado: req.flash('fecha_fin_secado')[0] || '',
                 peso_final_secado: req.flash('peso_final_secado')[0] || '',
                 observaciones_fin_secado: req.flash('observaciones_fin_secado')[0] || '',
@@ -196,13 +188,12 @@ class SecadoController {
 
         try {
             const secadoActual = await secadoDAO.getSecadoByLoteId(id_lote);
-            if (!secadoActual || (secadoActual.id_estado_proceso !== 1 && secadoActual.id_estado_proceso !== 2)) { 
-                // Debe existir y estar 'Registrado' (1) o 'En Progreso' (2)
+            if (!secadoActual || (secadoActual.id_estado_proceso !== 1 && secadoActual.id_estado_proceso !== 2)) {
                 req.flash('error', 'El proceso de secado no está en estado para ser finalizado o no existe.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
-            // Determinar si hay decisión de venta (checkbox)
+
             const decision_venta = req.body.decision_venta ? 1 : 0;
             const fecha_decision = decision_venta ? new Date() : null;
 
@@ -212,7 +203,7 @@ class SecadoController {
                 observaciones: req.body.observaciones_fin_secado,
                 decision_venta: decision_venta,
                 fecha_decision: fecha_decision,
-                id_estado_proceso: 3 // 3 = Terminado
+                id_estado_proceso: 3
             };
 
             await secadoDAO.updateSecado(secadoActual.id, datosActualizacion);
@@ -227,18 +218,15 @@ class SecadoController {
 
             const siguienteProcesoDef = todosLosProcesos.find(p => p.orden === (procesoSecadoDef.orden + 1));
             
-            // Si hay decisión de venta, no continuamos con el siguiente proceso
             let idNuevoProcesoActualParaLote; 
             let nuevoEstadoGeneralLote;
             
             if (decision_venta) {
-                // Si hay decisión de venta, marcamos como proceso terminado
                 idNuevoProcesoActualParaLote = procesoSecadoDef.id;
-                nuevoEstadoGeneralLote = 3; // 3 = Terminado
+                nuevoEstadoGeneralLote = 3;
             } else {
-                // De lo contrario, avanzamos al siguiente proceso
                 idNuevoProcesoActualParaLote = siguienteProcesoDef ? siguienteProcesoDef.id : procesoSecadoDef.id;
-                nuevoEstadoGeneralLote = siguienteProcesoDef ? 2 : 3; // 2 En progreso, 3 Finalizado Lote
+                nuevoEstadoGeneralLote = siguienteProcesoDef ? 2 : 3;
             }
 
             await loteDAO.updateLoteProcesoYEstado(id_lote, idNuevoProcesoActualParaLote, nuevoEstadoGeneralLote);
@@ -249,7 +237,7 @@ class SecadoController {
         } catch (error) {
             console.error('Error al registrar fin de secado:', error);
             req.flash('error', 'Error interno al registrar el fin del secado.');
-            // Repopular campos
+
             req.flash('fecha_fin_secado', req.body.fecha_fin_secado);
             req.flash('peso_final_secado', req.body.peso_final_secado);
             req.flash('observaciones_fin_secado', req.body.observaciones_fin_secado);
@@ -299,7 +287,7 @@ class SecadoController {
                 lote: lote,
                 secado: secado,
                 peso_zarandeo_final: zarandeoInfo ? zarandeoInfo.peso_final : 0,
-                // Para repoblar el formulario
+    
                 fecha_inicio_secado: req.flash('fecha_inicio_secado')[0] || secado.fecha_inicio,
                 metodo_secado: req.flash('metodo_secado')[0] || secado.metodo_secado,
                 humedad_inicial_secado: req.flash('humedad_inicial_secado')[0] || secado.humedad_inicial,
@@ -324,7 +312,6 @@ class SecadoController {
             const id_finca = parseInt(req.params.id_finca);
             const id_lote = parseInt(req.params.id_lote);
 
-            // Verificar permisos
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
             if (!finca) { 
                 req.flash('error', 'Finca no encontrada o sin permiso.');
@@ -337,7 +324,6 @@ class SecadoController {
                 return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
-            // Verificar que el secado existe y está en estado válido para corrección
             const secado = await secadoDAO.getSecadoByLoteId(id_lote);
             if (!secado) {
                 req.flash('error', 'No se encontró el proceso de secado para este lote.');
@@ -349,17 +335,14 @@ class SecadoController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
-            // Preparar observaciones con el formato estándar de corrección
             let observacionesExistentes = secado.observaciones || '';
             let observacionesNuevas = req.body.observaciones_secado || '';
             let observacionesFinales = '';
             
-            // Si hay observaciones existentes, las mantenemos
             if (observacionesExistentes.trim() !== '') {
                 observacionesFinales = observacionesExistentes;
             }
             
-            // Si hay observaciones nuevas del usuario, las añadimos
             if (observacionesNuevas.trim() !== '') {
                 if (observacionesFinales.trim() !== '') {
                     observacionesFinales += '\n';
@@ -367,7 +350,6 @@ class SecadoController {
                 observacionesFinales += observacionesNuevas;
             }
             
-            // Añadir la nota de corrección automática
             if (observacionesFinales.trim() !== '') {
                 observacionesFinales += '\n';
             }
@@ -379,12 +361,7 @@ class SecadoController {
                 humedad_inicial: req.body.humedad_inicial_secado || null,
                 observaciones: observacionesFinales
             };
-
-            // Si el secado está en estado 1 (Por hacer) y se está corrigiendo, 
-            // mantenerlo en estado 1 pero con los datos actualizados
-            // Si está en estado 2 o 3, mantener su estado actual
             
-            // Actualizar solo los datos de inicio
             await secadoDAO.updateSecado(secado.id, datosActualizacion);
 
             req.flash('mensaje', 'Datos de inicio del secado corregidos exitosamente.');
@@ -394,7 +371,6 @@ class SecadoController {
             console.error('Error al corregir datos de inicio de secado:', error);
             req.flash('error', 'Error interno al corregir los datos de inicio.');
             
-            // Mantener los datos del formulario
             req.flash('fecha_inicio_secado', req.body.fecha_inicio_secado);
             req.flash('metodo_secado', req.body.metodo_secado);
             req.flash('humedad_inicial_secado', req.body.humedad_inicial_secado);
@@ -414,7 +390,6 @@ class SecadoController {
             const id_lote = parseInt(req.params.id_lote);
             const id_secado = parseInt(req.params.id_secado);
 
-            // Verificar permisos
             const finca = await fincaDAO.getFincaByIdAndUserId(id_finca, req.session.usuario.id);
             if (!finca) { 
                 req.flash('error', 'Finca no encontrada o sin permiso.');
@@ -427,23 +402,19 @@ class SecadoController {
                 return res.redirect(`/fincas/${id_finca}/lotes`);
             }
 
-            // Verificar que el proceso existe
             const secado = await secadoDAO.getSecadoByLoteId(id_lote);
             if (!secado || secado.id !== id_secado) {
                 req.flash('error', 'El proceso de secado no existe o no corresponde al lote indicado.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
-            // Solo se pueden reiniciar procesos terminados
             if (secado.id_estado_proceso !== 3) {
                 req.flash('error', 'Solo se pueden reiniciar procesos que estén marcados como terminados.');
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
 
-            // Reiniciar el proceso
             await secadoDAO.reiniciarSecado(id_secado);
 
-            // Actualizar el estado del lote
             const procesoSecadoDef = (await procesosDAO.getAllProcesosOrdenados()).find(p => p.nombre.toLowerCase() === 'secado');
             
             if (!procesoSecadoDef) {
@@ -451,7 +422,7 @@ class SecadoController {
                 return res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);
             }
             
-            await loteDAO.updateLoteProcesoYEstado(id_lote, procesoSecadoDef.id, 2); // 2 = 'En progreso'
+            await loteDAO.updateLoteProcesoYEstado(id_lote, procesoSecadoDef.id, 2);
 
             req.flash('mensaje', 'Proceso de Secado reiniciado exitosamente para su corrección.');
             res.redirect(`/fincas/${id_finca}/lotes/${id_lote}/procesos`);

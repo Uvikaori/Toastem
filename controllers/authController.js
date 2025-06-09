@@ -9,11 +9,9 @@ const { setMessages } = require('../utils/messages');
  * Muestra la página de inicio de sesión
  */
 const mostrarPaginaInicioSesion = (req, res) => {
-  // Consumir mensajes flash solo si existen
   const errorMessages = req.flash('error') || [];
   const successMessages = req.flash('mensaje') || [];
   
-  // Filtrar mensajes vacíos
   const filteredErrors = errorMessages.filter(msg => msg && msg.toString().trim() !== '');
   const filteredSuccess = successMessages.filter(msg => msg && msg.toString().trim() !== '');
 
@@ -33,7 +31,6 @@ const iniciarSesion = async (req, res) => {
     const { correo, contraseña } = req.body;
     console.log('Datos recibidos:', { correo });
 
-    // Validar campos vacíos
     if (!correo || correo.trim() === '') {
       return res.status(400).json({
         errores: { correo: 'El correo electrónico no puede estar vacío' }
@@ -46,14 +43,12 @@ const iniciarSesion = async (req, res) => {
       });
     }
 
-    // Información de depuración sobre la conexión a la base de datos
     console.log('Configuración DB:', {
       host: db.pool ? db.pool.config.connectionConfig.host : 'No disponible',
       port: db.pool ? db.pool.config.connectionConfig.port : 'No disponible',
       database: db.pool ? db.pool.config.connectionConfig.database : 'No disponible'
     });
 
-    // Buscar usuario
     let usuarios;
     try {
       console.log('Intentando ejecutar consulta para buscar usuario...');
@@ -80,7 +75,6 @@ const iniciarSesion = async (req, res) => {
 
     const usuario = usuarios[0];
 
-    // Verificar contraseña
     let contraseñaValida;
     try {
       contraseñaValida = await bcrypt.compare(contraseña, usuario.password);
@@ -100,22 +94,16 @@ const iniciarSesion = async (req, res) => {
       });
     }
 
-    // Eliminar datos sensibles
     delete usuario.password;
     delete usuario.respuesta_seguridad;
 
-    // Guardar usuario en sesión
     req.session.usuario = usuario;
     req.session.idUsuario = usuario.id;
 
-    // Limpiar cualquier mensaje flash de error que pudiera haber sido
-    // establecido por el middleware isAuthenticated antes del login.
-    req.flash('error'); // Llamar sin argumentos consume y limpia los mensajes de error.
+    req.flash('error');
 
     console.log('Sesión establecida y flashes de error limpiados:', req.session);
 
-    // Guardar la sesión explícitamente ANTES de enviar la respuesta JSON
-    // para asegurar que los cambios (incluida la limpieza de flash) persistan
     req.session.save(err => {
       if (err) {
         console.error('Error al guardar sesión después de limpiar flash:', err);
@@ -127,7 +115,6 @@ const iniciarSesion = async (req, res) => {
         });
       }
 
-      // Responder con éxito
       res.json({
         success: true,
         redirect: '/fincas/gestionar'
@@ -151,7 +138,6 @@ const iniciarSesion = async (req, res) => {
  */
 const mostrarPaginaRegistro = async (req, res) => {
   try {
-    // Usar preguntas predefinidas directamente
     const preguntasArray = [
       { id: 1, pregunta: '¿Cuál fue el nombre de tu primera mascota?' },
       { id: 2, pregunta: '¿En qué ciudad naciste?' },
@@ -170,18 +156,16 @@ const mostrarPaginaRegistro = async (req, res) => {
     res.status(500).render('error', {
       titulo: 'Error | Toastem',
       mensaje: 'Error al cargar la página de registro',
-      preguntas: [], // Proporcionar un array vacío en caso de error
+      preguntas: [],
       hideNavbar: true,
       error: process.env.NODE_ENV === 'development' ? error : {}
     });
   }
 };
 
-// Función para validar los datos del formulario
 function validarDatosRegistro(datos) {
   const errores = {};
 
-  // Validar nombre
   if (!datos.nombre || datos.nombre.trim() === '') {
     errores.nombre = 'El nombre no puede estar vacío';
   } else if (!/^[A-Za-zÑñÁáÉéÍíÓóÚúÜü\s]+$/.test(datos.nombre)) {
@@ -190,33 +174,28 @@ function validarDatosRegistro(datos) {
     errores.nombre = 'Debe ingresar nombre y apellido separados por un espacio';
   }
 
-  // Validar email
   if (!datos.correo || datos.correo.trim() === '') {
     errores.correo = 'El correo electrónico no puede estar vacío';
   } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(datos.correo)) {
     errores.correo = 'Ingrese un correo electrónico válido';
   }
 
-  // Validar contraseña
   if (!datos.contraseña) {
     errores.contraseña = 'La contraseña no puede estar vacía';
   } else if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(datos.contraseña)) {
     errores.contraseña = 'La contraseña debe tener al menos 6 caracteres, una letra y un número';
   }
 
-  // Validar confirmación de contraseña
   if (!datos.confirmarContraseña) {
     errores.confirmarContraseña = 'Debe confirmar la contraseña';
   } else if (datos.contraseña !== datos.confirmarContraseña) {
     errores.confirmarContraseña = 'Las contraseñas no coinciden';
   }
 
-  // Validar pregunta de seguridad
   if (!datos.pregunta_seguridad) {
     errores.pregunta_seguridad = 'Debe seleccionar una pregunta de seguridad';
   }
 
-  // Validar respuesta de seguridad
   if (!datos.respuesta_seguridad || datos.respuesta_seguridad.trim() === '') {
     errores.respuesta_seguridad = 'La respuesta de seguridad no puede estar vacía';
   }
@@ -231,15 +210,12 @@ const registrarUsuario = async (req, res) => {
     const datos = req.body;
     console.log('Datos recibidos:', datos);
 
-    // Validar datos
     const errores = validarDatosRegistro(datos);
 
-    // Si hay errores, devolverlos
     if (Object.keys(errores).length > 0) {
       return res.status(400).json({ errores });
     }
 
-    // Verificar si el usuario ya existe
     const [usuariosExistentes] = await db.query(
       'SELECT id FROM usuarios WHERE email = ?',
       [datos.correo]
@@ -253,11 +229,9 @@ const registrarUsuario = async (req, res) => {
       });
     }
 
-    // Hashear la contraseña
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(datos.contraseña, salt);
 
-    // Insertar usuario
     const [resultado] = await db.query(
       `INSERT INTO usuarios (
         nombre, email, password, id_pregunta_seguridad, 
@@ -272,7 +246,6 @@ const registrarUsuario = async (req, res) => {
       ]
     );
 
-    // Verificar si la inserción fue exitosa
     if (resultado && resultado.insertId) {
       console.log('Usuario registrado con ID:', resultado.insertId);
       return res.status(200).json({
@@ -330,7 +303,6 @@ const verificarCorreo = async (req, res) => {
   try {
     const { correo } = req.body;
 
-    // Validar correo
     if (!correo || correo.trim() === '') {
       return res.status(400).json({
         errores: {
@@ -339,7 +311,6 @@ const verificarCorreo = async (req, res) => {
       });
     }
 
-    // Buscar usuario
     const [usuarios] = await db.query(
       'SELECT id, id_pregunta_seguridad FROM usuarios WHERE email = ?',
       [correo]
@@ -353,7 +324,6 @@ const verificarCorreo = async (req, res) => {
       });
     }
 
-    // Obtener pregunta de seguridad
     const preguntasArray = [
       { id: 1, pregunta: '¿Cuál fue el nombre de tu primera mascota?' },
       { id: 2, pregunta: '¿En qué ciudad naciste?' },
@@ -394,14 +364,12 @@ const resetearContraseña = async (req, res) => {
     const { correo, respuesta, nuevaContraseña, confirmarContraseña } = req.body;
     const errores = {};
 
-    // Validar contraseña
     if (!nuevaContraseña) {
       errores.nuevaContraseña = 'La contraseña no puede estar vacía';
     } else if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(nuevaContraseña)) {
       errores.nuevaContraseña = 'La contraseña debe tener al menos 6 caracteres, una letra y un número';
     }
 
-    // Validar confirmación
     if (!confirmarContraseña) {
       errores.confirmarContraseña = 'Debe confirmar la contraseña';
     } else if (nuevaContraseña !== confirmarContraseña) {
@@ -412,7 +380,6 @@ const resetearContraseña = async (req, res) => {
       return res.status(400).json({ errores });
     }
 
-    // Verificar respuesta de seguridad
     const [usuarios] = await db.query(
       'SELECT id, respuesta_seguridad FROM usuarios WHERE email = ?',
       [correo]
@@ -428,7 +395,6 @@ const resetearContraseña = async (req, res) => {
 
     const usuario = usuarios[0];
 
-    // Verificar respuesta
     if (respuesta.toLowerCase() !== usuario.respuesta_seguridad.toLowerCase()) {
       return res.status(400).json({
         errores: {
@@ -437,11 +403,9 @@ const resetearContraseña = async (req, res) => {
       });
     }
 
-    // Hashear nueva contraseña
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(nuevaContraseña, salt);
 
-    // Actualizar contraseña
     await db.query(
       'UPDATE usuarios SET password = ? WHERE id = ?',
       [hash, usuario.id]

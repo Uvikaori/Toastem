@@ -19,7 +19,7 @@ class ControlCalidadController {
                 return res.redirect(`/fincas/${req.params.id_finca}/lotes/${id_lote}/procesos`);
             }
 
-            res.render('lotes/control-calidad', { // Asegúrate que esta ruta de vista exista o ajústala
+            res.render('lotes/control-calidad', { 
                 titulo: 'Registrar Control de Calidad',
                 lote: lote,
                 finca: req.finca, // Asumiendo que lote y finca vienen en req gracias a un middleware
@@ -74,7 +74,6 @@ class ControlCalidadController {
             );
 
             await controlCalidadDAO.createControlCalidad(controlCalidad);
-            // Aquí podrías actualizar el estado del lote si Control de Calidad es el último proceso
             // await loteDAO.updateLoteProcesoYEstado(id_lote, SIGUIENTE_PROCESO_ID, ESTADO_COMPLETADO);
             // O marcar el lote como finalizado completamente
             // await loteDAO.updateLoteEstado(id_lote, ESTADO_LOTE_FINALIZADO);

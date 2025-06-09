@@ -16,15 +16,14 @@ const fincaRoutes = require('./routes/fincaRoutes');
 const helpers = require('./utils/helpers');
 const loteRoutes = require('./routes/loteRoutes');
 const apiRoutes = require('./routes/apiRoutes');
+const authRoutes = require('./routes/authRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
-// Cargar variables de entorno al inicio
-require('dotenv').config();
-// Sobreescribir la variable NODE_ENV si no está definida
 if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = 'development';
 }
 
-// Configuración de Swagger
+// Configuración para la documentación de la API
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -32,10 +31,6 @@ const swaggerOptions = {
       title: 'API de Toastem',
       version: '1.0.0',
       description: 'Documentación de la API de Toastem para la gestión de procesos de café',
-      contact: {
-        name: 'Soporte Toastem',
-        email: 'soporte@toastem.com'
-      }
     },
     servers: [
       {
@@ -44,25 +39,18 @@ const swaggerOptions = {
       }
     ]
   },
-  apis: ['./routes/*.js'] // archivos que contienen anotaciones
+  apis: ['./routes/*.js'] 
 };
 
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
 
-// Routes
-const authRoutes = require('./routes/authRoutes');
-const dashboardRoutes = require('./routes/dashboardRoutes');
-
-// App
 const app = express();
 
-// Configurar EJS como motor de vistas
+// Configuración del motor de vistas EJS
 app.set('view engine', 'ejs');
-
-// Configurar la ruta del layout principal
 app.set('layout', 'layouts/main');
 
-// Hacer helpers disponibles globalmente en las vistas
+// Helpers globales para las vistas
 app.locals.capitalizarPalabras = helpers.capitalizarPalabras;
 
 // Middlewares
@@ -73,50 +61,31 @@ app.use(cors());
 app.use(expressLayouts);
 app.use(methodOverride('_method'));
 
-// Configuración de Swagger UI
+// Ruta para la documentación de la API
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 
-// Session
+// Configuración de la sesión
 app.use(session({
   secret: process.env.SESSION_SECRET || 'toastem-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: false, // Desactivado para funcionar tanto en HTTP como HTTPS
-    maxAge: 24 * 60 * 60 * 1000, // 24 horas
-    httpOnly: true, // Previene acceso JS al lado del cliente
-    sameSite: 'lax' // Restringe cookies a mismo sitio
+    secure: false, // En desarrollo debe ser false para usar HTTP
+    // Sin maxAge, la cookie expira al cerrar el navegador
+    httpOnly: true, 
+    sameSite: 'lax' 
   }
 }));
 
-// Protecciones de seguridad
-/*
-app.use(require('helmet')({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:", "http:"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https:", "http:"],
-      fontSrc: ["'self'", "https:", "http:", "data:"],
-      imgSrc: ["'self'", "data:", "https:", "http:"],
-      connectSrc: ["'self'", "https:", "http:"]
-    }
-  }
-}));
-*/
-
-// Comentado temporalmente para diagnosticar problemas con los íconos
-// Recuerda volver a habilitar estas protecciones después
-
-// Limitar tasa de peticiones para prevenir ataques de fuerza bruta
+// Limita las peticiones para prevenir ataques de fuerza bruta
 const limiter = require('express-rate-limit')({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // límite de 100 peticiones por ventana
+  max: 100, 
   message: 'Demasiadas peticiones desde esta IP, por favor intente de nuevo más tarde.'
 });
-app.use('/auth', limiter); // Aplicar solo a rutas de autenticación
+app.use('/auth', limiter);
 
-// Middleware para pasar usuario a todas las vistas
+// Middleware para pasar datos a las vistas
 app.use((req, res, next) => {
   res.locals.usuario = req.session.usuario;
   res.locals.currentPath = req.path;
@@ -124,12 +93,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Después de la configuración de session
+// Middlewares para mensajes flash
 app.use(flash());
-app.use(flashFilter); // Filtrar mensajes flash vacíos
-app.use(messageHandler.prepareViewMessages); // Middleware para manejo centralizado de mensajes
+app.use(flashFilter); 
+app.use(messageHandler.prepareViewMessages);
 
-// Routes
+// Rutas
 app.get('/', (req, res) => {
   res.render('index', { titulo: 'Inicio | Toastem' });
 });
@@ -140,7 +109,7 @@ app.use('/fincas', fincaRoutes);
 app.use('/fincas/:id_finca/lotes', loteRoutes);
 app.use('/api', apiRoutes);
 
-// 404
+// Error 404
 app.use((req, res) => {
   res.status(404).render('error', { 
     titulo: 'Página no encontrada | Toastem',
@@ -149,13 +118,12 @@ app.use((req, res) => {
   });
 });
 
-// Error handler - con más detalles temporalmente para depuración en producción
+// Manejador de errores
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   
-  // Distinguir entre peticiones API y vistas
+  // Si es una petición de API, se devuelve JSON
   if (req.xhr || req.path.includes('/auth/login') && req.method === 'POST') {
-    // Para APIs, devolver JSON con detalles
     return res.status(500).json({ 
       error: 'Error interno del servidor', 
       message: err.message,
@@ -163,7 +131,7 @@ app.use((err, req, res, next) => {
     });
   }
   
-  // Para vistas, renderizar página de error
+  // Para peticiones normales, se renderiza la página de error
   res.status(500).render('error', { 
     titulo: 'Error interno del servidor | Toastem',
     mensaje: 'Ocurrió un error inesperado.',
@@ -172,17 +140,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Exportar la app para pruebas
+// Exportar la app para las pruebas
 module.exports = app;
 
-// Solo iniciar el servidor si no estamos en modo de prueba
+// Iniciar el servidor solo si no se está en modo de prueba
 if (process.env.NODE_ENV !== 'test') {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, async () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
     console.log(`Entorno: ${process.env.NODE_ENV || 'development'}`);
     
-    // Test DB connection
+    // Testear la conexión a la base de datos
     try {
       console.log('Intentando conectar a la base de datos...');
       const connected = await db.testConnection();
