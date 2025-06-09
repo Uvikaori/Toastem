@@ -71,7 +71,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: { 
     secure: false, // En desarrollo debe ser false para usar HTTP
-    // Sin maxAge, la cookie expira al cerrar el navegador
+    maxAge: 24 * 60 * 60 * 1000, // 24 horas
     httpOnly: true, 
     sameSite: 'lax' 
   }
