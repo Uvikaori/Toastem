@@ -129,18 +129,6 @@ router.get('/logout', controladorAuth.cerrarSesion);
 
 /**
  * @swagger
- * /auth/logout-ajax:
- *   post:
- *     summary: Cierra la sesión del usuario vía AJAX
- *     tags: [Autenticación]
- *     responses:
- *       200:
- *         description: Sesión cerrada exitosamente
- */
-router.post('/logout-ajax', controladorAuth.cerrarSesionAjax);
-
-/**
- * @swagger
  * /auth/recuperar-password:
  *   get:
  *     summary: Muestra la página de recuperación de contraseña

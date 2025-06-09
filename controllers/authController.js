@@ -275,15 +275,6 @@ const cerrarSesion = (req, res) => {
 };
 
 /**
- * Cierra la sesión del usuario vía AJAX (para cuando se cierra la ventana)
- */
-const cerrarSesionAjax = (req, res) => {
-  req.session.destroy(() => {
-    res.json({ success: true, message: 'Sesión cerrada correctamente' });
-  });
-};
-
-/**
  * Muestra la página de recuperación de contraseña
  */
 const mostrarPaginaRecuperacion = (req, res) => {
@@ -440,7 +431,6 @@ module.exports = {
   mostrarPaginaRegistro,
   registrarUsuario,
   cerrarSesion,
-  cerrarSesionAjax,
   mostrarPaginaRecuperacion,
   verificarCorreo,
   resetearContraseña
