@@ -107,7 +107,47 @@ class DashboardDAO {
    */
   async obtenerLotesTerminadosPorTipo(userId) {
     try {
-      // Obtener datos de la caché
+      // Obtener datos directamente de las tablas para garantizar datos actualizados
+      // 1. Datos de lotes vendidos como pergamino
+      const [pergaminoData] = await db.query(`
+        SELECT 
+          COUNT(DISTINCT l.id) as cantidad,
+          COALESCE(SUM(v.cantidad), 0) as total_kg
+        FROM lotes l
+        JOIN fincas f ON l.id_finca = f.id
+        JOIN ventas v ON l.id = v.id_lote
+        WHERE f.id_usuario = ? 
+        AND l.id_estado_proceso = 5
+        AND v.detalle_producto_vendido = 'Pergamino'
+      `, [userId]);
+      
+      // 2. Datos de lotes con café tostado en grano
+      const [granoData] = await db.query(`
+        SELECT 
+          COUNT(DISTINCT l.id) as cantidad,
+          COALESCE(SUM(v.cantidad), 0) as total_kg
+        FROM lotes l
+        JOIN fincas f ON l.id_finca = f.id
+        JOIN ventas v ON l.id = v.id_lote
+        WHERE f.id_usuario = ? 
+        AND l.id_estado_proceso = 5
+        AND v.detalle_producto_vendido = 'Grano'
+      `, [userId]);
+      
+      // 3. Datos de lotes con café tostado molido
+      const [molidoData] = await db.query(`
+        SELECT 
+          COUNT(DISTINCT l.id) as cantidad,
+          COALESCE(SUM(v.cantidad), 0) as total_kg
+        FROM lotes l
+        JOIN fincas f ON l.id_finca = f.id
+        JOIN ventas v ON l.id = v.id_lote
+        WHERE f.id_usuario = ? 
+        AND l.id_estado_proceso = 5
+        AND v.detalle_producto_vendido = 'Molido'
+      `, [userId]);
+      
+      // Fallback a la caché si las consultas directas no retornan resultados
       const [tipoLotes] = await db.query(`
         SELECT clave as tipo, json_data
         FROM dashboard_cache 
@@ -115,14 +155,37 @@ class DashboardDAO {
         AND tipo_dato = 'lotes_terminados_tipo_disponible'
       `, [userId]);
 
-      // Convertir a objeto
+      // Inicializar el objeto de resultado
       const result = {
         pergamino: { cantidad: 0, total_kg: 0 },
         tostadoGrano: { cantidad: 0, total_kg: 0 },
         tostadoMolido: { cantidad: 0, total_kg: 0 }
       };
 
-      if (tipoLotes && tipoLotes.length > 0) {
+      // Usar los datos directos si están disponibles
+      if (pergaminoData && pergaminoData.length > 0) {
+        result.pergamino = {
+          cantidad: Number(pergaminoData[0].cantidad) || 0,
+          total_kg: Number(pergaminoData[0].total_kg) || 0
+        };
+      }
+      
+      if (granoData && granoData.length > 0) {
+        result.tostadoGrano = {
+          cantidad: Number(granoData[0].cantidad) || 0,
+          total_kg: Number(granoData[0].total_kg) || 0
+        };
+      }
+      
+      if (molidoData && molidoData.length > 0) {
+        result.tostadoMolido = {
+          cantidad: Number(molidoData[0].cantidad) || 0,
+          total_kg: Number(molidoData[0].total_kg) || 0
+        };
+      }
+      
+      // Fallback a la caché solo si los datos directos no tienen valores
+      if (result.pergamino.cantidad === 0 && result.tostadoGrano.cantidad === 0 && result.tostadoMolido.cantidad === 0 && tipoLotes && tipoLotes.length > 0) {
         tipoLotes.forEach(item => {
           let parsed_data = null;
           
@@ -171,7 +234,55 @@ class DashboardDAO {
    */
   async obtenerLotesEnProceso(userId) {
     try {
-      // Obtener conteos de procesos de la caché
+      // Obtener conteos directamente de las tablas para garantizar datos actualizados
+      const [conteosDirectos] = await db.query(`
+        SELECT 
+          SUM(CASE WHEN EXISTS (
+            SELECT 1 FROM despulpado d 
+            WHERE d.id_lote = l.id AND d.id_estado_proceso = 2
+          ) THEN 1 ELSE 0 END) AS despulpado_count,
+          
+          SUM(CASE WHEN EXISTS (
+            SELECT 1 FROM fermentacion_lavado fl 
+            WHERE fl.id_lote = l.id AND fl.id_estado_proceso = 2
+          ) THEN 1 ELSE 0 END) AS fermentacion_lavado_count,
+          
+          SUM(CASE WHEN EXISTS (
+            SELECT 1 FROM secado s 
+            WHERE s.id_lote = l.id AND s.id_estado_proceso = 2
+          ) THEN 1 ELSE 0 END) AS secado_count,
+          
+          SUM(CASE WHEN EXISTS (
+            SELECT 1 FROM clasificacion c 
+            WHERE c.id_lote = l.id AND c.id_estado_proceso = 2
+          ) THEN 1 ELSE 0 END) AS clasificacion_count,
+          
+          SUM(CASE WHEN EXISTS (
+            SELECT 1 FROM trilla t 
+            WHERE t.id_lote = l.id AND t.id_estado_proceso = 2
+          ) THEN 1 ELSE 0 END) AS trilla_count,
+          
+          SUM(CASE WHEN EXISTS (
+            SELECT 1 FROM tueste t 
+            WHERE t.id_lote = l.id AND t.id_estado_proceso = 2
+          ) THEN 1 ELSE 0 END) AS tueste_count,
+          
+          SUM(CASE WHEN EXISTS (
+            SELECT 1 FROM tueste t JOIN molienda m ON t.id = m.id_tueste
+            WHERE t.id_lote = l.id AND m.id_estado_proceso = 2
+          ) THEN 1 ELSE 0 END) AS molienda_count,
+          
+          SUM(CASE WHEN EXISTS (
+            SELECT 1 FROM empacado e 
+            WHERE e.id_lote = l.id AND e.id_estado_proceso = 2 AND e.es_historico = 0
+          ) THEN 1 ELSE 0 END) AS empacado_count
+        
+        FROM lotes l
+        JOIN fincas f ON l.id_finca = f.id
+        WHERE f.id_usuario = ? AND l.id_estado_proceso = 2
+      `, [userId]);
+
+      // Fallback a la caché solo si la consulta directa no retornó resultados
       const [conteos] = await db.query(`
         SELECT json_data
         FROM dashboard_cache 
@@ -279,7 +390,7 @@ class DashboardDAO {
         LIMIT 5
       `, [userId]);
 
-      // Convertir los conteos de JSON a objeto
+      // Inicializar el objeto de conteos
       let conteosObj = {
         despulpado_count: 0,
         fermentacion_lavado_count: 0,
@@ -291,7 +402,22 @@ class DashboardDAO {
         empacado_count: 0
       };
 
-      if (conteos && conteos.length > 0 && conteos[0].json_data) {
+      // Usar los conteos directos si están disponibles
+      if (conteosDirectos && conteosDirectos.length > 0) {
+        const direct = conteosDirectos[0];
+        conteosObj = {
+          despulpado_count: Number(direct.despulpado_count) || 0,
+          fermentacion_lavado_count: Number(direct.fermentacion_lavado_count) || 0,
+          secado_count: Number(direct.secado_count) || 0,
+          clasificacion_count: Number(direct.clasificacion_count) || 0,
+          trilla_count: Number(direct.trilla_count) || 0,
+          tueste_count: Number(direct.tueste_count) || 0,
+          molienda_count: Number(direct.molienda_count) || 0,
+          empacado_count: Number(direct.empacado_count) || 0
+        };
+      } 
+      // Fallback a la caché solo si los conteos directos no tienen datos
+      else if (conteos && conteos.length > 0 && conteos[0].json_data) {
         try {
           const raw_json_data = conteos[0].json_data;
           let parsed_conteos_data = null;
@@ -353,7 +479,64 @@ class DashboardDAO {
    */
   async obtenerResumenVentas(userId) {
     try {
-      // Obtener datos de la caché
+      // Consultar directamente las ventas de los últimos 30 días
+      const fechaLimite = new Date();
+      fechaLimite.setDate(fechaLimite.getDate() - 30);
+      const fechaLimiteStr = fechaLimite.toISOString().split('T')[0];
+      
+      // Ventas de Pergamino
+      const [ventasPergamino] = await db.query(`
+        SELECT 
+          COALESCE(SUM(v.cantidad), 0) as kg,
+          COALESCE(SUM(v.cantidad * v.precio_kg), 0) as total
+        FROM ventas v
+        JOIN lotes l ON v.id_lote = l.id
+        JOIN fincas f ON l.id_finca = f.id
+        WHERE f.id_usuario = ? 
+        AND v.fecha_venta >= ?
+        AND v.detalle_producto_vendido = 'Pergamino'
+      `, [userId, fechaLimiteStr]);
+      
+      // Ventas de Grano
+      const [ventasGrano] = await db.query(`
+        SELECT 
+          COALESCE(SUM(v.cantidad), 0) as kg,
+          COALESCE(SUM(v.cantidad * v.precio_kg), 0) as total
+        FROM ventas v
+        JOIN lotes l ON v.id_lote = l.id
+        JOIN fincas f ON l.id_finca = f.id
+        WHERE f.id_usuario = ? 
+        AND v.fecha_venta >= ?
+        AND v.detalle_producto_vendido = 'Grano'
+      `, [userId, fechaLimiteStr]);
+      
+      // Ventas de Molido
+      const [ventasMolido] = await db.query(`
+        SELECT 
+          COALESCE(SUM(v.cantidad), 0) as kg,
+          COALESCE(SUM(v.cantidad * v.precio_kg), 0) as total
+        FROM ventas v
+        JOIN lotes l ON v.id_lote = l.id
+        JOIN fincas f ON l.id_finca = f.id
+        WHERE f.id_usuario = ? 
+        AND v.fecha_venta >= ?
+        AND v.detalle_producto_vendido = 'Molido'
+      `, [userId, fechaLimiteStr]);
+      
+      // Ventas de Pasilla
+      const [ventasPasilla] = await db.query(`
+        SELECT 
+          COALESCE(SUM(v.cantidad), 0) as kg,
+          COALESCE(SUM(v.cantidad * v.precio_kg), 0) as total
+        FROM ventas v
+        JOIN lotes l ON v.id_lote = l.id
+        JOIN fincas f ON l.id_finca = f.id
+        WHERE f.id_usuario = ? 
+        AND v.fecha_venta >= ?
+        AND v.detalle_producto_vendido = 'Pasilla Molido'
+      `, [userId, fechaLimiteStr]);
+      
+      // Fallback a la caché si las consultas directas no retornan resultados
       const [resumen] = await db.query(`
         SELECT json_data
         FROM dashboard_cache 
@@ -362,7 +545,7 @@ class DashboardDAO {
         LIMIT 1
       `, [userId]);
 
-      // Valores por defecto
+      // Inicializar valores por defecto
       let resultado = {
         pasilla: { kg: 0, total: 0 },
         pergamino: { kg: 0, total: 0 },
@@ -370,8 +553,43 @@ class DashboardDAO {
         tostadoMolido: { kg: 0, total: 0 }
       };
 
-      // Procesar el JSON si existe
-      if (resumen && resumen.length > 0 && resumen[0].json_data) {
+      // Usar los datos directos si están disponibles
+      if (ventasPergamino && ventasPergamino.length > 0) {
+        resultado.pergamino = {
+          kg: Number(ventasPergamino[0].kg) || 0,
+          total: Number(ventasPergamino[0].total) || 0
+        };
+      }
+      
+      if (ventasGrano && ventasGrano.length > 0) {
+        resultado.tostadoGrano = {
+          kg: Number(ventasGrano[0].kg) || 0,
+          total: Number(ventasGrano[0].total) || 0
+        };
+      }
+      
+      if (ventasMolido && ventasMolido.length > 0) {
+        resultado.tostadoMolido = {
+          kg: Number(ventasMolido[0].kg) || 0,
+          total: Number(ventasMolido[0].total) || 0
+        };
+      }
+      
+      if (ventasPasilla && ventasPasilla.length > 0) {
+        resultado.pasilla = {
+          kg: Number(ventasPasilla[0].kg) || 0,
+          total: Number(ventasPasilla[0].total) || 0
+        };
+      }
+      
+      // Fallback a la caché solo si los datos directos no tienen valores significativos
+      const totalDirecto = 
+        resultado.pergamino.kg + 
+        resultado.tostadoGrano.kg + 
+        resultado.tostadoMolido.kg + 
+        resultado.pasilla.kg;
+        
+      if (totalDirecto < 0.01 && resumen && resumen.length > 0 && resumen[0].json_data) {
         try {
           const raw_json_data = resumen[0].json_data;
           let parsed_data = null;
@@ -436,7 +654,68 @@ class DashboardDAO {
    */
   async obtenerEmpacadoDisponible(userId) {
     try {
-      // Obtener datos de la caché
+      // Consultar directamente los productos empacados disponibles
+      // 1. Datos de café en grano
+      const [granoData] = await db.query(`
+        SELECT 
+          COALESCE(SUM(e.total_empaques), 0) as cantidad_empaques,
+          COALESCE(SUM(e.peso_empacado), 0) as peso_total,
+          COUNT(DISTINCT e.id_lote) as lotes_count
+        FROM empacado e
+        JOIN lotes l ON e.id_lote = l.id
+        JOIN fincas f ON l.id_finca = f.id
+        WHERE f.id_usuario = ? 
+        AND e.id_estado_proceso = 3
+        AND e.es_historico = 0
+        AND e.tipo_producto_empacado = 'Grano'
+        AND NOT EXISTS (
+          SELECT 1 FROM ventas v 
+          WHERE v.id_lote = l.id 
+          AND v.detalle_producto_vendido = 'Grano'
+        )
+      `, [userId]);
+      
+      // 2. Datos de café molido
+      const [molidoData] = await db.query(`
+        SELECT 
+          COALESCE(SUM(e.total_empaques), 0) as cantidad_empaques,
+          COALESCE(SUM(e.peso_empacado), 0) as peso_total,
+          COUNT(DISTINCT e.id_lote) as lotes_count
+        FROM empacado e
+        JOIN lotes l ON e.id_lote = l.id
+        JOIN fincas f ON l.id_finca = f.id
+        WHERE f.id_usuario = ? 
+        AND e.id_estado_proceso = 3
+        AND e.es_historico = 0
+        AND e.tipo_producto_empacado = 'Molido'
+        AND NOT EXISTS (
+          SELECT 1 FROM ventas v 
+          WHERE v.id_lote = l.id 
+          AND v.detalle_producto_vendido = 'Molido'
+        )
+      `, [userId]);
+      
+      // 3. Datos de pasilla molido
+      const [pasillaData] = await db.query(`
+        SELECT 
+          COALESCE(SUM(e.total_empaques), 0) as cantidad_empaques,
+          COALESCE(SUM(e.peso_empacado), 0) as peso_total,
+          COUNT(DISTINCT e.id_lote) as lotes_count
+        FROM empacado e
+        JOIN lotes l ON e.id_lote = l.id
+        JOIN fincas f ON l.id_finca = f.id
+        WHERE f.id_usuario = ? 
+        AND e.id_estado_proceso = 3
+        AND e.es_historico = 0
+        AND e.tipo_producto_empacado = 'Pasilla Molido'
+        AND NOT EXISTS (
+          SELECT 1 FROM ventas v 
+          WHERE v.id_lote = l.id 
+          AND v.detalle_producto_vendido = 'Pasilla Molido'
+        )
+      `, [userId]);
+      
+      // Fallback a la caché solo si las consultas directas no retornan resultados
       const [empacadoData] = await db.query(`
         SELECT clave as tipo_producto, valor_numerico, json_data
         FROM dashboard_cache 
@@ -444,15 +723,45 @@ class DashboardDAO {
         AND tipo_dato = 'empacado_disponible'
       `, [userId]);
 
-      // Estructura para almacenar resultados
+      // Inicializar estructura para almacenar resultados
       const resultado = {
         grano: { cantidad_empaques: 0, peso_total: 0, lotes_count: 0 },
         molido: { cantidad_empaques: 0, peso_total: 0, lotes_count: 0 },
         pasillaMolido: { cantidad_empaques: 0, peso_total: 0, lotes_count: 0 }
       };
 
-      // Procesar cada registro
-      if (empacadoData && empacadoData.length > 0) {
+      // Usar los datos directos si están disponibles
+      if (granoData && granoData.length > 0) {
+        resultado.grano = {
+          cantidad_empaques: Number(granoData[0].cantidad_empaques) || 0,
+          peso_total: Number(granoData[0].peso_total) || 0,
+          lotes_count: Number(granoData[0].lotes_count) || 0
+        };
+      }
+      
+      if (molidoData && molidoData.length > 0) {
+        resultado.molido = {
+          cantidad_empaques: Number(molidoData[0].cantidad_empaques) || 0,
+          peso_total: Number(molidoData[0].peso_total) || 0,
+          lotes_count: Number(molidoData[0].lotes_count) || 0
+        };
+      }
+      
+      if (pasillaData && pasillaData.length > 0) {
+        resultado.pasillaMolido = {
+          cantidad_empaques: Number(pasillaData[0].cantidad_empaques) || 0,
+          peso_total: Number(pasillaData[0].peso_total) || 0,
+          lotes_count: Number(pasillaData[0].lotes_count) || 0
+        };
+      }
+      
+      // Fallback a la caché solo si los datos directos no tienen valores significativos
+      const totalDirecto = 
+        resultado.grano.cantidad_empaques + 
+        resultado.molido.cantidad_empaques + 
+        resultado.pasillaMolido.cantidad_empaques;
+        
+      if (totalDirecto < 1 && empacadoData && empacadoData.length > 0) {
         empacadoData.forEach(item => {
           let parsed_data = null;
           

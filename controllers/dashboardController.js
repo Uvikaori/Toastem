@@ -114,7 +114,7 @@ class DashboardController {
         console.error('Error al cargar productos empacados:', error);
       }
 
-      // Formatear datos para gráficos
+      // Formatear datos para gráficos con valores predeterminados en caso de datos faltantes
       try {
         // Datos para gráfico de procesos por mes
         if (dashboardData.procesosStats.procesosPorMes && dashboardData.procesosStats.procesosPorMes.length > 0) {
@@ -123,6 +123,12 @@ class DashboardController {
             cantidad: Number(item.cantidad) || 0
           }));
           dashboardData.procesosDataForChart = JSON.stringify(procesosPorMesData);
+        } else {
+          // Datos de ejemplo si no hay datos reales
+          const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun"];
+          dashboardData.procesosDataForChart = JSON.stringify(
+            meses.map(mes => ({ mes, cantidad: 0 }))
+          );
         }
 
         // Datos para gráfico de estado de procesos
@@ -132,22 +138,27 @@ class DashboardController {
             cantidad: Number(item.cantidad) || 0
           }));
           dashboardData.estadoProcesosDataForChart = JSON.stringify(estadoProcesosData);
+        } else {
+          // Datos de ejemplo si no hay datos reales
+          dashboardData.estadoProcesosDataForChart = JSON.stringify([
+            { estado: "En progreso", cantidad: 0 },
+            { estado: "Finalizado", cantidad: 0 },
+            { estado: "Cancelado", cantidad: 0 }
+          ]);
         }
 
-        // Datos para gráfico de tipo de proceso
-        if (dashboardData.lotesEnProceso.conteos) {
-          const tipoProcesoData = [
-            { tipo: 'Despulpado', cantidad: dashboardData.lotesEnProceso.conteos.despulpado_count || 0 },
-            { tipo: 'Lavado', cantidad: dashboardData.lotesEnProceso.conteos.fermentacion_lavado_count || 0 },
-            { tipo: 'Secado', cantidad: dashboardData.lotesEnProceso.conteos.secado_count || 0 },
-            { tipo: 'Clasificación', cantidad: dashboardData.lotesEnProceso.conteos.clasificacion_count || 0 },
-            { tipo: 'Trilla', cantidad: dashboardData.lotesEnProceso.conteos.trilla_count || 0 },
-            { tipo: 'Tueste', cantidad: dashboardData.lotesEnProceso.conteos.tueste_count || 0 },
-            { tipo: 'Molienda', cantidad: dashboardData.lotesEnProceso.conteos.molienda_count || 0 },
-            { tipo: 'Empacado', cantidad: dashboardData.lotesEnProceso.conteos.empacado_count || 0 }
-          ];
-          dashboardData.tipoProcesoDataForChart = JSON.stringify(tipoProcesoData);
-        }
+        // Datos para gráfico de tipo de proceso - asegurar que siempre tenemos datos
+        const tipoProcesoData = [
+          { tipo: 'Despulpado', cantidad: dashboardData.lotesEnProceso.conteos.despulpado_count || 0 },
+          { tipo: 'Lavado', cantidad: dashboardData.lotesEnProceso.conteos.fermentacion_lavado_count || 0 },
+          { tipo: 'Secado', cantidad: dashboardData.lotesEnProceso.conteos.secado_count || 0 },
+          { tipo: 'Clasificación', cantidad: dashboardData.lotesEnProceso.conteos.clasificacion_count || 0 },
+          { tipo: 'Trilla', cantidad: dashboardData.lotesEnProceso.conteos.trilla_count || 0 },
+          { tipo: 'Tueste', cantidad: dashboardData.lotesEnProceso.conteos.tueste_count || 0 },
+          { tipo: 'Molienda', cantidad: dashboardData.lotesEnProceso.conteos.molienda_count || 0 },
+          { tipo: 'Empacado', cantidad: dashboardData.lotesEnProceso.conteos.empacado_count || 0 }
+        ];
+        dashboardData.tipoProcesoDataForChart = JSON.stringify(tipoProcesoData);
       } catch (error) {
         console.error('Error al formatear datos para gráficos:', error);
       }

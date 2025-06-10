@@ -141,7 +141,12 @@ class VentaController {
 
             await ventaDAO.createVenta(nuevaVenta);
 
-            await loteDAO.updateLoteProcesoYEstado(id_lote, null, 5);
+            // Usamos el último proceso (en orden) para los lotes finalizados por venta
+            const todosLosProcesos = await procesosDAO.getAllProcesosOrdenados();
+            const ultimoProceso = todosLosProcesos[todosLosProcesos.length - 1]; 
+            const idUltimoProceso = ultimoProceso ? ultimoProceso.id : null;
+            
+            await loteDAO.updateLoteProcesoYEstado(id_lote, idUltimoProceso, 5);
             await loteDAO.update(id_lote, { fecha_finalizacion: fecha_venta });
 
             req.flash('mensaje', 'Venta de pergamino registrada exitosamente. Lote finalizado.');
@@ -292,7 +297,12 @@ class VentaController {
             }
 
             // Actualizar estado del lote
-            await loteDAO.updateLoteProcesoYEstado(id_lote, null, 5);
+            // Usamos el último proceso (en orden) para los lotes finalizados por venta
+            const todosLosProcesos = await procesosDAO.getAllProcesosOrdenados();
+            const ultimoProceso = todosLosProcesos[todosLosProcesos.length - 1]; 
+            const idUltimoProceso = ultimoProceso ? ultimoProceso.id : null;
+            
+            await loteDAO.updateLoteProcesoYEstado(id_lote, idUltimoProceso, 5);
             await loteDAO.update(id_lote, { fecha_finalizacion: fecha_venta });
 
             req.flash('mensaje', 'Ventas de productos empacados registradas exitosamente. Lote finalizado.');
