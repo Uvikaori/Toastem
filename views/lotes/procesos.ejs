@@ -149,6 +149,7 @@
                                 <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 2) { %> bg-warning text-dark
                                 <% } else if (proceso.datosEtapa && proceso.datosEtapa.id_estado_proceso === 1) { %> bg-info
                                 <% } else if (lote.id_proceso_actual === proceso.id && lote.id_estado_proceso === 2) { %> bg-warning text-dark
+                                <% } else if (proceso.nombre.toLowerCase() === 'recolección' && lote.id_proceso_actual > 1) { %> bg-success
                                 <% } else { %> bg-light text-dark <% } %>
                             <% } %>
                         ">
@@ -173,6 +174,8 @@
                                     Registrado
                                 <% } else if (lote.id_proceso_actual === proceso.id && lote.id_estado_proceso === 2) { %>
                                     En Curso
+                                <% } else if (proceso.nombre.toLowerCase() === 'recolección' && lote.id_proceso_actual > 1) { %>
+                                    Terminado
                                 <% } else { %>
                                     Pendiente
                                 <% } %>
