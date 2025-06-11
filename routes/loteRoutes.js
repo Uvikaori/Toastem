@@ -25,6 +25,7 @@ const empacadoController = require('../controllers/empacadoController');
 const controlCalidadController = require('../controllers/controlCalidadController');
 const ventaController = require('../controllers/ventaController');
 const { validateVentaPergamino, validateVentaEmpacado } = require('../validators/ventaValidator');
+const { loadLoteData, validateProcessStatus } = require('../middlewares/processValidators');
 
 /**
  * @swagger
@@ -1658,7 +1659,7 @@ router.post('/:id_lote/trilla/:id_trilla/reiniciar', isLoteOwner, trillaControll
  *       404:
  *         description: Lote no encontrado
  */
-router.get('/:id_lote/tueste/registrar', isLoteOwner, tuesteController.mostrarFormularioTueste);
+router.get('/:id_lote/tueste/registrar', isLoteOwner, loadLoteData, validateProcessStatus, tuesteController.mostrarFormularioTueste);
 
 /**
  * @swagger
@@ -1860,7 +1861,7 @@ router.post('/:id_lote/tueste/:id_tueste/reiniciar', isLoteOwner, tuesteControll
  *       404:
  *         description: Lote no encontrado
  */
-router.get('/:id_lote/molienda/registrar', isLoteOwner, moliendaController.mostrarFormularioMolienda);
+router.get('/:id_lote/molienda/registrar', isLoteOwner, loadLoteData, validateProcessStatus, moliendaController.mostrarFormularioMolienda);
 
 /**
  * @swagger
@@ -2085,7 +2086,7 @@ router.post('/:id_lote/molienda/:id_molienda/reiniciar', isLoteOwner, moliendaCo
  *       404:
  *         description: Lote no encontrado
  */
-router.get('/:id_lote/empacado/registrar', isLoteOwner, empacadoController.mostrarFormularioEmpacado);
+router.get('/:id_lote/empacado/registrar', isLoteOwner, loadLoteData, validateProcessStatus, empacadoController.mostrarFormularioEmpacado);
 
 /**
  * @swagger
